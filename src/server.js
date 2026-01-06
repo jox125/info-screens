@@ -1,13 +1,14 @@
-const express = require('express')
-const http = require('http')
-const socketIO = require('socket.io')
+import express from 'express'
+import { static as serveStatic } from 'express'
+import { createServer } from 'http'
+import { Server } from 'socket.io'
 
 // Initialize express, socketIO
 const app = express()
-const server = http.createServer(app)
-const io = socketIO(server)
+const server = createServer(app)
+const io = new Server(server)
 
-app.use(express.static('src/public'))
+app.use(serveStatic('src/public'))
 
 // Race state (currently in memory)
 const raceState = {
