@@ -22,6 +22,8 @@ const raceState = {
 io.on('connection', (socket) => {
     console.log('Client connected')
 
+    // ---- SESSION MANAGEMENT ----
+
     // Adding a session
     socket.on('session:add', (data) => {
         const session = {
@@ -34,6 +36,13 @@ io.on('connection', (socket) => {
 
         // For debugging
         console.log(raceState)
+    })
+
+
+    // ---- REQUESTS ----
+    
+    socket.on('session:request', () => {
+        socket.emit('sessions:update', raceState.sessions)
     })
 
     socket.on('disconnect', () => {

@@ -19,7 +19,14 @@
             placeholder="New session name"
           >
           <button type="submit">+ Add Session</button>
+          <span id="nameError" class="error"></span>
         </form>
+        <div id="session-list" class="list-container">
+          <p class="empty-message">No sessions yet. Add one to get started.</p>
+        </div>
+      </div>
+    </div>
+
     <script src="/socket.io/socket.io.js"></script>
     <script src="js/front-desk.js"></script>
 </body>
