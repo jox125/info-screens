@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Front Desk</title>
+</head>
+<body>
+    <div class="interface-content">
+      <div class="panel">
+        <div class="panel-header">
+          <h2>Race Sessions</h2>
+        </div>
+        
+        <form id="add-session-form" class="add-form">
+          <input 
+            type="text" 
+            id="session-name" 
+            placeholder="New session name"
+          >
+          <button type="submit">+ Add Session</button>
+        </form>
+    <script src="/socket.io/socket.io.js"></script>
+    <script src="js/front-desk.js"></script>
+</body>
+</html>
