@@ -1,4 +1,5 @@
 import express from 'express'
+import 'dotenv/config'
 import { static as serveStatic } from 'express'
 import { createServer } from 'http'
 import { Server } from 'socket.io'
@@ -40,7 +41,7 @@ io.on('connection', (socket) => {
 
 
     // ---- REQUESTS ----
-    
+
     socket.on('session:request', () => {
         socket.emit('sessions:update', raceState.sessions)
     })
@@ -50,7 +51,7 @@ io.on('connection', (socket) => {
     })
 })
 
-const PORT = 3000;
+const PORT = process.env.PORT || 3000
 server.listen(PORT, () => {
     console.log(`server running at http://localhost:${PORT}`)
 })
