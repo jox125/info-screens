@@ -12,9 +12,9 @@ const server = createServer(app);
 const io = new Server(server);
 
 // env keys
-const RECEPTIONIST_KEY = process.env.receptionist_key;
+const SAFETY_KEY = process.env.safety_key;
 
-if (!RECEPTIONIST_KEY) {
+if (!SAFETY_KEY) {
   console.error("ERROR: Missing required environment variables.");
   process.exit(1);
 }
@@ -46,7 +46,7 @@ io.on("connection", (socket) => {
   // ---- RACE CONTROL LOGIN ----
   socket.on("race-control-login", (key) => {
     console.log("Key recieved: " + key);
-    if (key !== RECEPTIONIST_KEY){
+    if (key !== SAFETY_KEY){
       loginStates.raceControl=false;     
       socket.emit("wrong-key");
     }
