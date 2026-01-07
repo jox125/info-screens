@@ -5,8 +5,8 @@
   "main": "server.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "dev": "nodemon src/server.js",
-    "raceControl": "nodemon src/racetrackApp.mjs"
+    "dev": "nodemon src/server.mjs",
+    "testEnv": "export receptionist_key=8ded6076 && nodemon src/server.mjs"
   },
   "repository": {
     "type": "git",
@@ -17,6 +17,7 @@
   "license": "ISC",
   "type": "module",
   "dependencies": {
+    "dotenv": "^17.2.3",
     "express": "^5.2.1",
     "socket.io": "^4.8.3"
   },
