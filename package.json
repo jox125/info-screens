@@ -6,7 +6,7 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "dev": "nodemon src/server.mjs",
-    "testEnv": "export receptionist_key=8ded6076 && nodemon src/server.mjs"
+    "testEnv": "export safety_key=8ded6076 && nodemon src/server.mjs"
   },
   "repository": {
     "type": "git",
