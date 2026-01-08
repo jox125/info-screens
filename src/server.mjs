@@ -3,13 +3,20 @@ import 'dotenv/config'
 import { static as serveStatic } from 'express'
 import { createServer } from 'http'
 import { Server } from 'socket.io'
+import { fileURLToPath } from 'url'
+import { join, dirname } from 'path'
 
 // Initialize express, socketIO
 const app = express()
 const server = createServer(app)
 const io = new Server(server)
+const __dirname = fileURLToPath(dirname(import.meta.url))
 
 app.use(serveStatic('src/public'))
+
+app.get('/front-desk', (req, res) => {
+    res.sendFile(join(__dirname, '/public/front-desk.html'))
+})
 
 // Race state (currently in memory)
 const raceState = {
