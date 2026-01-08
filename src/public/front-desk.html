@@ -4,10 +4,12 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Front Desk</title>
+    <link rel="stylesheet" href="css/main.css">
+    <link rel="stylesheet" href="css/front-desk.css">
 </head>
 <body>
     <div class="interface-content">
-      <div class="panel">
+      <div class="session-panel">
         <div class="panel-header">
           <h2>Race Sessions</h2>
         </div>
@@ -19,14 +21,33 @@
             placeholder="New session name"
           >
           <button type="submit">+ Add Session</button>
-          <span id="nameError" class="error"></span>
+          <span id="session-name-error" class="error"></span>
         </form>
         <div id="session-list" class="list-container">
           <p class="empty-message">No sessions yet. Add one to get started.</p>
         </div>
       </div>
-    </div>
 
+
+      <div id="driver-panel" class="driver-panel hidden">
+        <div class="panel-header">
+          <h2>Drivers</h2>
+        </div>
+        
+        <form id="add-driver-form" class="add-form">
+          <input 
+            type="text" 
+            id="driver-name" 
+            placeholder="New driver name"
+          >
+          <button id="type="submit">+ Add Driver</button>
+          <span id="driver-name-error" class="error"></span>
+        </form>
+        <div id="driver-list" class="list-container">
+          <p class="empty-message">No drivers yet. Add one to get started.</p>
+        </div>
+      </div>
+      
     <script src="/socket.io/socket.io.js"></script>
     <script src="js/front-desk.js"></script>
 </body>

@@ -1,0 +1,29 @@
+.hidden {
+    display: none;
+}
+
+.session-item {
+    cursor: pointer;
+    user-select: none;
+}
+
+.session-item:hover {
+    background-color: rgba(255, 200, 0, 0.18);
+}
+
+.session-item.selected {
+    background-color: rgba(0, 150, 255, 0.25);
+    border-left: 4px solid #0096ff;
+}
+
+.interface-content {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.interface-content > * {
+    flex: 1;
+    height: 100vh;
+    border: 1px solid black;
+}

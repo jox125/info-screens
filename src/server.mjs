@@ -28,15 +28,33 @@ io.on('connection', (socket) => {
     // Adding a session
     socket.on('session:add', (data) => {
         const session = {
+            id: Date.now(),
             name: data.name,
             drivers: [],
-            status: 'upcoming'
+            status: 'upcoming'  // upcoming, in progress, finished
         }
+
         raceState.sessions.push(session)
         io.emit('sessions:update', raceState.sessions)
 
         // For debugging
         console.log(raceState)
+    })
+
+    // Adding a driver
+    socket.on('session:driver:add', (data) => {
+        const session = raceState.sessions.find(
+            s => s.id === Number(data.sessionId)
+        )
+
+        if(!session) return
+
+        session.drivers.push({
+            id: Date.now(),
+            name: data.name
+        })
+
+        io.emit('sessions:update', raceState.sessions)
     })
 
 
