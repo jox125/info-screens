@@ -1,4 +1,6 @@
-const socket = io();
+const socket = io({
+  autoConnect: false,
+});
 
 const loginForm = document.getElementById("login-form");
 const loginInput = document.getElementById("login-key");
@@ -7,74 +9,83 @@ const panel = document.getElementById("panel");
 
 loginForm.addEventListener("submit", (e) => {
   e.preventDefault();
-  if (loginInput) {
-    socket.emit("race-control-login", loginInput.value);
+  if (loginInput) {    
+    let key = loginInput.value.trim();
+    let role = "safety-official";
+    socket.auth = { role, key };
+    socket.connect();
     loginInput.value = "";
   }
 });
-socket.on("wrong-key", () => {
+
+socket.on("connect_error", (err) => {
+  console.log(err);
   loginError.innerHTML = "Wrong key";
   loginInput.disabled = true;
   loginInput.placeholder = "";
-  window.setTimeout(enableLogin, 500);
+  window.setTimeout(() => {
+    loginError.innerHTML = "";
+    loginInput.disabled = false;
+    loginInput.placeholder = "Please enter key";
+  }, 500);
 });
-const enableLogin = () => {
-  loginError.innerHTML = "";
-  loginInput.disabled = false;
-  loginInput.placeholder = "Please enter key";
-};
-socket.on("correct-key", () => {
-  const loginPanel = document.getElementById("login-panel");
-  loginPanel.remove();
 
-  const raceModeControlPanel = document.createElement("div");
-  raceModeControlPanel.id = "control-panel";
-  raceModeControlPanel.classList.add("control-panel");
+socket.on("auth:ok", (role) => {
+  if (role === "safety-official"){
+    const loginPanel = document.getElementById("login-panel");
+    loginPanel.remove();
 
-  const startButton = document.createElement("button");
-  startButton.id = "start-button";
-  startButton.innerHTML = "Start Race";
-  startButton.onclick = () => {
-    socket.emit("start-race");
+    const raceModeControlPanel = document.createElement("div");
+    raceModeControlPanel.id = "control-panel";
+    raceModeControlPanel.classList.add("control-panel");
+
+    const startButton = document.createElement("button");
+    startButton.id = "start-button";
+    startButton.innerHTML = "Start Race";
+    startButton.onclick = () => {
+      socket.emit("race:action", { type:"START" });
+    };
+
+    raceModeControlPanel.appendChild(startButton);
+
+    panel.appendChild(raceModeControlPanel);
+
+    socket.on("state:update", (raceState) => {
+      if (raceState.raceOn){
+        const startButton = document.getElementById("start-button");
+        startButton.remove();
+
+        const raceControlButtonsContainer = document.createElement("div");
+        raceControlButtonsContainer.id = "race-control-buttons-container";
+        raceControlButtonsContainer.classList.add("buttons-container");
+        panel.appendChild(raceControlButtonsContainer);
+
+        const safeButton = document.createElement("button");
+        safeButton.innerHTML = "Safe";
+        safeButton.onclick = () => {
+          socket.emit("race:action", { type: "GREEN_FLAG" });
+        };
+        const hazardButton = document.createElement("button");
+        hazardButton.innerHTML = "Hazard";
+        hazardButton.onclick = () => {
+          socket.emit("race:action", { type: "YELLOW_FLAG" });
+        };
+        const dangerButton = document.createElement("button");
+        dangerButton.innerHTML = "Danger";
+        dangerButton.onclick = () => {
+          socket.emit("race:action", { type: "RED_FLAG" });
+        };
+        const finishButton = document.createElement("button");
+        finishButton.innerHTML = "Finish";
+        finishButton.onclick = () => {
+          socket.emit("race:action", { type: "CHEQUERED_FLAG" });
+        };
+
+        raceControlButtonsContainer.appendChild(safeButton);
+        raceControlButtonsContainer.appendChild(hazardButton);
+        raceControlButtonsContainer.appendChild(dangerButton);
+        raceControlButtonsContainer.appendChild(finishButton);
+      }
+    });
   };
-
-  raceModeControlPanel.appendChild(startButton);
-
-  panel.appendChild(raceModeControlPanel);
-
-  socket.on("start-confirmed", () => {
-    const startButton = document.getElementById("start-button");
-    startButton.remove();
-
-    const raceControlButtonsContainer = document.createElement("div");
-    raceControlButtonsContainer.id = "race-control-buttons-container";
-    raceControlButtonsContainer.classList.add("buttons-container");
-    panel.appendChild(raceControlButtonsContainer);
-
-    const safeButton = document.createElement("button");
-    safeButton.innerHTML = "Safe";
-    safeButton.onclick = () => {
-      socket.emit("safe");
-    };
-    const hazardButton = document.createElement("button");
-    hazardButton.innerHTML = "Hazard";
-    hazardButton.onclick = () => {
-      socket.emit("hazard");
-    };
-    const dangerButton = document.createElement("button");
-    dangerButton.innerHTML = "Danger";
-    dangerButton.onclick = () => {
-      socket.emit("danger");
-    };
-    const finishButton = document.createElement("button");
-    finishButton.innerHTML = "Finish";
-    finishButton.onclick = () => {
-      socket.emit("finish");
-    };
-
-    raceControlButtonsContainer.appendChild(safeButton);
-    raceControlButtonsContainer.appendChild(hazardButton);
-    raceControlButtonsContainer.appendChild(dangerButton);
-    raceControlButtonsContainer.appendChild(finishButton);
-  });
 });
