@@ -13,11 +13,11 @@
         <div class="panel-header">
           <h2>Race Sessions</h2>
         </div>
-        
+
         <form id="add-session-form" class="add-form">
-          <input 
-            type="text" 
-            id="session-name" 
+          <input
+            type="text"
+            id="session-name"
             placeholder="New session name"
           >
           <button type="submit">+ Add Session</button>
@@ -33,21 +33,21 @@
         <div class="panel-header">
           <h2>Drivers</h2>
         </div>
-        
+
         <form id="add-driver-form" class="add-form">
-          <input 
-            type="text" 
-            id="driver-name" 
+          <input
+            type="text"
+            id="driver-name"
             placeholder="New driver name"
           >
-          <button id="type="submit">+ Add Driver</button>
+          <button type="submit">+ Add Driver</button>
           <span id="driver-name-error" class="error"></span>
         </form>
         <div id="driver-list" class="list-container">
           <p class="empty-message">No drivers yet. Add one to get started.</p>
         </div>
       </div>
-      
+
     <script src="/socket.io/socket.io.js"></script>
     <script src="js/front-desk.js"></script>
 </body>

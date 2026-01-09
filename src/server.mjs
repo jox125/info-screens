@@ -49,7 +49,7 @@ io.on('connection', (socket) => {
     })
 
     // Adding a driver
-    socket.on('session:driver:add', (data) => {
+    socket.on('driver:add', (data) => {
         const session = raceState.sessions.find(
             s => s.id === Number(data.sessionId)
         )
@@ -61,6 +61,21 @@ io.on('connection', (socket) => {
             name: data.name
         })
 
+        io.emit('sessions:update', raceState.sessions)
+    })
+
+    // Removing a driver
+    socket.on('driver:remove', (data) => {
+        const session = raceState.sessions.find(
+            s => s.id === Number(data.sessionId)
+        )
+        
+        if(!session) return
+        
+        session.drivers = session.drivers.filter(
+            d => d.id !== Number(data.driverId)
+        )
+        
         io.emit('sessions:update', raceState.sessions)
     })
 

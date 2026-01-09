@@ -44,24 +44,7 @@ addSessionForm.addEventListener('submit', (e) => {
     socket.emit('session:add', ({ name: sessionName }))
 })
 
-// Listener for creating new driver
-addDriverForm.addEventListener('submit', (e) => {
-    e.preventDefault()
-    const driverName = driverNameInput.value.trim()
-    
-    if(!driverName) {
-        driverNameError.textContent = 'Driver name is required'
-        return
-    }
-    driverNameError.textContent = ''
-    driverNameInput.value = ''
-
-    socket.emit('session:driver:add', {
-        sessionId: selectedSessionId,
-        name: driverName
-    })
-})
-
+// Listener for toggling driverPanel visibility
 sessionList.addEventListener('click', (e) => {
     const item = e.target.closest('.session-item')
     if(!item) return
@@ -75,18 +58,49 @@ sessionList.addEventListener('click', (e) => {
     renderDrivers()
 })
 
+// Listener for creating new driver
+addDriverForm.addEventListener('submit', (e) => {
+    e.preventDefault()
+    const driverName = driverNameInput.value.trim()
+
+    if(!driverName) {
+        driverNameError.textContent = 'Driver name is required'
+        return
+    }
+    driverNameError.textContent = ''
+    driverNameInput.value = ''
+
+    socket.emit('driver:add', {
+        sessionId: selectedSessionId,
+        name: driverName
+    })
+})
+
+// Listener for removing drivers
+driverList.addEventListener('click', (e) => {
+    e.preventDefault()
+    const driver = e.target
+    console.log(driver)
+
+    if(driver.classList.contains('remove-driver-button')) {
+        const driverId = driver.closest('.driver-item').dataset.id
+        removeDriver(driverId)
+    }
+})
+
+
 
 // Renders the session list
 function renderSessions() {
     sessionList.innerHTML = ''
-    
+
     if(sessions.length === 0) {
         sessionList.textContent = 'No sessions yet. Add one to get started.'
         driverPanel.classList.add('hidden')
         return
     }
 
-    
+
     sessions.forEach(session => {
         const item = document.createElement('div')
         item.classList.add('session-item')
@@ -96,7 +110,7 @@ function renderSessions() {
         if(session.id === selectedSessionId) {
             item.classList.add('selected')
         }
-        
+
         const name = document.createElement('h3')
         name.textContent = `${session.name} - ${session.status}`
 
@@ -116,7 +130,7 @@ function renderDrivers() {
     const session = sessions.find(
         s => s.id === selectedSessionId
     )
-    
+
     if(!session || session.drivers.length === 0) {
         driverList.textContent = 'No drivers yet. Add one to get started.'
         return
@@ -125,13 +139,26 @@ function renderDrivers() {
     session.drivers.forEach(driver => {
         const item = document.createElement('div')
         item.classList.add('driver-item', 'list-container')
+        item.dataset.id = driver.id
 
         const driverName = document.createElement('h3')
         driverName.textContent = driver.name
 
+        const removeButton = document.createElement('button')
+        removeButton.classList = 'remove-driver-button'
+        removeButton.textContent = 'Remove Driver'
+
         item.appendChild(driverName)
+        item.appendChild(removeButton)
         driverList.appendChild(item)
     })
+}
+
+function removeDriver(driverId) {
+    socket.emit('driver:remove', ({
+        sessionId: selectedSessionId,
+        driverId
+    }))
 }
 
 /* TODO
