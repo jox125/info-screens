@@ -65,7 +65,7 @@ addDriverForm.addEventListener('submit', (e) => {
 
     if(!driverName) {
         driverNameError.textContent = 'Driver name is required'
-        return
+        
     }
     driverNameError.textContent = ''
     driverNameInput.value = ''
@@ -76,18 +76,46 @@ addDriverForm.addEventListener('submit', (e) => {
     })
 })
 
-// Listener for removing drivers
+// Listener for toggling edit form and removing driver
 driverList.addEventListener('click', (e) => {
-    e.preventDefault()
     const driver = e.target
-    console.log(driver)
-
+    const driverItem = driver.closest('.driver-item')
+    const driverId = driverItem.dataset.id
+    
+    // Remove driver
     if(driver.classList.contains('remove-driver-button')) {
-        const driverId = driver.closest('.driver-item').dataset.id
         removeDriver(driverId)
+    }
+    
+    // Toggles edit form
+    if(driver.classList.contains('edit-driver-button')) {
+        const editForm = driverItem.querySelector('.edit-driver-form')
+        editForm.classList.toggle('hidden')
     }
 })
 
+// Listener for editing driver
+driverList.addEventListener('submit', (e) => {
+    if(!e.target.classList.contains('edit-driver-form')) return
+    e.preventDefault()
+
+    const driverItem = e.target.closest('.driver-item')
+    const driverId = driverItem.dataset.id
+    const input = driverItem.querySelector('.edit-driver-name')
+    const newName = input.value.trim()
+
+    if(!newName) {
+        input.placeholder = 'New name is required'
+        input.classList.add('error')
+        return
+    }
+    input.placeholder = 'New driver name'
+    input.classList.remove('error')
+
+    editDriver(driverId, newName)
+
+    e.target.classList.add('hidden')
+})
 
 
 // Renders the session list
@@ -144,14 +172,43 @@ function renderDrivers() {
         const driverName = document.createElement('h3')
         driverName.textContent = driver.name
 
+        const editButton = document.createElement('button')
+        editButton.classList.add('edit-driver-button')
+        editButton.textContent = 'Edit Driver'
+
+        const editForm = document.createElement('form')
+        editForm.classList.add('edit-driver-form', 'hidden')
+        editForm.id = `edit-driver-form-${driver.id}`
+
+        const nameInput = document.createElement('input')
+        nameInput.type = 'text'
+        nameInput.classList.add('edit-driver-name')
+        nameInput.placeholder = 'New driver name'
+
+        const saveButton = document.createElement('button')
+        saveButton.type = 'submit'
+        saveButton.textContent = 'Save driver'
+
         const removeButton = document.createElement('button')
-        removeButton.classList = 'remove-driver-button'
+        removeButton.classList.add('remove-driver-button')
         removeButton.textContent = 'Remove Driver'
 
+        editForm.appendChild(nameInput)
+        editForm.appendChild(saveButton)
         item.appendChild(driverName)
+        item.appendChild(editButton)
         item.appendChild(removeButton)
+        item.appendChild(editForm)
         driverList.appendChild(item)
     })
+}
+
+function editDriver(driverId, newName) {
+    socket.emit('driver:edit', ({
+        sessionId: selectedSessionId,
+        driverId,
+        newName
+    }))
 }
 
 function removeDriver(driverId) {
@@ -169,9 +226,9 @@ Sessions
 - Edit/Remove sessions
 
 Drivers
-- Display drivers and buttons for editing/removing
+- Display drivers and buttons for editing
 - Automatically assign racecar
-- Edit/remove drivers in sessions
+- Edit drivers in sessions
 
 Input Validation
 - Add authentication w/ access keys

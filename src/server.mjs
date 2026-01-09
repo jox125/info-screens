@@ -64,12 +64,30 @@ io.on('connection', (socket) => {
         io.emit('sessions:update', raceState.sessions)
     })
 
+    socket.on('driver:edit', (data) => {
+        const session = raceState.sessions.find(
+            s => s.id === Number(data.sessionId)
+        )
+
+        if(!session) return
+
+        const driver = session.drivers.find(
+            d => d.id === Number(data.driverId)
+        )
+
+        if(!driver) return
+
+        driver.name = data.newName
+
+        io.emit('sessions:update', raceState.sessions)
+    })
+
     // Removing a driver
     socket.on('driver:remove', (data) => {
         const session = raceState.sessions.find(
             s => s.id === Number(data.sessionId)
         )
-        
+
         if(!session) return
         
         session.drivers = session.drivers.filter(
