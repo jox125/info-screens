@@ -30,6 +30,10 @@ const raceState = {
 io.on('connection', (socket) => {
     console.log('Client connected')
 
+    io.on('session:update', () => {
+        console.log(raceState)
+    })
+
     // ---- SESSION MANAGEMENT ----
 
     // Adding a session
@@ -44,8 +48,16 @@ io.on('connection', (socket) => {
         raceState.sessions.push(session)
         io.emit('sessions:update', raceState.sessions)
 
-        // For debugging
-        console.log(raceState)
+        // // For debugging
+        // console.log(raceState)
+    })
+
+    socket.on('session:remove', (data) => {
+        raceState.sessions = raceState.sessions.filter(
+            s => s.id !== Number(data.sessionId)
+        )
+
+        io.emit('sessions:update', raceState.sessions)
     })
 
     // Adding a driver

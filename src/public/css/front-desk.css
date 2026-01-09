@@ -2,20 +2,6 @@
     display: none;
 }
 
-.session-item {
-    cursor: pointer;
-    user-select: none;
-}
-
-.session-item:hover {
-    background-color: rgba(255, 200, 0, 0.18);
-}
-
-.session-item.selected {
-    background-color: rgba(0, 150, 255, 0.25);
-    border-left: 4px solid #0096ff;
-}
-
 .interface-content {
     display: flex;
     justify-content: center;
@@ -26,4 +12,39 @@
     flex: 1;
     height: 100vh;
     border: 1px solid black;
+}
+
+.session-item, 
+.driver-item {
+    display: flex;
+    flex-direction: column;
+    gap: 0.2rem;
+    user-select: none;
+}
+
+.session-item:hover {
+    background-color: rgba(255, 255, 255, 0.18);
+}
+
+.session-item:hover:not(:has(button:hover)) {
+    background-color: rgba(255, 200, 0, 0.18);
+}
+
+.session-item.selected {
+    background-color: rgba(0, 150, 255, 0.25);
+    border-left: 4px solid #0096ff;
+}
+
+.edit-driver-button,
+.remove-session-button,
+.remove-driver-button {
+    align-self: flex-start;
+    width: auto;
+    padding: 4px 8px;
+    font-size: 0.85rem;
+}
+
+.remove-session-button,
+.remove-driver-button {
+    color: red;
 }

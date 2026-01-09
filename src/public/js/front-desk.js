@@ -44,14 +44,28 @@ addSessionForm.addEventListener('submit', (e) => {
     socket.emit('session:add', ({ name: sessionName }))
 })
 
-// Listener for toggling driverPanel visibility
+// Listener for toggling driverPanel visibility and removing session
 sessionList.addEventListener('click', (e) => {
-    const item = e.target.closest('.session-item')
+    const elem = e.target
+    const item = elem.closest('.session-item')
+    
     if(!item) return
 
+    const isRemoveButton = elem.classList.contains('remove-session-button')
     const id = Number(item.dataset.sessionId)
-    selectedSessionId = selectedSessionId === id ? null : id
+    
+    if(isRemoveButton) {
+        removeSession(id)
 
+        // Hide driver panel if session was selected
+        if(selectedSessionId === id) {
+            selectedSessionId = null
+            driverPanel.classList.add('hidden')
+        }
+        return
+    }
+
+    selectedSessionId = selectedSessionId === id ? null : id
     driverPanel.classList.toggle('hidden', selectedSessionId === null)
 
     renderSessions()
@@ -82,10 +96,10 @@ addDriverForm.addEventListener('submit', (e) => {
 driverList.addEventListener('click', (e) => {
     const driver = e.target
     const driverItem = driver.closest('.driver-item')
-    const driverId = driverItem.dataset.id
     
     // Remove driver
     if(driver.classList.contains('remove-driver-button')) {
+        const driverId = driverItem.dataset.id
         removeDriver(driverId)
     }
     
@@ -130,7 +144,6 @@ function renderSessions() {
         return
     }
 
-
     sessions.forEach(session => {
         const item = document.createElement('div')
         item.classList.add('session-item')
@@ -147,8 +160,13 @@ function renderSessions() {
         const driverCount = document.createElement('span')
         driverCount.textContent = `${session.drivers.length} drivers`
 
+        const removeButton = document.createElement('button')
+        removeButton.classList.add('remove-session-button')
+        removeButton.textContent = 'Remove Session'
+
         item.appendChild(name)
         item.appendChild(driverCount)
+        item.appendChild(removeButton)
         sessionList.appendChild(item)
     })
 }
@@ -203,6 +221,12 @@ function renderDrivers() {
         item.appendChild(editForm)
         driverList.appendChild(item)
     })
+}
+
+function removeSession(sessionId) {
+    socket.emit('session:remove', ({
+        sessionId
+    }))
 }
 
 function editDriver(driverId, newName) {
