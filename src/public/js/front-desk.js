@@ -2,11 +2,9 @@ const socket = io()
 
 const addSessionForm = document.getElementById('add-session-form')
 const sessionNameInput = document.getElementById('session-name')
-const sessionNameError = document.getElementById('session-name-error')
 const sessionList = document.getElementById('session-list')
 const addDriverForm = document.getElementById('add-driver-form')
 const driverNameInput = document.getElementById('driver-name')
-const driverNameError = document.getElementById('driver-name-error')
 const driverList = document.getElementById('driver-list')
 const driverPanel = document.getElementById('driver-panel')
 
@@ -36,10 +34,12 @@ addSessionForm.addEventListener('submit', (e) => {
     const sessionName = sessionNameInput.value.trim()
 
     if(!sessionName) {
-        sessionNameError.textContent = 'Session name is required'
+        sessionNameInput.placeholder = 'Session name is required'
+        sessionNameInput.classList.add('error')
         return
     }
-    sessionNameError.textContent = ''
+    sessionNameInput.placeholder = 'New session name'
+    sessionNameInput.classList.remove('error')
     sessionNameInput.value = ''
     socket.emit('session:add', ({ name: sessionName }))
 })
@@ -64,10 +64,12 @@ addDriverForm.addEventListener('submit', (e) => {
     const driverName = driverNameInput.value.trim()
 
     if(!driverName) {
-        driverNameError.textContent = 'Driver name is required'
-        
+        driverNameInput.placeholder = 'Driver name is required'
+        driverNameInput.classList.add('error')
+        return
     }
-    driverNameError.textContent = ''
+    driverNameInput.placeholder = 'New driver name'
+    driverNameInput.classList.remove('error')
     driverNameInput.value = ''
 
     socket.emit('driver:add', {
@@ -226,9 +228,8 @@ Sessions
 - Edit/Remove sessions
 
 Drivers
-- Display drivers and buttons for editing
 - Automatically assign racecar
-- Edit drivers in sessions
+- Display driver car number
 
 Input Validation
 - Add authentication w/ access keys

@@ -64,6 +64,7 @@ io.on('connection', (socket) => {
         io.emit('sessions:update', raceState.sessions)
     })
 
+    // Editing a driver
     socket.on('driver:edit', (data) => {
         const session = raceState.sessions.find(
             s => s.id === Number(data.sessionId)
