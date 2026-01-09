@@ -5,6 +5,7 @@ import { createServer } from "http";
 import { Server } from "socket.io";
 import { fileURLToPath } from "url";
 import { dirname, join } from "path";
+import { clearInterval } from "timers";
 
 // Initialize express, socketIO
 const app = express();
@@ -15,6 +16,10 @@ const io = new Server(server);
 const RECEPTIONIST_KEY = process.env.receptionist_key;
 const OBSERVER_KEY = process.env.observer_key;
 const SAFETY_KEY = process.env.safety_key;
+
+//timers
+let ticTac = null;
+let timer = null;
 
 if (!RECEPTIONIST_KEY || !OBSERVER_KEY || !SAFETY_KEY) {
   console.error("ERROR: Missing required environment variables.");
@@ -29,11 +34,66 @@ app.get("/race-control", (req, res) => {
 });
 
 // Race state (currently in memory)
+/*
 const raceState = {
   sessions: [],
   currentRace: null,
   raceMode: "danger", // safe, hazard, danger, finish
-  raceOn: false,
+  duration: 60000, // Only 1 min races for now
+};
+*/
+
+// example races
+const raceState = {
+  sessions: [
+    {
+      id: 1,
+      name: "Race nr 1",
+      drivers: [
+        {
+          id: 1,
+          name: "Driver 1",
+        },
+        {
+          id: 2,
+          name: "Driver 2",
+        },
+      ],
+      status: "upcoming", // upcoming, in progress, finished
+    },
+    {
+      id: 2,
+      name: "Race nr 2",
+      drivers: [
+        {
+          id: 1,
+          name: "Driver 3",
+        },
+        {
+          id: 2,
+          name: "Driver 4",
+        },
+      ],
+      status: "upcoming", // upcoming, in progress, finished
+    },
+    {
+      id: 3,
+      name: "Race nr 3",
+      drivers: [
+        {
+          id: 1,
+          name: "Driver 5",
+        },
+        {
+          id: 2,
+          name: "Driver 6",
+        },
+      ],
+      status: "upcoming", // upcoming, in progress, finished
+    },
+  ],
+  currentRace: null,
+  raceMode: "danger", // safe, hazard, danger, finish
   duration: 60000, // Only 1 min races for now
 };
 
@@ -78,39 +138,43 @@ io.on("connection", (socket) => {
       return;
     }
 
-    if (action.type === "START") {
+    if (!raceState.currentRace && raceState.sessions.length > 0 && action.type === "START") {
       raceState.raceMode = "safe";
-      raceState.raceOn = true;
+      //takes first element of sessions array and moves to current race
+      raceState.currentRace = raceState.sessions.shift();     
+      //start timer
+      startCountdown(raceState.duration);
       // --- TODO ---
       //The leader board changes to the current race.
       //The Next Race screen switches to the subsequent race session.
+      
       io.emit("state:update", raceState);
     }
 
-    if (action.type === "GREEN_FLAG") {
+    //controlls active when race is on
+    if (raceState.currentRace && action.type === "GREEN_FLAG") {
       raceState.raceMode = "safe";
       console.log("green flag");
       io.emit("state:update", raceState);
     }
 
-    if (action.type === "YELLOW_FLAG") {
+    if (raceState.currentRace && action.type === "YELLOW_FLAG") {
       raceState.raceMode = "hazard";
       console.log("yellow flag");
       io.emit("state:update", raceState);
     }
 
-    if (action.type === "RED_FLAG") {
-      raceState.raceMode = "danger";      
+    if (raceState.currentRace && action.type === "RED_FLAG") {
+      raceState.raceMode = "danger";
       console.log("red flag");
       io.emit("state:update", raceState);
     }
 
-    if (action.type === "CHEQUERED_FLAG") {
-      raceState.raceMode = "finish";
-      console.log("checquered flag");
-      io.emit("state:update", raceState);
+    if (raceState.currentRace && action.type === "CHEQUERED_FLAG") {
+      finishRace();
     }
   });
+
 
   // ---- SESSION MANAGEMENT ----
 
@@ -130,6 +194,10 @@ io.on("connection", (socket) => {
 
   // ---- REQUESTS ----
 
+  socket.on("state:request", () => {
+    socket.emit("state:update", raceState);
+  });
+
   socket.on("session:request", () => {
     socket.emit("sessions:update", raceState.sessions);
   });
@@ -137,6 +205,30 @@ io.on("connection", (socket) => {
   socket.on("disconnect", () => {
     console.log("Client disconnected");
   });
+
+  // ---- TIMER ----
+  const startCountdown = (duration) => {
+    console.log("Start countown");
+    let timeLeft = duration;
+    ticTac = setInterval(() => {
+      timeLeft -= 1000;
+      io.emit("tic-tac", timeLeft);
+    }, 1000);
+    timer = setTimeout(() => {
+      finishRace();
+    }, duration);
+  };
+
+  // ---- FINISH RACE ----
+  const finishRace = () => {          
+      raceState.raceMode = "finish";
+      console.log("checquered flag");
+      raceState.currentRace = null;
+      clearInterval(ticTac);
+      clearTimeout(timer);
+      io.emit("state:update", raceState);
+  }
+
 });
 
 const PORT = process.env.PORT || 3000;
