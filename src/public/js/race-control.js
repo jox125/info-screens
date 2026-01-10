@@ -40,9 +40,6 @@ socket.on("auth:ok", (role) => {
 
     // Request initial data
     socket.emit("state:request");
-    /*socket.on("state:update", (state) => {
-      Object.assign(raceState, state);
-    });*/
 
     // Render Control Panel
     const controlPanel = document.createElement("div");
@@ -87,22 +84,30 @@ socket.on("auth:ok", (role) => {
     controlPanel.appendChild(raceControlButtonsContainer);
 
     const safeButton = document.createElement("button");
-    safeButton.innerHTML = "Safe";
+    safeButton.innerHTML = `<span>Safe</span>`;
+    safeButton.id = "safe-button";
+    safeButton.classList.add("race-control-button");
     safeButton.onclick = () => {
       socket.emit("race:action", { type: "GREEN_FLAG" });
     };
     const hazardButton = document.createElement("button");
-    hazardButton.innerHTML = "Hazard";
+    hazardButton.innerHTML = `<span>Hazard</span>`;
+    hazardButton.id = "hazard-button";
+    hazardButton.classList.add("race-control-button");
     hazardButton.onclick = () => {
       socket.emit("race:action", { type: "YELLOW_FLAG" });
     };
     const dangerButton = document.createElement("button");
-    dangerButton.innerHTML = "Danger";
+    dangerButton.innerHTML = `<span>Danger</span>`;
+    dangerButton.id = "danger-button";
+    dangerButton.classList.add("race-control-button");
     dangerButton.onclick = () => {
       socket.emit("race:action", { type: "RED_FLAG" });
     };
     const finishButton = document.createElement("button");
-    finishButton.innerHTML = "Finish";
+    finishButton.innerHTML = `<span>Finish</span>`;
+    finishButton.id = "finish-button";
+    finishButton.classList.add("race-control-button");
     finishButton.onclick = () => {
       socket.emit("race:action", { type: "CHEQUERED_FLAG" });
     };
@@ -111,16 +116,30 @@ socket.on("auth:ok", (role) => {
     raceControlButtonsContainer.appendChild(hazardButton);
     raceControlButtonsContainer.appendChild(dangerButton);
     raceControlButtonsContainer.appendChild(finishButton);
+
     panel.appendChild(controlPanel);
+
+    //End session button
+    const endSessionButton = document.createElement("button");
+    endSessionButton.id = "end-session-button";
+    endSessionButton.innerHTML = "End Session";
+    endSessionButton.onclick = () => {
+      socket.emit("race:action", { type: "END_SESSION" });
+    };
+    controlPanel.appendChild(endSessionButton);
   }
 });
 
 socket.on("state:update", (state) => {
+  //update state data
   Object.assign(raceState, state);
-  // If no upcoming races
-  console.log(raceState.nextRace);
-  if (!raceState.sessions.find((session) => session.status === "next")) {
+  // view 1. no race on, and no next races
+  if (
+    !raceState.sessions.find((session) => session.status === "in progress") &&
+    !raceState.sessions.find((session) => session.status === "next")
+  ) {
     try {
+      //show no upcoming races warning
       const warning = document.getElementById("warning");
       warning.innerHTML = `
       <p>No upcoming races</p>
@@ -128,32 +147,53 @@ socket.on("state:update", (state) => {
       `;
       warning.classList.remove("hidden");
       //remove info about upcoming races
-      const info = document.getElementById("next-info");
-      info.innerHTML = "";
-      //disable start button
+      const nextInfo = document.getElementById("next-info");
+      nextInfo.innerHTML = "";
+      //remove info about current race
+      const currentInfo = document.getElementById("current-info");
+      currentInfo.innerHTML = "";
+      const timer = document.getElementById("timer");
+      timer.innerHTML = "";
+      //disable start button, but show
       const startButton = document.getElementById("start-button");
       startButton.disabled = true;
+      startButton.classList.remove("hidden");
+      //disable and hide end Session button
+      const endSessionButton = document.getElementById("end-session-button");
+      endSessionButton.disabled = true;
+      endSessionButton.classList.add("hidden");
     } catch (err) {
       console.log("Control panel not ready in no upcoming.");
     }
   }
-  //upcoming race exists
-  if (raceState.sessions.find((session) => session.status === "next")) {
+  //view 2. no race in progress, no race in finished state, next waiting
+  if (
+    !raceState.sessions.find((session) => session.status === "in progress") &&
+    !raceState.sessions.find((session) => session.status === "finished") &&
+    raceState.sessions.find((session) => session.status === "next")
+  ) {
     try {
-      //hide warnings and enable start button
-      const warning = document.getElementById("warning");
-      warning.innerHTML = "";
-      warning.classList.add("hidden");
+
+      // hide current race info
+      const currentInfo = document.getElementById("current-info");
+      currentInfo.innerHTML = "";
+      const timer = document.getElementById("timer");
+      timer.innerHTML = "";
+      //disable and hide End Session button
+      const endSessionButton = document.getElementById("end-session-button");
+      endSessionButton.disabled = true;
+      endSessionButton.classList.add("hidden");
+      //enable and show start button
       const startButton = document.getElementById("start-button");
       startButton.disabled = false;
-      // Show info about upcoming race
-      const info = document.getElementById("next-info");
-
+      startButton.classList.remove("hidden");
+      //show next race info
+      const nextInfo = document.getElementById("next-info");
+      nextInfo.classList.remove("hidden");
       const nextRace = raceState.sessions.find(
         (session) => session.status === "next"
       );
-
-      info.innerHTML = `
+      nextInfo.innerHTML = `
         <h4>Next race:</h4>
         <p>${nextRace.name}</p>    
         <h4>Drivers:</h4>
@@ -162,22 +202,22 @@ socket.on("state:update", (state) => {
           .join("")}</div>
       `;
     } catch (err) {
-      console.log("Control panel not ready in upcoming exists.");
+      console.log("Control panel not ready in no race in progress.");
     }
   }
-
-  //race is started
+  // view 3. race in progress
   if (raceState.sessions.find((session) => session.status === "in progress")) {
-    //disable start button , show race control buttons, show current race info
     try {
+      //disable and hide start button
       const startButton = document.getElementById("start-button");
       startButton.disabled = true;
-
+      startButton.classList.add("hidden");
+      //show race control buttons
       const controlButtons = document.getElementById(
         "race-control-buttons-container"
       );
       controlButtons.classList.remove("hidden");
-
+      //show current race info
       const info = document.getElementById("current-info");
       const currentRace = raceState.sessions.find(
         (session) => session.status === "in progress"
@@ -190,34 +230,44 @@ socket.on("state:update", (state) => {
           .map((driver) => `<div>Name: ${driver.name}</div>`)
           .join("")}</div>
       `;
+      //show timer
       const timer = document.getElementById("timer");
       if (timer.textContent.trim() === "") {
         timer.innerHTML = convertTime(raceState.duration);
       }
+      //hide next race info
+      const nextRaceInfo = document.getElementById("next-info");
+      nextRaceInfo.classList.add("hidden");
+      nextRaceInfo.innerHTML = "";
     } catch (err) {
       console.log("Control panel not ready in race started.");
     }
   }
-  //race is finished
-  if (!raceState.sessions.find((session) => session.status === "in progress")) {
-    //enable start button and hide control buttons, clear current race info, clear timer
+  //view 4. race is finished but session not jet
+  if (
+    !raceState.sessions.find((session) => session.status === "in progress") &&
+    raceState.sessions.find((session) => session.status === "finished")
+  ) {
+    //hide control buttons, show end session button
     try {
+      //disable and hide start button
       const startButton = document.getElementById("start-button");
-      startButton.disabled = false;
-      //if no upcoming races disable start button
-      if (!raceState.sessions.find((session) => session.status === "next")) {
-        startButton.disabled = true;
-      }
+      startButton.disabled = true;
+      startButton.classList.add("hidden");
+      //hide control buttons
       const controlButtons = document.getElementById(
         "race-control-buttons-container"
       );
       controlButtons.classList.add("hidden");
-
-      const info = document.getElementById("current-info");
-      info.innerHTML = "";
-
+      //show End Session button
+      const endSessionButton = document.getElementById("end-session-button");
+      endSessionButton.classList.remove("hidden");
+      endSessionButton.disabled = false;
+      //show timer
       const timer = document.getElementById("timer");
-      timer.innerHTML = "";
+      if (timer.textContent.trim() === "") {
+        timer.innerHTML = convertTime(raceState.duration);
+      }
     } catch (err) {
       console.log("Control panel not ready in race finished.");
     }

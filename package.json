@@ -5,8 +5,8 @@
   "main": "server.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "node ./src/server.mjs",
-    "dev": "receptionist_key=8ded6076 observer_key=662e0f6c safety_key=a2d393bc nodemon src/server.mjs"
+    "start": "NODE_ENV=production node ./src/server.mjs",
+    "dev": "NODE_ENV=development RECEPTIONIST_KEY=8ded6076 OBSERVER_KEY=662e0f6c SAFETY_KEY=a2d393bc nodemon ./src/server.mjs"
   },
   "repository": {
     "type": "git",

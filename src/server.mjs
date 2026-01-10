@@ -6,20 +6,40 @@ import { Server } from "socket.io";
 import { fileURLToPath } from "url";
 import { dirname, join } from "path";
 import { clearInterval } from "timers";
+import { loadMockData } from "./dev-helpers/load-mock-data.mjs";
 
 // Initialize express, socketIO
 const app = express();
 const server = createServer(app);
 const io = new Server(server);
 
-// env keys
-const RECEPTIONIST_KEY = process.env.receptionist_key;
-const OBSERVER_KEY = process.env.observer_key;
-const SAFETY_KEY = process.env.safety_key;
-
 //timers
 let ticTac = null;
 let timer = null;
+
+// env keys
+const RECEPTIONIST_KEY = process.env.RECEPTIONIST_KEY;
+const OBSERVER_KEY = process.env.OBSERVER_KEY;
+const SAFETY_KEY = process.env.SAFETY_KEY;
+
+// Race state (currently in memory)
+const raceState = {
+  sessions: [],
+  raceMode: "danger", // safe, hazard, danger, finish
+  duration: 60000, // Only 1 min races for now
+};
+
+if (process.env.NODE_ENV === "development") {
+  Object.assign(raceState, loadMockData());
+  console.log({
+    NODE_ENV: process.env.NODE_ENV,
+    RECEPTIONIST_KEY: process.env.RECEPTIONIST_KEY,
+    OBSERVER_KEY: process.env.OBSERVER_KEY,
+    SAFETY_KEY: process.env.SAFETY_KEY,
+  });
+  console.log("Race state data:")
+  console.log(raceState);
+}
 
 if (!RECEPTIONIST_KEY || !OBSERVER_KEY || !SAFETY_KEY) {
   console.error("ERROR: Missing required environment variables.");
@@ -33,79 +53,8 @@ app.get("/race-control", (req, res) => {
   res.sendFile(join(__dirname, "/public/race-control.html"));
 });
 
-// Race state (currently in memory)
-/*
-const raceState = {
-  sessions: [],
-  currentRace: null,
-  raceMode: "danger", // safe, hazard, danger, finish
-  duration: 60000, // Only 1 min races for now
-};
-*/
-
-// example races
-const raceState = {
-  sessions: [
-    {
-      id: 3,
-      name: "Race nr 1",
-      drivers: [
-        {
-          id: 1,
-          name: "Driver 1",
-          carNum: 11,
-        },
-        {
-          id: 2,
-          name: "Driver 2",
-          carNum: 22,
-        },
-      ],
-      status: "upcoming", // upcoming, in progress, finished
-    },
-    {
-      id: 1,
-      name: "Race nr 2",
-      drivers: [
-        {
-          id: 1,
-          name: "Driver 3",
-          carNum: 33,
-        },
-        {
-          id: 2,
-          name: "Driver 4",
-          carNum: 44,
-        },
-      ],
-      status: "upcoming", // upcoming, in progress, finished
-    },
-    {
-      id: 3,
-      name: "Race nr 3",
-      drivers: [
-        {
-          id: 1,
-          name: "Driver 5",
-          carNum: 55,
-        },
-        {
-          id: 2,
-          name: "Driver 6",
-          carNum: 66,
-        },
-      ],
-      status: "upcoming", // upcoming, next, in progress, finished
-    },
-  ],
-  //currentRace: null,
-  //nextRace: null,
-  raceMode: "danger", // safe, hazard, danger, finish
-  duration: 60000, // Only 1 min races for now
-};
-
 //add next race if no next race, and upcomings exist
-if (!raceState.sessions.find((session)=>session.status === "next")){
+if (!raceState.sessions.find((session) => session.status === "next")) {
   if (raceState.sessions.find((session) => session.status === "upcoming")) {
     const upcomingSessions = raceState.sessions.filter(
       (session) => session.status === "upcoming"
@@ -121,10 +70,10 @@ if (!raceState.sessions.find((session)=>session.status === "next")){
         }
       }
     }
-    //raceState.currentRace = nextSession;
     raceState.sessions[raceState.sessions.indexOf(nextSession)].status = "next";
     console.log("Updating next race:");
-    console.log(raceState.sessions);
+    console.log("Race state data:");
+    console.log(raceState);
   }
 }
 
@@ -181,8 +130,9 @@ io.on("connection", (socket) => {
         raceState.sessions.findIndex((session) => session.status === "next")
       ].status = "in progress";
 
-      console.log("changed next to in progress:");
-      console.log(raceState.sessions);
+      console.log("START recieved:");
+      console.log("Race state data:");
+      console.log(raceState);
 
       //if more upcoming races, find next
       if (!raceState.sessions.find((session) => session.status === "next")) {
@@ -203,11 +153,11 @@ io.on("connection", (socket) => {
               }
             }
           }
-          //raceState.currentRace = nextSession;
           raceState.sessions[raceState.sessions.indexOf(nextSession)].status =
             "next";
-          console.log("Updating next race:");
-          console.log(raceState.sessions);
+          console.log("Updated next race:");
+          console.log("Race state data:");
+          console.log(raceState);
         }
       }
 
@@ -227,6 +177,8 @@ io.on("connection", (socket) => {
     ) {
       raceState.raceMode = "safe";
       console.log("green flag");
+      console.log("Race state data:");
+      console.log(raceState);
       io.emit("state:update", raceState);
     }
 
@@ -236,6 +188,8 @@ io.on("connection", (socket) => {
     ) {
       raceState.raceMode = "hazard";
       console.log("yellow flag");
+      console.log("Race state data:");
+      console.log(raceState);
       io.emit("state:update", raceState);
     }
 
@@ -245,6 +199,8 @@ io.on("connection", (socket) => {
     ) {
       raceState.raceMode = "danger";
       console.log("red flag");
+      console.log("Race state data:");
+      console.log(raceState);
       io.emit("state:update", raceState);
     }
 
@@ -253,6 +209,21 @@ io.on("connection", (socket) => {
       action.type === "CHEQUERED_FLAG"
     ) {
       finishRace();
+    }
+
+    if (
+      raceState.sessions.find((session) => session.status === "finished") &&
+      action.type === "END_SESSION"
+    ) {
+      //change finished race status to closed
+      raceState.sessions[
+        raceState.sessions.findIndex((session) => session.status === "finished")
+      ].status = "closed";
+      raceState.raceMode = "danger";
+      console.log("end session");
+      console.log("Race state data:");
+      console.log(raceState);
+      io.emit("state:update", raceState);
     }
   });
 
@@ -303,7 +274,6 @@ io.on("connection", (socket) => {
   const finishRace = () => {
     raceState.raceMode = "finished";
     console.log("checquered flag");
-    raceState.currentRace = null;
     raceState.sessions[
       raceState.sessions.findIndex(
         (session) => session.status === "in progress"
@@ -311,8 +281,10 @@ io.on("connection", (socket) => {
     ].status = "finished";
     clearInterval(ticTac);
     clearTimeout(timer);
+    io.emit("tic-tac", 0);
     io.emit("state:update", raceState);
-    console.log(raceState.sessions);
+    console.log("Race state data:");
+    console.log(raceState);
   };
 });
 
