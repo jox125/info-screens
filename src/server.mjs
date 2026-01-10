@@ -95,13 +95,38 @@ const raceState = {
           carNum: 66,
         },
       ],
-      status: "upcoming", // upcoming, in progress, finished
+      status: "upcoming", // upcoming, next, in progress, finished
     },
   ],
-  currentRace: null,
+  //currentRace: null,
+  //nextRace: null,
   raceMode: "danger", // safe, hazard, danger, finish
   duration: 60000, // Only 1 min races for now
 };
+
+//add next race if no next race, and upcomings exist
+if (!raceState.sessions.find((session)=>session.status === "next")){
+  if (raceState.sessions.find((session) => session.status === "upcoming")) {
+    const upcomingSessions = raceState.sessions.filter(
+      (session) => session.status === "upcoming"
+    );
+    let nextSession = {};
+    //find session with smallest id
+    if (!upcomingSessions) {
+    } else {
+      nextSession.id = Number.MAX_SAFE_INTEGER;
+      for (let i = 0; i < upcomingSessions.length; i++) {
+        if (upcomingSessions[i].id < nextSession.id) {
+          nextSession = upcomingSessions[i];
+        }
+      }
+    }
+    //raceState.currentRace = nextSession;
+    raceState.sessions[raceState.sessions.indexOf(nextSession)].status = "next";
+    console.log("Updating next race:");
+    console.log(raceState.sessions);
+  }
+}
 
 // ---- AUTH get key on handshake and set role or deny connect ----
 io.use((socket, next) => {
@@ -145,30 +170,47 @@ io.on("connection", (socket) => {
     }
 
     if (
-      !raceState.currentRace &&
-      raceState.sessions.find((session)=>session.status === "upcoming") &&
+      !raceState.sessions.find((session) => session.status === "in progress") &&
+      raceState.sessions.find((session) => session.status === "next") &&
       action.type === "START"
     ) {
       raceState.raceMode = "safe";
-      //takes first element of sessions array and moves to current race
-      //raceState.currentRace = raceState.sessions.shift();
-      //save first upcoming session to current race, and set status "in progress"
-      const upcomingSessions = raceState.sessions.filter((session)=>session.status === "upcoming");
-      let nextSession = {};
-      //find session with smallest id
-      if (!upcomingSessions) {}
-      else{
-        nextSession.id = Number.MAX_SAFE_INTEGER;
-        for (let i = 0; i < upcomingSessions.length; i++) {
-          if (upcomingSessions[i].id < nextSession.id){
-            nextSession = upcomingSessions[i];
+
+      //change next race status to in progres
+      raceState.sessions[
+        raceState.sessions.findIndex((session) => session.status === "next")
+      ].status = "in progress";
+
+      console.log("changed next to in progress:");
+      console.log(raceState.sessions);
+
+      //if more upcoming races, find next
+      if (!raceState.sessions.find((session) => session.status === "next")) {
+        if (
+          raceState.sessions.find((session) => session.status === "upcoming")
+        ) {
+          const upcomingSessions = raceState.sessions.filter(
+            (session) => session.status === "upcoming"
+          );
+          let nextSession = {};
+          //find session with smallest id
+          if (!upcomingSessions) {
+          } else {
+            nextSession.id = Number.MAX_SAFE_INTEGER;
+            for (let i = 0; i < upcomingSessions.length; i++) {
+              if (upcomingSessions[i].id < nextSession.id) {
+                nextSession = upcomingSessions[i];
+              }
+            }
           }
+          //raceState.currentRace = nextSession;
+          raceState.sessions[raceState.sessions.indexOf(nextSession)].status =
+            "next";
+          console.log("Updating next race:");
+          console.log(raceState.sessions);
         }
       }
-      raceState.currentRace = nextSession;
-      raceState.sessions[raceState.sessions.indexOf(nextSession)].status = "in progress";
 
-      console.log(raceState.sessions);
       //start timer
       startCountdown(raceState.duration);
       // --- TODO ---
@@ -179,25 +221,37 @@ io.on("connection", (socket) => {
     }
 
     //controlls active when race is on
-    if (raceState.currentRace && action.type === "GREEN_FLAG") {
+    if (
+      raceState.sessions.find((session) => session.status === "in progress") &&
+      action.type === "GREEN_FLAG"
+    ) {
       raceState.raceMode = "safe";
       console.log("green flag");
       io.emit("state:update", raceState);
     }
 
-    if (raceState.currentRace && action.type === "YELLOW_FLAG") {
+    if (
+      raceState.sessions.find((session) => session.status === "in progress") &&
+      action.type === "YELLOW_FLAG"
+    ) {
       raceState.raceMode = "hazard";
       console.log("yellow flag");
       io.emit("state:update", raceState);
     }
 
-    if (raceState.currentRace && action.type === "RED_FLAG") {
+    if (
+      raceState.sessions.find((session) => session.status === "in progress") &&
+      action.type === "RED_FLAG"
+    ) {
       raceState.raceMode = "danger";
       console.log("red flag");
       io.emit("state:update", raceState);
     }
 
-    if (raceState.currentRace && action.type === "CHEQUERED_FLAG") {
+    if (
+      raceState.sessions.find((session) => session.status === "in progress") &&
+      action.type === "CHEQUERED_FLAG"
+    ) {
       finishRace();
     }
   });
@@ -250,7 +304,11 @@ io.on("connection", (socket) => {
     raceState.raceMode = "finished";
     console.log("checquered flag");
     raceState.currentRace = null;
-    raceState.sessions[raceState.sessions.findIndex((session)=> session.status === "in progress")].status = "finished";
+    raceState.sessions[
+      raceState.sessions.findIndex(
+        (session) => session.status === "in progress"
+      )
+    ].status = "finished";
     clearInterval(ticTac);
     clearTimeout(timer);
     io.emit("state:update", raceState);

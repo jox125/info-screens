@@ -40,9 +40,9 @@ socket.on("auth:ok", (role) => {
 
     // Request initial data
     socket.emit("state:request");
-    socket.on("state:update", (state) => {
+    /*socket.on("state:update", (state) => {
       Object.assign(raceState, state);
-    });
+    });*/
 
     // Render Control Panel
     const controlPanel = document.createElement("div");
@@ -118,7 +118,8 @@ socket.on("auth:ok", (role) => {
 socket.on("state:update", (state) => {
   Object.assign(raceState, state);
   // If no upcoming races
-  if (raceState.sessions.length == 0) {
+  console.log(raceState.nextRace);
+  if (!raceState.sessions.find((session) => session.status === "next")) {
     try {
       const warning = document.getElementById("warning");
       warning.innerHTML = `
@@ -128,7 +129,7 @@ socket.on("state:update", (state) => {
       warning.classList.remove("hidden");
       //remove info about upcoming races
       const info = document.getElementById("next-info");
-      info.innerHTML = ""; 
+      info.innerHTML = "";
       //disable start button
       const startButton = document.getElementById("start-button");
       startButton.disabled = true;
@@ -137,7 +138,7 @@ socket.on("state:update", (state) => {
     }
   }
   //upcoming race exists
-  if (raceState.sessions.length > 0) {
+  if (raceState.sessions.find((session) => session.status === "next")) {
     try {
       //hide warnings and enable start button
       const warning = document.getElementById("warning");
@@ -147,12 +148,16 @@ socket.on("state:update", (state) => {
       startButton.disabled = false;
       // Show info about upcoming race
       const info = document.getElementById("next-info");
-      
-        info.innerHTML = `
+
+      const nextRace = raceState.sessions.find(
+        (session) => session.status === "next"
+      );
+
+      info.innerHTML = `
         <h4>Next race:</h4>
-        <p>${raceState.sessions[0].name}</p>    
+        <p>${nextRace.name}</p>    
         <h4>Drivers:</h4>
-        <div>${raceState.sessions[0].drivers
+        <div>${nextRace.drivers
           .map((driver) => `<div>Name: ${driver.name}</div>`)
           .join("")}</div>
       `;
@@ -162,7 +167,7 @@ socket.on("state:update", (state) => {
   }
 
   //race is started
-  if (raceState.currentRace) {
+  if (raceState.sessions.find((session) => session.status === "in progress")) {
     //disable start button , show race control buttons, show current race info
     try {
       const startButton = document.getElementById("start-button");
@@ -174,16 +179,19 @@ socket.on("state:update", (state) => {
       controlButtons.classList.remove("hidden");
 
       const info = document.getElementById("current-info");
+      const currentRace = raceState.sessions.find(
+        (session) => session.status === "in progress"
+      );
       info.innerHTML = `
         <h4>Current race:</h4>
-        <p>${raceState.currentRace.name}</p>
+        <p>${currentRace.name}</p>
         <h4>Drivers:</h4>
-        <div>${raceState.currentRace.drivers
+        <div>${currentRace.drivers
           .map((driver) => `<div>Name: ${driver.name}</div>`)
           .join("")}</div>
       `;
       const timer = document.getElementById("timer");
-      if (timer.textContent.trim() === ""){
+      if (timer.textContent.trim() === "") {
         timer.innerHTML = convertTime(raceState.duration);
       }
     } catch (err) {
@@ -191,13 +199,13 @@ socket.on("state:update", (state) => {
     }
   }
   //race is finished
-  if (!raceState.currentRace) {
+  if (!raceState.sessions.find((session) => session.status === "in progress")) {
     //enable start button and hide control buttons, clear current race info, clear timer
     try {
       const startButton = document.getElementById("start-button");
       startButton.disabled = false;
       //if no upcoming races disable start button
-      if (raceState.sessions.length == 0){
+      if (!raceState.sessions.find((session) => session.status === "next")) {
         startButton.disabled = true;
       }
       const controlButtons = document.getElementById(
@@ -221,7 +229,7 @@ socket.on("tic-tac", (timeLeft) => {
   timer.innerHTML = convertTime(timeLeft);
 });
 
-const convertTime = (millis)=>{
+const convertTime = (millis) => {
   var minutes = Math.floor(millis / 60000);
   var seconds = ((millis % 60000) / 1000).toFixed(0);
   return minutes + ":" + (seconds < 10 ? "0" : "") + seconds;
