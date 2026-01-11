@@ -267,6 +267,7 @@ io.on("connection", (socket) => {
     }, 1000);
     timer = setTimeout(() => {
       finishRace();
+      io.emit("tic-tac", 0);
     }, duration);
   };
 
@@ -280,8 +281,7 @@ io.on("connection", (socket) => {
       )
     ].status = "finished";
     clearInterval(ticTac);
-    clearTimeout(timer);
-    io.emit("tic-tac", 0);
+    clearTimeout(timer);    
     io.emit("state:update", raceState);
     console.log("Race state data:");
     console.log(raceState);

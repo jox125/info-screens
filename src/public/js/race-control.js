@@ -173,7 +173,6 @@ socket.on("state:update", (state) => {
     raceState.sessions.find((session) => session.status === "next")
   ) {
     try {
-
       // hide current race info
       const currentInfo = document.getElementById("current-info");
       currentInfo.innerHTML = "";
@@ -196,9 +195,16 @@ socket.on("state:update", (state) => {
       nextInfo.innerHTML = `
         <h4>Next race:</h4>
         <p>${nextRace.name}</p>    
-        <h4>Drivers:</h4>
+        <h4>Cars:</h4>
         <div>${nextRace.drivers
-          .map((driver) => `<div>Name: ${driver.name}</div>`)
+          .map(
+            (driver) => `
+            <div>
+            <span><strong>Car nr: </strong>${driver.carNum}</span>
+            <span><strong>Driver: </strong>${driver.name}</span>
+            </div>
+            `
+          )
           .join("")}</div>
       `;
     } catch (err) {
@@ -227,7 +233,14 @@ socket.on("state:update", (state) => {
         <p>${currentRace.name}</p>
         <h4>Drivers:</h4>
         <div>${currentRace.drivers
-          .map((driver) => `<div>Name: ${driver.name}</div>`)
+          .map(
+            (driver) => `
+            <div>
+            <span><strong>Car nr: </strong>${driver.carNum}</span>
+            <span><strong>Driver: </strong>${driver.name}</span>
+            </div>
+            `
+          )
           .join("")}</div>
       `;
       //show timer
