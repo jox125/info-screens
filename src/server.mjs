@@ -280,9 +280,10 @@ io.on("connection", (socket) => {
         (session) => session.status === "in progress"
       )
     ].status = "finished";
+    io.emit("state:update", raceState);
     clearInterval(ticTac);
     clearTimeout(timer);    
-    io.emit("state:update", raceState);
+    
     console.log("Race state data:");
     console.log(raceState);
   };

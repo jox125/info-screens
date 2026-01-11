@@ -16,6 +16,7 @@ body {
     background-color: dimgray;
     background-image: url("../assets/car.jpg");
     background-size: cover;
+    background-position: center;
 }
 
 .error {
