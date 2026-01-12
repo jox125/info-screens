@@ -48,8 +48,20 @@ io.on('connection', (socket) => {
         raceState.sessions.push(session)
         io.emit('sessions:update', raceState.sessions)
 
-        // // For debugging
-        // console.log(raceState)
+        // For debugging
+        console.log(raceState)
+    })
+
+    // Editing session name
+    socket.on('session:edit', (data) => {
+        const session = raceState.sessions.find(
+            s => s.id === Number(data.sessionId)
+        )
+        
+        if(!session) return
+
+        session.name = data.newName
+        io.emit('sessions:update', raceState.sessions)
     })
 
     socket.on('session:remove', (data) => {

@@ -46,13 +46,15 @@ addSessionForm.addEventListener('submit', (e) => {
 
 // Listener for toggling driverPanel visibility and removing session
 sessionList.addEventListener('click', (e) => {
-    const elem = e.target
-    const item = elem.closest('.session-item')
-    
-    if(!item) return
+    const session = e.target
+    const sessionItem = session.closest('.session-item')
 
-    const isRemoveButton = elem.classList.contains('remove-session-button')
-    const id = Number(item.dataset.sessionId)
+    if(!sessionItem) return
+    if(session.closest('.edit-session-form')) return
+
+    // Remove session
+    const isRemoveButton = session.classList.contains('remove-session-button')
+    const id = Number(sessionItem.dataset.sessionId)
     
     if(isRemoveButton) {
         removeSession(id)
@@ -65,11 +67,40 @@ sessionList.addEventListener('click', (e) => {
         return
     }
 
+    // Toggles edit form
+    if(session.classList.contains('edit-session-button')) {
+        const editForm = sessionItem.querySelector('.edit-session-form')
+        editForm.classList.toggle('hidden')
+        return
+    }
+
     selectedSessionId = selectedSessionId === id ? null : id
     driverPanel.classList.toggle('hidden', selectedSessionId === null)
 
     renderSessions()
     renderDrivers()
+})
+
+sessionList.addEventListener('submit', (e) => {
+    if(!e.target.classList.contains('edit-session-form')) return
+    e.preventDefault()
+
+    const sessionItem = e.target.closest('.session-item')
+    const sessionId = sessionItem.dataset.sessionId
+    const input = sessionItem.querySelector('.edit-session-name')
+    const newName = input.value.trim()
+
+    if(!newName) {
+        input.placeholder = 'New name is required'
+        input.classList.add('error')
+        return
+    }
+    input.placeholder = 'New session name'
+    input.classList.remove('error')
+
+    editSession(sessionId, newName)
+
+    e.target.classList.add('hidden')
 })
 
 // Listener for creating new driver
@@ -160,13 +191,34 @@ function renderSessions() {
         const driverCount = document.createElement('span')
         driverCount.textContent = `${session.drivers.length} drivers`
 
+        const editButton = document.createElement('button')
+        editButton.classList.add('edit-session-button')
+        editButton.textContent = 'Edit Session'
+
+        const editForm = document.createElement('form')
+        editForm.classList.add('edit-session-form', 'hidden')
+
+        const nameInput = document.createElement('input')
+        nameInput.type = 'text'
+        nameInput.classList.add('edit-session-name')
+        nameInput.id = session.id
+        nameInput.placeholder = 'New session name'
+
+        const saveButton = document.createElement('button')
+        saveButton.type = 'submit'
+        saveButton.textContent = 'Save session'
+
         const removeButton = document.createElement('button')
         removeButton.classList.add('remove-session-button')
         removeButton.textContent = 'Remove Session'
 
+        editForm.appendChild(nameInput)
+        editForm.appendChild(saveButton)
         item.appendChild(name)
         item.appendChild(driverCount)
+        item.appendChild(editButton)
         item.appendChild(removeButton)
+        item.appendChild(editForm)
         sessionList.appendChild(item)
     })
 }
@@ -198,11 +250,11 @@ function renderDrivers() {
 
         const editForm = document.createElement('form')
         editForm.classList.add('edit-driver-form', 'hidden')
-        editForm.id = `edit-driver-form-${driver.id}`
 
         const nameInput = document.createElement('input')
         nameInput.type = 'text'
         nameInput.classList.add('edit-driver-name')
+        nameInput.id = driver.id
         nameInput.placeholder = 'New driver name'
 
         const saveButton = document.createElement('button')
@@ -221,6 +273,13 @@ function renderDrivers() {
         item.appendChild(editForm)
         driverList.appendChild(item)
     })
+}
+
+function editSession(sessionId, newName) {
+    socket.emit('session:edit', ({
+        sessionId,
+        newName
+    }))
 }
 
 function removeSession(sessionId) {
@@ -248,8 +307,8 @@ function removeDriver(driverId) {
 Front Desk/Receptionist
 
 Sessions
-- Display sessions and buttons for editing/removing
-- Edit/Remove sessions
+- Display sessions and buttons for editing
+- Edit sessions
 
 Drivers
 - Automatically assign racecar

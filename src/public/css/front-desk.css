@@ -36,6 +36,7 @@
 }
 
 .edit-driver-button,
+.edit-session-button,
 .remove-session-button,
 .remove-driver-button {
     align-self: flex-start;
