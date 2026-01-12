@@ -72,9 +72,19 @@ io.on('connection', (socket) => {
         const session = findSession(data.sessionId)
         if(!session) return
 
+        const carNum = assignCar(session)
+        const isFull = !carNum
+        
+        if(isFull) {
+            console.warn(`Session is full`)
+            socket.emit('driver:add:error', { message: 'Session is full' })
+            return
+        }
+
         session.drivers.push({
             id: Date.now(),
-            name: data.name
+            name: data.name,
+            carNum
         })
 
         io.emit('sessions:update', raceState.sessions)
@@ -150,4 +160,13 @@ function findDriver(sessionId, driverId) {
     }
 
     return driver
+}
+
+function assignCar(session) {
+    const assigned = new Set(session.drivers.map(d => d.carNum))
+    const maxCars = 8
+
+    for(let num = 1; num <= maxCars; num++) {
+        if(!assigned.has(num)) return num
+    }
 }

@@ -28,6 +28,12 @@ socket.on('sessions:update', (data) => {
     }
 })
 
+// Error message for client if session is full
+socket.on('driver:add:error', (data) => {
+    driverNameInput.placeholder = data.message
+    driverNameInput.classList.add('error')
+})
+
 // Listener for creating new session
 addSessionForm.addEventListener('submit', (e) => {
     e.preventDefault()
@@ -185,10 +191,14 @@ function renderSessions() {
             item.classList.add('selected')
         }
 
+        const header = document.createElement('div')
+        header.classList.add('session-header')
+
         const name = document.createElement('h3')
         name.textContent = `${session.name} - ${session.status}`
 
         const driverCount = document.createElement('span')
+        driverCount.className = 'driver-count'
         driverCount.textContent = `${session.drivers.length} drivers`
 
         const editButton = document.createElement('button')
@@ -214,8 +224,9 @@ function renderSessions() {
 
         editForm.appendChild(nameInput)
         editForm.appendChild(saveButton)
-        item.appendChild(name)
-        item.appendChild(driverCount)
+        header.appendChild(name)
+        header.appendChild(driverCount)
+        item.appendChild(header)
         item.appendChild(editButton)
         item.appendChild(removeButton)
         item.appendChild(editForm)
@@ -241,8 +252,15 @@ function renderDrivers() {
         item.classList.add('driver-item', 'list-container')
         item.dataset.id = driver.id
 
+        const header = document.createElement('div')
+        header.classList.add('driver-header')
+
         const driverName = document.createElement('h3')
         driverName.textContent = driver.name
+
+        const driverCar = document.createElement('span')
+        driverCar.classList.add('driver-car')
+        driverCar.textContent = `#${driver.carNum}`
 
         const editButton = document.createElement('button')
         editButton.classList.add('edit-driver-button')
@@ -267,7 +285,9 @@ function renderDrivers() {
 
         editForm.appendChild(nameInput)
         editForm.appendChild(saveButton)
-        item.appendChild(driverName)
+        header.appendChild(driverName)
+        header.appendChild(driverCar)
+        item.appendChild(header)
         item.appendChild(editButton)
         item.appendChild(removeButton)
         item.appendChild(editForm)
@@ -306,16 +326,15 @@ function removeDriver(driverId) {
 /* TODO
 Front Desk/Receptionist
 
-Sessions
-- Display sessions and buttons for editing
-- Edit sessions
+Styling
 
 Drivers
-- Automatically assign racecar
-- Display driver car number
+- Render drivers based on car number
+
+Sessions
+- Render sessions based on session status
 
 Input Validation
 - Add authentication w/ access keys
 - The driver's name must be unique within each race session.
-- Max 8 cars in one session
 */
