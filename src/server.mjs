@@ -30,10 +30,6 @@ const raceState = {
 io.on('connection', (socket) => {
     console.log('Client connected')
 
-    io.on('session:update', () => {
-        console.log(raceState)
-    })
-
     // ---- SESSION MANAGEMENT ----
 
     // Adding a session
@@ -54,10 +50,7 @@ io.on('connection', (socket) => {
 
     // Editing session name
     socket.on('session:edit', (data) => {
-        const session = raceState.sessions.find(
-            s => s.id === Number(data.sessionId)
-        )
-        
+        const session = findSession(data.sessionId)
         if(!session) return
 
         session.name = data.newName
@@ -65,19 +58,18 @@ io.on('connection', (socket) => {
     })
 
     socket.on('session:remove', (data) => {
-        raceState.sessions = raceState.sessions.filter(
-            s => s.id !== Number(data.sessionId)
-        )
+        const session = findSession(data.sessionId)
+        if(!session) return
 
+        raceState.sessions = raceState.sessions.filter(
+            s => s.id !== session.id
+        )
         io.emit('sessions:update', raceState.sessions)
     })
 
     // Adding a driver
     socket.on('driver:add', (data) => {
-        const session = raceState.sessions.find(
-            s => s.id === Number(data.sessionId)
-        )
-
+        const session = findSession(data.sessionId)
         if(!session) return
 
         session.drivers.push({
@@ -90,35 +82,24 @@ io.on('connection', (socket) => {
 
     // Editing a driver
     socket.on('driver:edit', (data) => {
-        const session = raceState.sessions.find(
-            s => s.id === Number(data.sessionId)
-        )
-
-        if(!session) return
-
-        const driver = session.drivers.find(
-            d => d.id === Number(data.driverId)
-        )
-
+        const driver = findDriver(data.sessionId, data.driverId)
         if(!driver) return
 
         driver.name = data.newName
-
         io.emit('sessions:update', raceState.sessions)
     })
 
     // Removing a driver
     socket.on('driver:remove', (data) => {
-        const session = raceState.sessions.find(
-            s => s.id === Number(data.sessionId)
-        )
-
+        const session = findSession(data.sessionId)
         if(!session) return
+
+        const driver = findDriver(data.sessionId, data.driverId)
+        if(!driver) return
         
         session.drivers = session.drivers.filter(
-            d => d.id !== Number(data.driverId)
+            d => d.id !== driver.id
         )
-        
         io.emit('sessions:update', raceState.sessions)
     })
 
@@ -138,3 +119,35 @@ const PORT = process.env.PORT || 3000
 server.listen(PORT, () => {
     console.log(`server running at http://localhost:${PORT}`)
 })
+
+
+// ---- FUNCTIONS ----
+
+function findSession(sessionId) {
+    const session = raceState.sessions.find(
+        s => s.id === Number(sessionId)
+    )
+    
+    if(!session) {
+        console.warn(`Invalid sessionId recieved: ${sessionId}`)
+        return
+    }
+
+    return session
+}
+
+function findDriver(sessionId, driverId) {
+    const session = findSession(sessionId)
+    if(!session) return
+
+    const driver = session.drivers.find(
+        d => d.id === Number(driverId)
+    )
+
+    if(!driver) {
+        console.warn(`Invalid driverId recieved: ${driverId} in session: ${sessionId}`)
+        return
+    }
+
+    return driver
+}
