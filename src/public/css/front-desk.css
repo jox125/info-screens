@@ -12,6 +12,45 @@
     flex: 1;
     height: 100vh;
     border: 1px solid black;
+    overflow-y: auto;
+}
+
+.panel-header {
+    padding: 1rem;
+}
+
+#session-list {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 1rem;
+    align-items: start;
+    padding: 1rem;
+}
+
+.session-column {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.session-status-header {
+    margin: 0;
+    padding: 0.5rem;
+    background: #f0f0f0;
+    border-radius: 4px;
+    text-align: center;
+}
+
+.empty-message {
+    color: #999;
+    font-style: italic;
+    text-align: center;
+    padding: 1rem;
+}
+
+.empty-message--sessions {
+    text-align: left;
+    padding: 0;
 }
 
 .session-item, 
@@ -66,4 +105,16 @@
 .driver-count {
   font-size: 0.85rem;
   opacity: 0.8;
+}
+
+@media (max-width: 1200px) {
+    #session-list {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+@media (max-width: 768px) {
+    #session-list {
+        grid-template-columns: 1fr;
+    }
 }

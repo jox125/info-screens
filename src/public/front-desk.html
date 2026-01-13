@@ -12,19 +12,16 @@
       <div class="session-panel">
         <div class="panel-header">
           <h2>Race Sessions</h2>
+          <form id="add-session-form" class="add-form">
+            <input
+              type="text"
+              id="session-name"
+              placeholder="New session name"
+            >
+            <button type="submit">+ Add Session</button>
+          </form>
         </div>
-
-        <form id="add-session-form" class="add-form">
-          <input
-            type="text"
-            id="session-name"
-            placeholder="New session name"
-          >
-          <button type="submit">+ Add Session</button>
-        </form>
-        <div id="session-list" class="list-container">
-          <p class="empty-message">No sessions yet. Add one to get started.</p>
-        </div>
+        <div id="session-list" class="list-container"></div>
       </div>
 
 

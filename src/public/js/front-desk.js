@@ -176,61 +176,52 @@ function renderSessions() {
     sessionList.innerHTML = ''
 
     if(sessions.length === 0) {
-        sessionList.textContent = 'No sessions yet. Add one to get started.'
+        const emptyMessage = createEmptyMessage('No sessions yet. Add one to get started.')
+        emptyMessage.classList.add('empty-message--sessions')
+
+        sessionList.appendChild(emptyMessage)
         driverPanel.classList.add('hidden')
         return
     }
 
-    sessions.forEach(session => {
-        const item = document.createElement('div')
-        item.classList.add('session-item')
-        item.classList.add('list-container')
-        item.dataset.sessionId = session.id
+    const statusOrder = ['in progress', 'next', 'upcoming', 'finished']
+    const groupedSessions = {
+        'in progress': [],
+        'next': [],
+        'upcoming': [],
+        'finished': []
+    }
 
-        if(session.id === selectedSessionId) {
-            item.classList.add('selected')
+    // Group sessions by status
+    sessions.forEach(session => {
+        if(groupedSessions[session.status]) {
+            groupedSessions[session.status].push(session)
+        }
+    })
+
+    // Render groups with a status header
+    statusOrder.forEach(status => {
+        const sessionsInGroup = groupedSessions[status]
+
+        const column = document.createElement('div')
+        column.classList.add('session-column')
+
+        const header = document.createElement('h2')
+        header.classList.add('session-status-header')
+        header.textContent = status.charAt(0).toUpperCase() + status.slice(1)
+        column.appendChild(header)
+
+        if(sessionsInGroup.length === 0) {
+            const emptyMessage = createEmptyMessage(`No ${status} sessions`)
+            column.appendChild(emptyMessage)
+        } else {
+            sessionsInGroup.forEach(session => {
+                const item = createSessionItem(session)
+                column.appendChild(item)
+            })
         }
 
-        const header = document.createElement('div')
-        header.classList.add('session-header')
-
-        const name = document.createElement('h3')
-        name.textContent = `${session.name} - ${session.status}`
-
-        const driverCount = document.createElement('span')
-        driverCount.className = 'driver-count'
-        driverCount.textContent = `${session.drivers.length} drivers`
-
-        const editButton = document.createElement('button')
-        editButton.classList.add('edit-session-button')
-        editButton.textContent = 'Edit Session'
-
-        const editForm = document.createElement('form')
-        editForm.classList.add('edit-session-form', 'hidden')
-
-        const nameInput = document.createElement('input')
-        nameInput.type = 'text'
-        nameInput.classList.add('edit-session-name')
-        nameInput.id = session.id
-        nameInput.placeholder = 'New session name'
-
-        const saveButton = document.createElement('button')
-        saveButton.type = 'submit'
-        saveButton.textContent = 'Save session'
-
-        const removeButton = document.createElement('button')
-        removeButton.classList.add('remove-session-button')
-        removeButton.textContent = 'Remove Session'
-
-        editForm.appendChild(nameInput)
-        editForm.appendChild(saveButton)
-        header.appendChild(name)
-        header.appendChild(driverCount)
-        item.appendChild(header)
-        item.appendChild(editButton)
-        item.appendChild(removeButton)
-        item.appendChild(editForm)
-        sessionList.appendChild(item)
+        sessionList.appendChild(column)
     })
 }
 
@@ -323,6 +314,67 @@ function removeDriver(driverId) {
     }))
 }
 
+function createEmptyMessage(message) {
+    const emptyMessage = document.createElement('p')
+    emptyMessage.classList.add('empty-message')
+    emptyMessage.textContent = message
+
+    return emptyMessage
+}
+
+function createSessionItem(session) {
+    const item = document.createElement('div')
+        item.classList.add('session-item')
+        item.classList.add('list-container')
+        item.dataset.sessionId = session.id
+
+        if(session.id === selectedSessionId) {
+            item.classList.add('selected')
+        }
+
+        const header = document.createElement('div')
+        header.classList.add('session-header')
+
+        const name = document.createElement('h3')
+        name.textContent = `${session.name}`
+
+        const driverCount = document.createElement('span')
+        driverCount.className = 'driver-count'
+        driverCount.textContent = `${session.drivers.length} drivers`
+
+        const editButton = document.createElement('button')
+        editButton.classList.add('edit-session-button')
+        editButton.textContent = 'Edit Session'
+
+        const editForm = document.createElement('form')
+        editForm.classList.add('edit-session-form', 'hidden')
+
+        const nameInput = document.createElement('input')
+        nameInput.type = 'text'
+        nameInput.classList.add('edit-session-name')
+        nameInput.id = session.id
+        nameInput.placeholder = 'New session name'
+
+        const saveButton = document.createElement('button')
+        saveButton.type = 'submit'
+        saveButton.textContent = 'Save session'
+
+        const removeButton = document.createElement('button')
+        removeButton.classList.add('remove-session-button')
+        removeButton.textContent = 'Remove Session'
+
+        editForm.appendChild(nameInput)
+        editForm.appendChild(saveButton)
+        header.appendChild(name)
+        header.appendChild(driverCount)
+        item.appendChild(header)
+        item.appendChild(editButton)
+        item.appendChild(removeButton)
+        item.appendChild(editForm)
+
+        return item
+}
+
 /* TODO
 Front Desk/Receptionist
 
@@ -330,9 +382,6 @@ Styling
 
 Drivers
 - Render drivers based on car number
-
-Sessions
-- Render sessions based on session status
 
 Input Validation
 - Add authentication w/ access keys

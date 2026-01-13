@@ -38,7 +38,7 @@ io.on('connection', (socket) => {
             id: Date.now(),
             name: data.name,
             drivers: [],
-            status: 'upcoming'  // upcoming, in progress, finished
+            status: 'upcoming'  // upcoming, next, in progress, finished
         }
 
         raceState.sessions.push(session)
