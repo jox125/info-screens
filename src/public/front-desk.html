@@ -28,19 +28,16 @@
       <div id="driver-panel" class="driver-panel hidden">
         <div class="panel-header">
           <h2>Drivers</h2>
+          <form id="add-driver-form" class="add-form">
+            <input
+              type="text"
+              id="driver-name"
+              placeholder="New driver name"
+            >
+            <button type="submit">+ Add Driver</button>
+          </form>
         </div>
-
-        <form id="add-driver-form" class="add-form">
-          <input
-            type="text"
-            id="driver-name"
-            placeholder="New driver name"
-          >
-          <button type="submit">+ Add Driver</button>
-        </form>
-        <div id="driver-list" class="list-container">
-          <p class="empty-message">No drivers yet. Add one to get started.</p>
-        </div>
+        <div id="driver-list" class="list-container"></div>
       </div>
 
     <script src="/socket.io/socket.io.js"></script>
