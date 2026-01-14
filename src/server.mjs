@@ -5,6 +5,7 @@ import { createServer } from 'http'
 import { Server } from 'socket.io'
 import { fileURLToPath } from 'url'
 import { join, dirname } from 'path'
+import { raceState } from './testRaceState.js'
 
 // Initialize express, socketIO
 const app = express()
@@ -19,12 +20,12 @@ app.get('/front-desk', (req, res) => {
 })
 
 // Race state (currently in memory)
-const raceState = {
-    sessions: [],
-    currentRace: null,
-    raceMode: 'safe',   // safe, hazard, danger, finish
-    duration: 60000,    // Only 1 min races for now
-}
+// const raceState = {
+//     sessions: [],
+//     currentRace: null,
+//     raceMode: 'safe',   // safe, hazard, danger, finish
+//     duration: 60000,    // Only 1 min races for now
+// }
 
 // Connect with client
 io.on('connection', (socket) => {
@@ -78,6 +79,15 @@ io.on('connection', (socket) => {
         if(isFull) {
             console.warn(`Session is full`)
             socket.emit('driver:add:error', { message: 'Session is full' })
+            return
+        }
+
+        const hasDriver = session.drivers.find(
+            d => d.name === data.name
+        )
+        if(hasDriver) {
+            console.warn(`${data.name} already exists in session: ${session.id}`)
+            socket.emit('driver:add:error', { message: `${data.name} already exists`})
             return
         }
 

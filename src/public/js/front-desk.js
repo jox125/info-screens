@@ -2,9 +2,11 @@ const socket = io()
 
 const addSessionForm = document.getElementById('add-session-form')
 const sessionNameInput = document.getElementById('session-name')
+const sessionError = document.getElementById('session-error')
 const sessionList = document.getElementById('session-list')
 const addDriverForm = document.getElementById('add-driver-form')
 const driverNameInput = document.getElementById('driver-name')
+const driverError = document.getElementById('driver-error')
 const driverList = document.getElementById('driver-list')
 const driverPanel = document.getElementById('driver-panel')
 
@@ -30,8 +32,7 @@ socket.on('sessions:update', (data) => {
 
 // Error message for client if session is full
 socket.on('driver:add:error', (data) => {
-    driverNameInput.placeholder = data.message
-    driverNameInput.classList.add('error')
+    driverError.textContent = data.message
 })
 
 // Listener for creating new session
@@ -40,12 +41,10 @@ addSessionForm.addEventListener('submit', (e) => {
     const sessionName = sessionNameInput.value.trim()
 
     if(!sessionName) {
-        sessionNameInput.placeholder = 'Session name is required'
-        sessionNameInput.classList.add('error')
+        sessionError.textContent = 'Session name is required'
         return
     }
-    sessionNameInput.placeholder = 'New session name'
-    sessionNameInput.classList.remove('error')
+    
     sessionNameInput.value = ''
     socket.emit('session:add', ({ name: sessionName }))
 })
@@ -97,15 +96,11 @@ sessionList.addEventListener('submit', (e) => {
     const newName = input.value.trim()
 
     if(!newName) {
-        input.placeholder = 'New name is required'
-        input.classList.add('error')
+        sessionError.textContent = 'New name is required'
         return
     }
-    input.placeholder = 'New session name'
-    input.classList.remove('error')
 
     editSession(sessionId, newName)
-
     e.target.classList.add('hidden')
 })
 
@@ -115,12 +110,9 @@ addDriverForm.addEventListener('submit', (e) => {
     const driverName = driverNameInput.value.trim()
 
     if(!driverName) {
-        driverNameInput.placeholder = 'Driver name is required'
-        driverNameInput.classList.add('error')
+        driverError.textContent = 'Driver name is required'
         return
     }
-    driverNameInput.placeholder = 'New driver name'
-    driverNameInput.classList.remove('error')
     driverNameInput.value = ''
 
     socket.emit('driver:add', {
@@ -158,12 +150,9 @@ driverList.addEventListener('submit', (e) => {
     const newName = input.value.trim()
 
     if(!newName) {
-        input.placeholder = 'New name is required'
-        input.classList.add('error')
+        driverError.textContent = 'New name is required'
         return
     }
-    input.placeholder = 'New driver name'
-    input.classList.remove('error')
 
     editDriver(driverId, newName)
 
@@ -174,6 +163,7 @@ driverList.addEventListener('submit', (e) => {
 // Renders the session list
 function renderSessions() {
     sessionList.innerHTML = ''
+    sessionError.textContent = ''
 
     if(sessions.length === 0) {
         const emptyMessage = createEmptyMessage('No sessions yet. Add one to get started.')
@@ -228,6 +218,7 @@ function renderSessions() {
 // Render drivers for selected session
 function renderDrivers() {
     driverList.innerHTML = ''
+    driverError.textContent = ''
 
     const session = sessions.find(
         s => s.id === selectedSessionId
