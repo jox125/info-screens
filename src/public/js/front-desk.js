@@ -1,12 +1,13 @@
 const socket = io()
 
+const body = document.body
 const addSessionForm = document.getElementById('add-session-form')
 const sessionNameInput = document.getElementById('session-name')
-const sessionError = document.getElementById('session-error')
+const sessionAddError = document.getElementById('session-add-error')
 const sessionList = document.getElementById('session-list')
 const addDriverForm = document.getElementById('add-driver-form')
 const driverNameInput = document.getElementById('driver-name')
-const driverError = document.getElementById('driver-error')
+const driverAddError = document.getElementById('driver-add-error')
 const driverList = document.getElementById('driver-list')
 const driverPanel = document.getElementById('driver-panel')
 
@@ -32,7 +33,8 @@ socket.on('sessions:update', (data) => {
 
 // Error message for client if session is full
 socket.on('driver:add:error', (data) => {
-    driverError.textContent = data.message
+    driverAddError.textContent = data.message
+    driverAddError.classList.remove('hidden')
 })
 
 // Listener for creating new session
@@ -41,10 +43,11 @@ addSessionForm.addEventListener('submit', (e) => {
     const sessionName = sessionNameInput.value.trim()
 
     if(!sessionName) {
-        sessionError.textContent = 'Session name is required'
+        sessionAddError.textContent = 'Session name is required'
+        sessionAddError.classList.remove('hidden')
         return
     }
-    
+
     sessionNameInput.value = ''
     socket.emit('session:add', ({ name: sessionName }))
 })
@@ -68,6 +71,7 @@ sessionList.addEventListener('click', (e) => {
         if(selectedSessionId === id) {
             selectedSessionId = null
             driverPanel.classList.add('hidden')
+            body.classList.remove('driver-panel-visible')
         }
         return
     }
@@ -81,11 +85,13 @@ sessionList.addEventListener('click', (e) => {
 
     selectedSessionId = selectedSessionId === id ? null : id
     driverPanel.classList.toggle('hidden', selectedSessionId === null)
+    body.classList.toggle('driver-panel-visible', selectedSessionId !== null)
 
     renderSessions()
     renderDrivers()
 })
 
+// Listener for editing session name
 sessionList.addEventListener('submit', (e) => {
     if(!e.target.classList.contains('edit-session-form')) return
     e.preventDefault()
@@ -96,7 +102,9 @@ sessionList.addEventListener('submit', (e) => {
     const newName = input.value.trim()
 
     if(!newName) {
-        sessionError.textContent = 'New name is required'
+        const editError = e.target.querySelector('.error-message')
+        editError.textContent = 'Name is required'
+        editError.classList.remove('hidden')
         return
     }
 
@@ -110,7 +118,8 @@ addDriverForm.addEventListener('submit', (e) => {
     const driverName = driverNameInput.value.trim()
 
     if(!driverName) {
-        driverError.textContent = 'Driver name is required'
+        driverAddError.textContent = 'Driver name is required'
+        driverAddError.classList.remove('hidden')
         return
     }
     driverNameInput.value = ''
@@ -150,12 +159,13 @@ driverList.addEventListener('submit', (e) => {
     const newName = input.value.trim()
 
     if(!newName) {
-        driverError.textContent = 'New name is required'
+        const editError = e.target.querySelector('.error-message')
+        editError.textContent = 'Name is required'
+        editError.classList.remove('hidden')
         return
     }
 
     editDriver(driverId, newName)
-
     e.target.classList.add('hidden')
 })
 
@@ -163,7 +173,8 @@ driverList.addEventListener('submit', (e) => {
 // Renders the session list
 function renderSessions() {
     sessionList.innerHTML = ''
-    sessionError.textContent = ''
+    sessionAddError.textContent = ''
+    sessionAddError.classList.add('hidden')
 
     if(sessions.length === 0) {
         const emptyMessage = createEmptyMessage('No sessions yet. Add one to get started.')
@@ -171,6 +182,7 @@ function renderSessions() {
 
         sessionList.appendChild(emptyMessage)
         driverPanel.classList.add('hidden')
+        body.classList.remove('driver-panel-visible')
         return
     }
 
@@ -218,7 +230,8 @@ function renderSessions() {
 // Render drivers for selected session
 function renderDrivers() {
     driverList.innerHTML = ''
-    driverError.textContent = ''
+    driverAddError.textContent = ''
+    driverAddError.classList.add('hidden')
 
     const session = sessions.find(
         s => s.id === selectedSessionId
@@ -297,6 +310,9 @@ function createSessionItem(session) {
     driverCount.className = "driver-count";
     driverCount.textContent = `${session.drivers.length} drivers`;
 
+    const buttonContainer = document.createElement("div");
+    buttonContainer.classList.add("button-container");
+
     const editButton = document.createElement("button");
     editButton.classList.add("edit-session-button");
     editButton.textContent = "Edit Session";
@@ -310,6 +326,9 @@ function createSessionItem(session) {
     nameInput.id = session.id;
     nameInput.placeholder = "New session name";
 
+    const editError = document.createElement("p");
+    editError.classList.add("error-message", "hidden");
+
     const saveButton = document.createElement("button");
     saveButton.type = "submit";
     saveButton.textContent = "Save session";
@@ -318,13 +337,15 @@ function createSessionItem(session) {
     removeButton.classList.add("remove-session-button");
     removeButton.textContent = "Remove Session";
 
-    editForm.appendChild(nameInput);
-    editForm.appendChild(saveButton);
     header.appendChild(name);
     header.appendChild(driverCount);
+    buttonContainer.appendChild(editButton);
+    buttonContainer.appendChild(removeButton);
+    editForm.appendChild(nameInput);
+    editForm.appendChild(editError);
+    editForm.appendChild(saveButton);
     item.appendChild(header);
-    item.appendChild(editButton);
-    item.appendChild(removeButton);
+    item.appendChild(buttonContainer);
     item.appendChild(editForm);
 
     return item;
@@ -345,6 +366,9 @@ function createDriverItem(driver) {
     driverCar.classList.add("driver-car");
     driverCar.textContent = `#${driver.carNum}`;
 
+    const buttonContainer = document.createElement("div");
+    buttonContainer.classList.add("button-container");
+
     const editButton = document.createElement("button");
     editButton.classList.add("edit-driver-button");
     editButton.textContent = "Edit Driver";
@@ -358,6 +382,9 @@ function createDriverItem(driver) {
     nameInput.id = driver.id;
     nameInput.placeholder = "New driver name";
 
+    const editError = document.createElement("p");
+    editError.classList.add("error-message", "hidden");
+
     const saveButton = document.createElement("button");
     saveButton.type = "submit";
     saveButton.textContent = "Save driver";
@@ -366,26 +393,29 @@ function createDriverItem(driver) {
     removeButton.classList.add("remove-driver-button");
     removeButton.textContent = "Remove Driver";
 
-    editForm.appendChild(nameInput);
-    editForm.appendChild(saveButton);
     header.appendChild(driverName);
     header.appendChild(driverCar);
+    buttonContainer.appendChild(editButton);
+    buttonContainer.appendChild(removeButton);
+    editForm.appendChild(nameInput);
+    editForm.appendChild(editError);
+    editForm.appendChild(saveButton);
     item.appendChild(header);
-    item.appendChild(editButton);
-    item.appendChild(removeButton);
+    item.appendChild(buttonContainer);
     item.appendChild(editForm);
 
-    return item
+    return item;
 }
 
 /* TODO
 Front Desk/Receptionist
 
-Styling
+Edit functionality fix -> if a new editing form is opened, close last
 
 Update display when session status changes
 
 Input Validation
+- Server side validation
 - Add authentication w/ access keys
 - The driver's name must be unique within each race session.
 */

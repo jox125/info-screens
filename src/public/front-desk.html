@@ -11,7 +11,7 @@
     <div class="interface-content">
       <div class="session-panel">
         <div class="panel-header">
-          <h2>Race Sessions</h2>
+          <h2 class="panel-title">Race Sessions</h2>
           <form id="add-session-form" class="add-form">
             <input
               type="text"
@@ -19,7 +19,7 @@
               placeholder="New session name"
             >
             <button type="submit">+ Add Session</button>
-            <p id="session-error" class="error-message"></p>
+            <p id="session-add-error" class="error-message hidden"></p>
           </form>
         </div>
         <div id="session-list" class="list-container"></div>
@@ -28,7 +28,7 @@
 
       <div id="driver-panel" class="driver-panel hidden">
         <div class="panel-header">
-          <h2>Drivers</h2>
+          <h2 class="panel-title">Drivers</h2>
           <form id="add-driver-form" class="add-form">
             <input
               type="text"
@@ -36,7 +36,7 @@
               placeholder="New driver name"
             >
             <button type="submit">+ Add Driver</button>
-            <p id="driver-error" class="error-message"></p>
+            <p id="driver-add-error" class="error-message hidden"></p>
           </form>
         </div>
         <div id="driver-list" class="list-container"></div>
