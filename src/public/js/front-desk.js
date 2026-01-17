@@ -29,13 +29,94 @@ socket.on('sessions:update', (data) => {
     if(selectedSessionId) {
         renderDrivers()
     }
+
+    sessionAddError.classList.add('hidden')
+    sessionAddError.textContent = ''
+
+    driverAddError.classList.add('hidden')
+    driverAddError.textContent = ''
+
+    document.querySelectorAll('.edit-session-form').forEach(form => {
+        form.classList.add('hidden')
+
+        const errorElement = form.querySelector('.error-message')
+        if(errorElement) {
+            errorElement.classList.add('hidden')
+            errorElement.textContent = ''
+        }
+    })
+
+    document.querySelectorAll('.edit-driver-form').forEach(form => {
+        form.classList.add('hidden')
+
+        const errorElement = form.querySelector('.error-message')
+        if(errorElement) {
+            errorElement.classList.add('hidden')
+            errorElement.textContent = ''
+        }
+    })
 })
 
-// Error message for client if session is full
-socket.on('driver:add:error', (data) => {
+// ---- ERROR MESSAGES ----
+
+// General error messages (No name, session not found etc...)
+socket.on('session:error', (data) => {
+    sessionAddError.textContent = data.message
+    sessionAddError.classList.remove('hidden')
+
+    // If no name is given, focus input box
+    if(data.focus) sessionAddError.focus()
+})
+
+// Error message if something went wrong trying to edit a session
+socket.on('session:edit:error', (data) => {
+    const sessionItem = document.querySelector(
+        `.session-item[data-session-id="${data.sessionId}"]`
+    )
+
+    if(!sessionItem) return
+
+    const editForm = sessionItem.querySelector('.edit-session-form')
+    const errorElement = editForm.querySelector('.error-message')
+    const input = editForm.querySelector('.edit-session-name')
+
+    errorElement.textContent = data.message
+    errorElement.classList.remove('hidden')
+
+    editForm.classList.remove('hidden')
+    input.focus()
+})
+
+
+// Error message if something went wrong trying to add a driver
+socket.on('driver:error', (data) => {
     driverAddError.textContent = data.message
     driverAddError.classList.remove('hidden')
+    driverNameInput.focus()
 })
+
+// Error message if something went wrong trying to edit a driver
+socket.on('driver:edit:error', (data) => {
+    const driverItem = document.querySelector(
+        `.driver-item[data-driver-id="${data.driverId}"]`
+    )
+
+    if(!driverItem) return
+
+    const editForm = driverItem.querySelector('.edit-driver-form')
+    const errorElement = editForm.querySelector('.error-message')
+    const input = editForm.querySelector('.edit-driver-name')
+
+    errorElement.textContent = data.message
+    errorElement.classList.remove('hidden')
+
+    editForm.classList.remove('hidden')
+    input.value = ''
+    input.focus()
+})
+
+
+// ---- EVENT LISTENERS ----
 
 // Listener for creating new session
 addSessionForm.addEventListener('submit', (e) => {
@@ -45,6 +126,7 @@ addSessionForm.addEventListener('submit', (e) => {
     if(!sessionName) {
         sessionAddError.textContent = 'Session name is required'
         sessionAddError.classList.remove('hidden')
+        sessionNameInput.focus()
         return
     }
 
@@ -83,6 +165,7 @@ sessionList.addEventListener('click', (e) => {
         return
     }
 
+    // Toggles driverPanel visibility based on if a session is selected or not
     selectedSessionId = selectedSessionId === id ? null : id
     driverPanel.classList.toggle('hidden', selectedSessionId === null)
     body.classList.toggle('driver-panel-visible', selectedSessionId !== null)
@@ -100,16 +183,16 @@ sessionList.addEventListener('submit', (e) => {
     const sessionId = sessionItem.dataset.sessionId
     const input = sessionItem.querySelector('.edit-session-name')
     const newName = input.value.trim()
+    const errorElement = e.target.querySelector('.error-message')
 
     if(!newName) {
-        const editError = e.target.querySelector('.error-message')
-        editError.textContent = 'Name is required'
-        editError.classList.remove('hidden')
+        errorElement.textContent = 'Name is required'
+        errorElement.classList.remove('hidden')
+        input.focus()
         return
     }
 
     editSession(sessionId, newName)
-    e.target.classList.add('hidden')
 })
 
 // Listener for creating new driver
@@ -120,6 +203,7 @@ addDriverForm.addEventListener('submit', (e) => {
     if(!driverName) {
         driverAddError.textContent = 'Driver name is required'
         driverAddError.classList.remove('hidden')
+        driverNameInput.focus()
         return
     }
     driverNameInput.value = ''
@@ -137,7 +221,7 @@ driverList.addEventListener('click', (e) => {
     
     // Remove driver
     if(driver.classList.contains('remove-driver-button')) {
-        const driverId = driverItem.dataset.id
+        const driverId = driverItem.dataset.driverId
         removeDriver(driverId)
     }
     
@@ -154,21 +238,23 @@ driverList.addEventListener('submit', (e) => {
     e.preventDefault()
 
     const driverItem = e.target.closest('.driver-item')
-    const driverId = driverItem.dataset.id
+    const driverId = driverItem.dataset.driverId
     const input = driverItem.querySelector('.edit-driver-name')
     const newName = input.value.trim()
+    const errorElement = e.target.querySelector('.error-message')
 
     if(!newName) {
-        const editError = e.target.querySelector('.error-message')
-        editError.textContent = 'Name is required'
-        editError.classList.remove('hidden')
+        errorElement.textContent = 'Name is required'
+        errorElement.classList.remove('hidden')
+        input.focus()
         return
     }
 
     editDriver(driverId, newName)
-    e.target.classList.add('hidden')
 })
 
+
+// ---- FUNCTIONS ----
 
 // Renders the session list
 function renderSessions() {
@@ -323,7 +409,7 @@ function createSessionItem(session) {
     const nameInput = document.createElement("input");
     nameInput.type = "text";
     nameInput.classList.add("edit-session-name");
-    nameInput.id = session.id;
+    nameInput.id = `session-${session.id}`;
     nameInput.placeholder = "New session name";
 
     const editError = document.createElement("p");
@@ -354,7 +440,7 @@ function createSessionItem(session) {
 function createDriverItem(driver) {
     const item = document.createElement("div");
     item.classList.add("driver-item", "list-container");
-    item.dataset.id = driver.id;
+    item.dataset.driverId = driver.id;
 
     const header = document.createElement("div");
     header.classList.add("driver-header");
@@ -379,7 +465,7 @@ function createDriverItem(driver) {
     const nameInput = document.createElement("input");
     nameInput.type = "text";
     nameInput.classList.add("edit-driver-name");
-    nameInput.id = driver.id;
+    nameInput.id = `driver-${driver.id}`;
     nameInput.placeholder = "New driver name";
 
     const editError = document.createElement("p");
@@ -410,12 +496,20 @@ function createDriverItem(driver) {
 /* TODO
 Front Desk/Receptionist
 
+Adding sessions, drivers -> visual confirmation if successful
+
 Edit functionality fix -> if a new editing form is opened, close last
+In progress & finished races -> read-only
 
 Update display when session status changes
+
+Add close button for driver panel
 
 Input Validation
 - Server side validation
 - Add authentication w/ access keys
-- The driver's name must be unique within each race session.
+    Incorrect keys:
+    - Must delay server response by 500ms
+    - Must show an error message
+    - Must re-prompt for the key
 */

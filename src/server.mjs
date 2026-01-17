@@ -35,92 +35,158 @@ io.on('connection', (socket) => {
 
     // Adding a session
     socket.on('session:add', (data) => {
+        const normalizedName = normalize(data.name)
+        if(!normalizedName) {
+            return socket.emit('session:error', {
+                message: 'Session name is required',
+                focus: true
+            })
+        }
+
         const session = {
             id: Date.now(),
-            name: data.name,
+            name: normalizedName,
             drivers: [],
             status: 'upcoming'  // upcoming, next, in progress, finished
         }
 
         raceState.sessions.push(session)
         io.emit('sessions:update', raceState.sessions)
-
-        // For debugging
-        console.log(raceState)
+        console.log(`[session:add] id=${session.id} name="${session.name}"`)
     })
 
     // Editing session name
     socket.on('session:edit', (data) => {
         const session = findSession(data.sessionId)
-        if(!session) return
+        if(!session) {
+            return socket.emit('session:error', { message: 'Session not found' })
+        }
 
-        session.name = data.newName
+        const normalizedName = normalize(data.newName)
+        if(!normalizedName) {
+            return socket.emit('session:edit:error', {
+                sessionId: data.sessionId,
+                message: 'Name is required'
+            })
+        }
+
+        const oldName = session.name
+        session.name = normalizedName
         io.emit('sessions:update', raceState.sessions)
+        console.log(`[session:edit] id=${session.id} name="${oldName}" -> "${session.name}"`)
     })
 
     socket.on('session:remove', (data) => {
         const session = findSession(data.sessionId)
-        if(!session) return
+        if(!session) {
+            return socket.emit('session:error', { message: 'Session not found' })
+        }
 
         raceState.sessions = raceState.sessions.filter(
             s => s.id !== session.id
         )
         io.emit('sessions:update', raceState.sessions)
+        console.log(`[session:remove] id=${session.id} name="${session.name}"`)
     })
 
     // Adding a driver
     socket.on('driver:add', (data) => {
+        const normalizedName = normalize(data.name)
+        if(!normalizedName) {
+            return socket.emit('driver:error', { message: 'Driver name is required' })
+        }
+
         const session = findSession(data.sessionId)
-        if(!session) return
+        if(!session) {
+            return socket.emit('session:error', { message: 'Session not found' })
+        }
 
         const carNum = assignCar(session)
         const isFull = !carNum
-        
         if(isFull) {
             console.warn(`Session is full`)
-            socket.emit('driver:add:error', { message: 'Session is full' })
-            return
+            return socket.emit('driver:add:error', { message: 'Session is full' })
         }
 
-        const hasDriver = session.drivers.find(
-            d => d.name === data.name
+        const driver = session.drivers.find(
+            d => normalize(d.name, true) === normalize(data.name, true)
         )
-        if(hasDriver) {
-            console.warn(`${data.name} already exists in session: ${session.id}`)
-            socket.emit('driver:add:error', { message: `${data.name} already exists`})
-            return
+        if(driver) {
+            console.warn(`[driver:add] session=${session.id} driver="${driver.name}" already exists`)
+            return socket.emit('driver:error', { message: `${driver.name} already exists`})
         }
-
-        session.drivers.push({
+        
+        const newDriver = {
             id: Date.now(),
-            name: data.name,
+            name: normalizedName,
             carNum
-        })
+        }
+        session.drivers.push(newDriver)
 
         io.emit('sessions:update', raceState.sessions)
+        console.log(`[driver:add] session=${session.id} driver=${newDriver.id} name="${newDriver.name}"`)
     })
-
+    
     // Editing a driver
     socket.on('driver:edit', (data) => {
-        const driver = findDriver(data.sessionId, data.driverId)
-        if(!driver) return
+        const normalizedName = normalize(data.newName)
 
-        driver.name = data.newName
+        if(!normalizedName) {
+            return socket.emit('driver:edit:error', {
+                sessionId: data.sessionId,
+                driverId: data.driverId,
+                message: 'Name is required'
+            })
+        }
+        
+        const session = findSession(data.sessionId)
+        if(!session) {
+            return socket.emit('session:error', { message: 'Session not found' })
+        }
+        
+        const driver = findDriver(data.sessionId, data.driverId)
+        if(!driver) {
+            return socket.emit('driver:error', { message: 'Driver not found' })
+        }
+
+        const duplicate = session.drivers.find(
+            d => normalize(d.name, true) === normalize(data.newName, true)
+        )
+
+        // Check if a driver with the new name already exists
+        if(duplicate) {
+            console.warn(`[driver:edit] session=${session.id} driver="${duplicate.name}" already exists`)
+            return socket.emit('driver:edit:error', { 
+                sessionId: data.sessionId,
+                driverId: data.driverId,
+                message: `${duplicate.name} already exists`
+            })
+        }
+
+        const oldName = driver.name
+        driver.name = normalizedName
         io.emit('sessions:update', raceState.sessions)
+        console.log(`[driver:edit] session=${session.id} driver=${driver.id} name="${oldName}" -> "${driver.name}"`)
     })
 
     // Removing a driver
     socket.on('driver:remove', (data) => {
         const session = findSession(data.sessionId)
-        if(!session) return
+        if(!session) {
+            return socket.emit('session:error', { message: 'Session not found' })
+        }
 
         const driver = findDriver(data.sessionId, data.driverId)
-        if(!driver) return
+        if(!driver) {
+            return socket.emit('driver:error', { message: 'Driver not found' })
+        }
         
         session.drivers = session.drivers.filter(
             d => d.id !== driver.id
         )
+
         io.emit('sessions:update', raceState.sessions)
+        console.log(`[driver:remove] session=${session.id} driver=${driver.id} name="${driver.name}"`)
     })
 
 
@@ -179,4 +245,9 @@ function assignCar(session) {
     for(let num = 1; num <= maxCars; num++) {
         if(!assigned.has(num)) return num
     }
+}
+
+function normalize(str, lowerCase = false) {
+    str = str.trim()
+    return lowerCase ? str.toLowerCase() : str
 }
