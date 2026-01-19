@@ -5,6 +5,7 @@ import { createServer } from "http";
 import { Server } from "socket.io";
 import { fileURLToPath } from "url";
 import { join, dirname } from "path";
+import { STATUS, IMMUTABLE_STATUSES } from "./shared/constants/status.js"
 import { raceState } from "./testRaceState.js";
 
 // Initialize express, socketIO
@@ -14,6 +15,7 @@ const io = new Server(server);
 const __dirname = fileURLToPath(dirname(import.meta.url));
 
 app.use(serveStatic("src/public"));
+app.use("/shared", serveStatic("src/shared"));
 
 app.get("/front-desk", (req, res) => {
     res.sendFile(join(__dirname, "/public/front-desk.html"));
@@ -47,7 +49,7 @@ io.on("connection", (socket) => {
             id: Date.now(),
             name: normalizedName,
             drivers: [],
-            status: "upcoming", // upcoming, next, in progress, finished
+            status: STATUS.UPCOMING, // upcoming, next, in progress, finished
         };
 
         raceState.sessions.push(session);
@@ -72,6 +74,13 @@ io.on("connection", (socket) => {
             });
         }
 
+        const status = session.status;
+        if(IMMUTABLE_STATUSES.has(status)) {
+            return socket.emit("session:error", {
+                message: `Session cannot be modified because session is ${status}`,
+            });
+        }
+
         const oldName = session.name;
         session.name = normalizedName;
         io.emit("sessions:update", raceState.sessions);
@@ -85,6 +94,13 @@ io.on("connection", (socket) => {
         if (!session) {
             return socket.emit("session:error", {
                 message: "Session not found",
+            });
+        }
+
+        const status = session.status
+        if(IMMUTABLE_STATUSES.has(status)) {
+            return socket.emit("session:error", {
+                message: `Session cannot be modified because session is ${status}`,
             });
         }
 
@@ -164,6 +180,13 @@ io.on("connection", (socket) => {
             });
         }
 
+        const status = session.status;
+        if(IMMUTABLE_STATUSES.has(status)) {
+            return socket.emit("session:error", {
+                message: `Driver cannot be modified because session is ${status}`,
+            });
+        }
+
         const driver = findDriver(data.sessionId, data.driverId);
         if (!driver) {
             return socket.emit("driver:error", { message: "Driver not found" });
@@ -200,6 +223,13 @@ io.on("connection", (socket) => {
             return socket.emit("session:error", {
                 message: "Session not found",
             });
+        }
+
+        const status = session.status;
+        if(IMMUTABLE_STATUSES.has(status)) {
+            return socket.emit("session:error", {
+                message: `Driver cannot be modified because session is ${status}`,
+            })
         }
 
         const driver = findDriver(data.sessionId, data.driverId);

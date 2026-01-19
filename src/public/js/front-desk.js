@@ -1,3 +1,5 @@
+import { STATUS, IMMUTABLE_STATUSES } from "/shared/constants/status.js";
+
 const socket = io();
 
 const body = document.body;
@@ -271,12 +273,12 @@ function renderSessions() {
         return;
     }
 
-    const statusOrder = ["in progress", "next", "upcoming", "finished"];
+    const statusOrder = [STATUS.IN_PROGRESS, STATUS.NEXT, STATUS.UPCOMING, STATUS.FINISHED];
     const groupedSessions = {
-        "in progress": [],
-        next: [],
-        upcoming: [],
-        finished: [],
+        [STATUS.IN_PROGRESS]: [],
+        [STATUS.NEXT]: [],
+        [STATUS.UPCOMING]: [],
+        [STATUS.FINISHED]: [],
     };
 
     // Group sessions by status
@@ -289,6 +291,13 @@ function renderSessions() {
     // Render groups with a status header
     statusOrder.forEach((status) => {
         const sessionsInGroup = groupedSessions[status];
+        let mutable = null;
+
+        if(IMMUTABLE_STATUSES.has(status)) {
+            mutable = false;
+        } else {
+            mutable = true;
+        }
 
         const column = document.createElement("div");
         column.classList.add("session-column");
@@ -303,7 +312,7 @@ function renderSessions() {
             column.appendChild(emptyMessage);
         } else {
             sessionsInGroup.forEach((session) => {
-                const item = createSessionItem(session);
+                const item = createSessionItem(session, mutable);
                 column.appendChild(item);
             });
         }
@@ -334,7 +343,16 @@ function renderDrivers() {
     );
 
     sortedDrivers.forEach((driver) => {
-        const item = createDriverItem(driver);
+        const status = session.status;
+        let mutable = null;
+
+        if(IMMUTABLE_STATUSES.has(status)) {
+            mutable = false;
+        } else {
+            mutable = true;
+        }
+
+        const item = createDriverItem(driver, mutable);
         driverList.appendChild(item);
     });
 }
@@ -375,7 +393,7 @@ function createEmptyMessage(message) {
     return emptyMessage;
 }
 
-function createSessionItem(session) {
+function createSessionItem(session, mutable) {
     const item = document.createElement("div");
     item.classList.add("session-item");
     item.classList.add("list-container");
@@ -394,49 +412,53 @@ function createSessionItem(session) {
     const driverCount = document.createElement("span");
     driverCount.className = "driver-count";
     driverCount.textContent = `${session.drivers.length} drivers`;
-
-    const buttonContainer = document.createElement("div");
-    buttonContainer.classList.add("button-container");
-
-    const editButton = document.createElement("button");
-    editButton.classList.add("edit-session-button");
-    editButton.textContent = "Edit Session";
-
-    const editForm = document.createElement("form");
-    editForm.classList.add("edit-session-form", "hidden");
-
-    const nameInput = document.createElement("input");
-    nameInput.type = "text";
-    nameInput.classList.add("edit-session-name");
-    nameInput.id = `session-${session.id}`;
-    nameInput.placeholder = "New session name";
-
-    const editError = document.createElement("p");
-    editError.classList.add("error-message", "hidden");
-
-    const saveButton = document.createElement("button");
-    saveButton.type = "submit";
-    saveButton.textContent = "Save session";
-
-    const removeButton = document.createElement("button");
-    removeButton.classList.add("remove-session-button");
-    removeButton.textContent = "Remove Session";
-
+    
     header.appendChild(name);
     header.appendChild(driverCount);
-    buttonContainer.appendChild(editButton);
-    buttonContainer.appendChild(removeButton);
-    editForm.appendChild(nameInput);
-    editForm.appendChild(editError);
-    editForm.appendChild(saveButton);
     item.appendChild(header);
-    item.appendChild(buttonContainer);
-    item.appendChild(editForm);
+
+    // If mutable, add buttons for editing, removing
+    if(mutable) {
+        const buttonContainer = document.createElement("div");
+        buttonContainer.classList.add("button-container");
+
+        const editButton = document.createElement("button");
+        editButton.classList.add("edit-session-button");
+        editButton.textContent = "Edit Session";
+
+        const editForm = document.createElement("form");
+        editForm.classList.add("edit-session-form", "hidden");
+
+        const nameInput = document.createElement("input");
+        nameInput.type = "text";
+        nameInput.classList.add("edit-session-name");
+        nameInput.id = `session-${session.id}`;
+        nameInput.placeholder = "New session name";
+
+        const editError = document.createElement("p");
+        editError.classList.add("error-message", "hidden");
+
+        const saveButton = document.createElement("button");
+        saveButton.type = "submit";
+        saveButton.textContent = "Save session";
+
+        const removeButton = document.createElement("button");
+        removeButton.classList.add("remove-session-button");
+        removeButton.textContent = "Remove Session";
+
+        buttonContainer.appendChild(editButton);
+        buttonContainer.appendChild(removeButton);
+        editForm.appendChild(nameInput);
+        editForm.appendChild(editError);
+        editForm.appendChild(saveButton);
+        item.appendChild(buttonContainer);
+        item.appendChild(editForm);
+    }
 
     return item;
 }
 
-function createDriverItem(driver) {
+function createDriverItem(driver, mutable) {
     const item = document.createElement("div");
     item.classList.add("driver-item", "list-container");
     item.dataset.driverId = driver.id;
@@ -451,43 +473,46 @@ function createDriverItem(driver) {
     driverCar.classList.add("driver-car");
     driverCar.textContent = `#${driver.carNum}`;
 
-    const buttonContainer = document.createElement("div");
-    buttonContainer.classList.add("button-container");
-
-    const editButton = document.createElement("button");
-    editButton.classList.add("edit-driver-button");
-    editButton.textContent = "Edit Driver";
-
-    const editForm = document.createElement("form");
-    editForm.classList.add("edit-driver-form", "hidden");
-
-    const nameInput = document.createElement("input");
-    nameInput.type = "text";
-    nameInput.classList.add("edit-driver-name");
-    nameInput.id = `driver-${driver.id}`;
-    nameInput.placeholder = "New driver name";
-
-    const editError = document.createElement("p");
-    editError.classList.add("error-message", "hidden");
-
-    const saveButton = document.createElement("button");
-    saveButton.type = "submit";
-    saveButton.textContent = "Save driver";
-
-    const removeButton = document.createElement("button");
-    removeButton.classList.add("remove-driver-button");
-    removeButton.textContent = "Remove Driver";
-
     header.appendChild(driverName);
     header.appendChild(driverCar);
-    buttonContainer.appendChild(editButton);
-    buttonContainer.appendChild(removeButton);
-    editForm.appendChild(nameInput);
-    editForm.appendChild(editError);
-    editForm.appendChild(saveButton);
     item.appendChild(header);
-    item.appendChild(buttonContainer);
-    item.appendChild(editForm);
+
+    if(mutable) {
+        const buttonContainer = document.createElement("div");
+        buttonContainer.classList.add("button-container");
+
+        const editButton = document.createElement("button");
+        editButton.classList.add("edit-driver-button");
+        editButton.textContent = "Edit Driver";
+
+        const editForm = document.createElement("form");
+        editForm.classList.add("edit-driver-form", "hidden");
+
+        const nameInput = document.createElement("input");
+        nameInput.type = "text";
+        nameInput.classList.add("edit-driver-name");
+        nameInput.id = `driver-${driver.id}`;
+        nameInput.placeholder = "New driver name";
+
+        const editError = document.createElement("p");
+        editError.classList.add("error-message", "hidden");
+
+        const saveButton = document.createElement("button");
+        saveButton.type = "submit";
+        saveButton.textContent = "Save driver";
+
+        const removeButton = document.createElement("button");
+        removeButton.classList.add("remove-driver-button");
+        removeButton.textContent = "Remove Driver";
+
+        buttonContainer.appendChild(editButton);
+        buttonContainer.appendChild(removeButton);
+        editForm.appendChild(nameInput);
+        editForm.appendChild(editError);
+        editForm.appendChild(saveButton);
+        item.appendChild(buttonContainer);
+        item.appendChild(editForm);
+    }
 
     return item;
 }
@@ -498,7 +523,6 @@ Front Desk/Receptionist
 Adding sessions, drivers -> visual confirmation if successful
 
 Edit functionality fix -> if a new editing form is opened, close last
-In progress & finished races -> read-only
 
 Update display when session status changes
 
