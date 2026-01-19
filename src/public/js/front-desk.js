@@ -1,379 +1,378 @@
-const socket = io()
+const socket = io();
 
-const body = document.body
-const addSessionForm = document.getElementById('add-session-form')
-const sessionNameInput = document.getElementById('session-name')
-const sessionAddError = document.getElementById('session-add-error')
-const sessionList = document.getElementById('session-list')
-const addDriverForm = document.getElementById('add-driver-form')
-const driverNameInput = document.getElementById('driver-name')
-const driverAddError = document.getElementById('driver-add-error')
-const driverList = document.getElementById('driver-list')
-const driverPanel = document.getElementById('driver-panel')
+const body = document.body;
+const addSessionForm = document.getElementById("add-session-form");
+const sessionNameInput = document.getElementById("session-name");
+const sessionAddError = document.getElementById("session-add-error");
+const sessionList = document.getElementById("session-list");
+const addDriverForm = document.getElementById("add-driver-form");
+const driverNameInput = document.getElementById("driver-name");
+const driverAddError = document.getElementById("driver-add-error");
+const driverList = document.getElementById("driver-list");
+const driverPanel = document.getElementById("driver-panel");
 
-let sessions = []
-let selectedSessionId = null
+let sessions = [];
+let selectedSessionId = null;
 
-socket.on('connect', () => {
-    console.log('Connected to server')
+socket.on("connect", () => {
+    console.log("Connected to server");
 
     // Request initial data
-    socket.emit('session:request')
-})
+    socket.emit("session:request");
+});
 
 // Render sessions after updates
-socket.on('sessions:update', (data) => {
-    sessions = data
-    renderSessions()
+socket.on("sessions:update", (data) => {
+    sessions = data;
+    renderSessions();
 
-    if(selectedSessionId) {
-        renderDrivers()
+    if (selectedSessionId) {
+        renderDrivers();
     }
 
-    sessionAddError.classList.add('hidden')
-    sessionAddError.textContent = ''
+    sessionAddError.classList.add("hidden");
+    sessionAddError.textContent = "";
 
-    driverAddError.classList.add('hidden')
-    driverAddError.textContent = ''
+    driverAddError.classList.add("hidden");
+    driverAddError.textContent = "";
 
-    document.querySelectorAll('.edit-session-form').forEach(form => {
-        form.classList.add('hidden')
+    document.querySelectorAll(".edit-session-form").forEach((form) => {
+        form.classList.add("hidden");
 
-        const errorElement = form.querySelector('.error-message')
-        if(errorElement) {
-            errorElement.classList.add('hidden')
-            errorElement.textContent = ''
+        const errorElement = form.querySelector(".error-message");
+        if (errorElement) {
+            errorElement.classList.add("hidden");
+            errorElement.textContent = "";
         }
-    })
+    });
 
-    document.querySelectorAll('.edit-driver-form').forEach(form => {
-        form.classList.add('hidden')
+    document.querySelectorAll(".edit-driver-form").forEach((form) => {
+        form.classList.add("hidden");
 
-        const errorElement = form.querySelector('.error-message')
-        if(errorElement) {
-            errorElement.classList.add('hidden')
-            errorElement.textContent = ''
+        const errorElement = form.querySelector(".error-message");
+        if (errorElement) {
+            errorElement.classList.add("hidden");
+            errorElement.textContent = "";
         }
-    })
-})
+    });
+});
 
 // ---- ERROR MESSAGES ----
 
 // General error messages (No name, session not found etc...)
-socket.on('session:error', (data) => {
-    sessionAddError.textContent = data.message
-    sessionAddError.classList.remove('hidden')
+socket.on("session:error", (data) => {
+    sessionAddError.textContent = data.message;
+    sessionAddError.classList.remove("hidden");
 
     // If no name is given, focus input box
-    if(data.focus) sessionAddError.focus()
-})
+    if (data.focus) sessionAddError.focus();
+});
 
 // Error message if something went wrong trying to edit a session
-socket.on('session:edit:error', (data) => {
+socket.on("session:edit:error", (data) => {
     const sessionItem = document.querySelector(
-        `.session-item[data-session-id="${data.sessionId}"]`
-    )
+        `.session-item[data-session-id="${data.sessionId}"]`,
+    );
 
-    if(!sessionItem) return
+    if (!sessionItem) return;
 
-    const editForm = sessionItem.querySelector('.edit-session-form')
-    const errorElement = editForm.querySelector('.error-message')
-    const input = editForm.querySelector('.edit-session-name')
+    const editForm = sessionItem.querySelector(".edit-session-form");
+    const errorElement = editForm.querySelector(".error-message");
+    const input = editForm.querySelector(".edit-session-name");
 
-    errorElement.textContent = data.message
-    errorElement.classList.remove('hidden')
+    errorElement.textContent = data.message;
+    errorElement.classList.remove("hidden");
 
-    editForm.classList.remove('hidden')
-    input.focus()
-})
-
+    editForm.classList.remove("hidden");
+    input.focus();
+});
 
 // Error message if something went wrong trying to add a driver
-socket.on('driver:error', (data) => {
-    driverAddError.textContent = data.message
-    driverAddError.classList.remove('hidden')
-    driverNameInput.focus()
-})
+socket.on("driver:error", (data) => {
+    driverAddError.textContent = data.message;
+    driverAddError.classList.remove("hidden");
+    driverNameInput.focus();
+});
 
 // Error message if something went wrong trying to edit a driver
-socket.on('driver:edit:error', (data) => {
+socket.on("driver:edit:error", (data) => {
     const driverItem = document.querySelector(
-        `.driver-item[data-driver-id="${data.driverId}"]`
-    )
+        `.driver-item[data-driver-id="${data.driverId}"]`,
+    );
 
-    if(!driverItem) return
+    if (!driverItem) return;
 
-    const editForm = driverItem.querySelector('.edit-driver-form')
-    const errorElement = editForm.querySelector('.error-message')
-    const input = editForm.querySelector('.edit-driver-name')
+    const editForm = driverItem.querySelector(".edit-driver-form");
+    const errorElement = editForm.querySelector(".error-message");
+    const input = editForm.querySelector(".edit-driver-name");
 
-    errorElement.textContent = data.message
-    errorElement.classList.remove('hidden')
+    errorElement.textContent = data.message;
+    errorElement.classList.remove("hidden");
 
-    editForm.classList.remove('hidden')
-    input.value = ''
-    input.focus()
-})
-
+    editForm.classList.remove("hidden");
+    input.value = "";
+    input.focus();
+});
 
 // ---- EVENT LISTENERS ----
 
 // Listener for creating new session
-addSessionForm.addEventListener('submit', (e) => {
-    e.preventDefault()
-    const sessionName = sessionNameInput.value.trim()
+addSessionForm.addEventListener("submit", (e) => {
+    e.preventDefault();
+    const sessionName = sessionNameInput.value.trim();
 
-    if(!sessionName) {
-        sessionAddError.textContent = 'Session name is required'
-        sessionAddError.classList.remove('hidden')
-        sessionNameInput.focus()
-        return
+    if (!sessionName) {
+        sessionAddError.textContent = "Session name is required";
+        sessionAddError.classList.remove("hidden");
+        sessionNameInput.focus();
+        return;
     }
 
-    sessionNameInput.value = ''
-    socket.emit('session:add', ({ name: sessionName }))
-})
+    sessionNameInput.value = "";
+    socket.emit("session:add", { name: sessionName });
+});
 
 // Listener for toggling driverPanel visibility and removing session
-sessionList.addEventListener('click', (e) => {
-    const session = e.target
-    const sessionItem = session.closest('.session-item')
+sessionList.addEventListener("click", (e) => {
+    const session = e.target;
+    const sessionItem = session.closest(".session-item");
 
-    if(!sessionItem) return
-    if(session.closest('.edit-session-form')) return
+    if (!sessionItem) return;
+    if (session.closest(".edit-session-form")) return;
 
     // Remove session
-    const isRemoveButton = session.classList.contains('remove-session-button')
-    const id = Number(sessionItem.dataset.sessionId)
-    
-    if(isRemoveButton) {
-        removeSession(id)
+    const isRemoveButton = session.classList.contains("remove-session-button");
+    const id = Number(sessionItem.dataset.sessionId);
+
+    if (isRemoveButton) {
+        removeSession(id);
 
         // Hide driver panel if session was selected
-        if(selectedSessionId === id) {
-            selectedSessionId = null
-            driverPanel.classList.add('hidden')
-            body.classList.remove('driver-panel-visible')
+        if (selectedSessionId === id) {
+            selectedSessionId = null;
+            driverPanel.classList.add("hidden");
+            body.classList.remove("driver-panel-visible");
         }
-        return
+        return;
     }
 
     // Toggles edit form
-    if(session.classList.contains('edit-session-button')) {
-        const editForm = sessionItem.querySelector('.edit-session-form')
-        editForm.classList.toggle('hidden')
-        return
+    if (session.classList.contains("edit-session-button")) {
+        const editForm = sessionItem.querySelector(".edit-session-form");
+        editForm.classList.toggle("hidden");
+        return;
     }
 
     // Toggles driverPanel visibility based on if a session is selected or not
-    selectedSessionId = selectedSessionId === id ? null : id
-    driverPanel.classList.toggle('hidden', selectedSessionId === null)
-    body.classList.toggle('driver-panel-visible', selectedSessionId !== null)
+    selectedSessionId = selectedSessionId === id ? null : id;
+    driverPanel.classList.toggle("hidden", selectedSessionId === null);
+    body.classList.toggle("driver-panel-visible", selectedSessionId !== null);
 
-    renderSessions()
-    renderDrivers()
-})
+    renderSessions();
+    renderDrivers();
+});
 
 // Listener for editing session name
-sessionList.addEventListener('submit', (e) => {
-    if(!e.target.classList.contains('edit-session-form')) return
-    e.preventDefault()
+sessionList.addEventListener("submit", (e) => {
+    if (!e.target.classList.contains("edit-session-form")) return;
+    e.preventDefault();
 
-    const sessionItem = e.target.closest('.session-item')
-    const sessionId = sessionItem.dataset.sessionId
-    const input = sessionItem.querySelector('.edit-session-name')
-    const newName = input.value.trim()
-    const errorElement = e.target.querySelector('.error-message')
+    const sessionItem = e.target.closest(".session-item");
+    const sessionId = sessionItem.dataset.sessionId;
+    const input = sessionItem.querySelector(".edit-session-name");
+    const newName = input.value.trim();
+    const errorElement = e.target.querySelector(".error-message");
 
-    if(!newName) {
-        errorElement.textContent = 'Name is required'
-        errorElement.classList.remove('hidden')
-        input.focus()
-        return
+    if (!newName) {
+        errorElement.textContent = "Name is required";
+        errorElement.classList.remove("hidden");
+        input.focus();
+        return;
     }
 
-    editSession(sessionId, newName)
-})
+    editSession(sessionId, newName);
+});
 
 // Listener for creating new driver
-addDriverForm.addEventListener('submit', (e) => {
-    e.preventDefault()
-    const driverName = driverNameInput.value.trim()
+addDriverForm.addEventListener("submit", (e) => {
+    e.preventDefault();
+    const driverName = driverNameInput.value.trim();
 
-    if(!driverName) {
-        driverAddError.textContent = 'Driver name is required'
-        driverAddError.classList.remove('hidden')
-        driverNameInput.focus()
-        return
+    if (!driverName) {
+        driverAddError.textContent = "Driver name is required";
+        driverAddError.classList.remove("hidden");
+        driverNameInput.focus();
+        return;
     }
-    driverNameInput.value = ''
+    driverNameInput.value = "";
 
-    socket.emit('driver:add', {
+    socket.emit("driver:add", {
         sessionId: selectedSessionId,
-        name: driverName
-    })
-})
+        name: driverName,
+    });
+});
 
 // Listener for toggling edit form and removing driver
-driverList.addEventListener('click', (e) => {
-    const driver = e.target
-    const driverItem = driver.closest('.driver-item')
-    
+driverList.addEventListener("click", (e) => {
+    const driver = e.target;
+    const driverItem = driver.closest(".driver-item");
+
     // Remove driver
-    if(driver.classList.contains('remove-driver-button')) {
-        const driverId = driverItem.dataset.driverId
-        removeDriver(driverId)
+    if (driver.classList.contains("remove-driver-button")) {
+        const driverId = driverItem.dataset.driverId;
+        removeDriver(driverId);
     }
-    
+
     // Toggles edit form
-    if(driver.classList.contains('edit-driver-button')) {
-        const editForm = driverItem.querySelector('.edit-driver-form')
-        editForm.classList.toggle('hidden')
+    if (driver.classList.contains("edit-driver-button")) {
+        const editForm = driverItem.querySelector(".edit-driver-form");
+        editForm.classList.toggle("hidden");
     }
-})
+});
 
 // Listener for editing driver
-driverList.addEventListener('submit', (e) => {
-    if(!e.target.classList.contains('edit-driver-form')) return
-    e.preventDefault()
+driverList.addEventListener("submit", (e) => {
+    if (!e.target.classList.contains("edit-driver-form")) return;
+    e.preventDefault();
 
-    const driverItem = e.target.closest('.driver-item')
-    const driverId = driverItem.dataset.driverId
-    const input = driverItem.querySelector('.edit-driver-name')
-    const newName = input.value.trim()
-    const errorElement = e.target.querySelector('.error-message')
+    const driverItem = e.target.closest(".driver-item");
+    const driverId = driverItem.dataset.driverId;
+    const input = driverItem.querySelector(".edit-driver-name");
+    const newName = input.value.trim();
+    const errorElement = e.target.querySelector(".error-message");
 
-    if(!newName) {
-        errorElement.textContent = 'Name is required'
-        errorElement.classList.remove('hidden')
-        input.focus()
-        return
+    if (!newName) {
+        errorElement.textContent = "Name is required";
+        errorElement.classList.remove("hidden");
+        input.focus();
+        return;
     }
 
-    editDriver(driverId, newName)
-})
-
+    editDriver(driverId, newName);
+});
 
 // ---- FUNCTIONS ----
 
 // Renders the session list
 function renderSessions() {
-    sessionList.innerHTML = ''
-    sessionAddError.textContent = ''
-    sessionAddError.classList.add('hidden')
+    sessionList.innerHTML = "";
+    sessionAddError.textContent = "";
+    sessionAddError.classList.add("hidden");
 
-    if(sessions.length === 0) {
-        const emptyMessage = createEmptyMessage('No sessions yet. Add one to get started.')
-        emptyMessage.classList.add('empty-message--sessions')
+    if (sessions.length === 0) {
+        const emptyMessage = createEmptyMessage(
+            "No sessions yet. Add one to get started.",
+        );
+        emptyMessage.classList.add("empty-message--sessions");
 
-        sessionList.appendChild(emptyMessage)
-        driverPanel.classList.add('hidden')
-        body.classList.remove('driver-panel-visible')
-        return
+        sessionList.appendChild(emptyMessage);
+        driverPanel.classList.add("hidden");
+        body.classList.remove("driver-panel-visible");
+        return;
     }
 
-    const statusOrder = ['in progress', 'next', 'upcoming', 'finished']
+    const statusOrder = ["in progress", "next", "upcoming", "finished"];
     const groupedSessions = {
-        'in progress': [],
-        'next': [],
-        'upcoming': [],
-        'finished': []
-    }
+        "in progress": [],
+        next: [],
+        upcoming: [],
+        finished: [],
+    };
 
     // Group sessions by status
-    sessions.forEach(session => {
-        if(groupedSessions[session.status]) {
-            groupedSessions[session.status].push(session)
+    sessions.forEach((session) => {
+        if (groupedSessions[session.status]) {
+            groupedSessions[session.status].push(session);
         }
-    })
+    });
 
     // Render groups with a status header
-    statusOrder.forEach(status => {
-        const sessionsInGroup = groupedSessions[status]
+    statusOrder.forEach((status) => {
+        const sessionsInGroup = groupedSessions[status];
 
-        const column = document.createElement('div')
-        column.classList.add('session-column')
+        const column = document.createElement("div");
+        column.classList.add("session-column");
 
-        const header = document.createElement('h2')
-        header.classList.add('session-status-header')
-        header.textContent = status.charAt(0).toUpperCase() + status.slice(1)
-        column.appendChild(header)
+        const header = document.createElement("h2");
+        header.classList.add("session-status-header");
+        header.textContent = status.charAt(0).toUpperCase() + status.slice(1);
+        column.appendChild(header);
 
-        if(sessionsInGroup.length === 0) {
-            const emptyMessage = createEmptyMessage(`No ${status} sessions`)
-            column.appendChild(emptyMessage)
+        if (sessionsInGroup.length === 0) {
+            const emptyMessage = createEmptyMessage(`No ${status} sessions`);
+            column.appendChild(emptyMessage);
         } else {
-            sessionsInGroup.forEach(session => {
-                const item = createSessionItem(session)
-                column.appendChild(item)
-            })
+            sessionsInGroup.forEach((session) => {
+                const item = createSessionItem(session);
+                column.appendChild(item);
+            });
         }
 
-        sessionList.appendChild(column)
-    })
+        sessionList.appendChild(column);
+    });
 }
 
 // Render drivers for selected session
 function renderDrivers() {
-    driverList.innerHTML = ''
-    driverAddError.textContent = ''
-    driverAddError.classList.add('hidden')
+    driverList.innerHTML = "";
+    driverAddError.textContent = "";
+    driverAddError.classList.add("hidden");
 
-    const session = sessions.find(
-        s => s.id === selectedSessionId
-    )
+    const session = sessions.find((s) => s.id === selectedSessionId);
 
-    if(!session || session.drivers.length === 0) {
-        const emptyMessage = createEmptyMessage('No drivers yet. Add one to get started.')
-        emptyMessage.classList.add('empty-message--drivers')
-        driverList.appendChild(emptyMessage)
-        return
+    if (!session || session.drivers.length === 0) {
+        const emptyMessage = createEmptyMessage(
+            "No drivers yet. Add one to get started.",
+        );
+        emptyMessage.classList.add("empty-message--drivers");
+        driverList.appendChild(emptyMessage);
+        return;
     }
 
     const sortedDrivers = [...session.drivers].sort(
-        (a, b) => a.carNum - b.carNum
-    )
+        (a, b) => a.carNum - b.carNum,
+    );
 
-    sortedDrivers.forEach(driver => {
-        const item = createDriverItem(driver)
-        driverList.appendChild(item)
-    })
+    sortedDrivers.forEach((driver) => {
+        const item = createDriverItem(driver);
+        driverList.appendChild(item);
+    });
 }
 
 function editSession(sessionId, newName) {
-    socket.emit('session:edit', ({
+    socket.emit("session:edit", {
         sessionId,
-        newName
-    }))
+        newName,
+    });
 }
 
 function removeSession(sessionId) {
-    socket.emit('session:remove', ({
-        sessionId
-    }))
+    socket.emit("session:remove", {
+        sessionId,
+    });
 }
 
 function editDriver(driverId, newName) {
-    socket.emit('driver:edit', ({
+    socket.emit("driver:edit", {
         sessionId: selectedSessionId,
         driverId,
-        newName
-    }))
+        newName,
+    });
 }
 
 function removeDriver(driverId) {
-    socket.emit('driver:remove', ({
+    socket.emit("driver:remove", {
         sessionId: selectedSessionId,
-        driverId
-    }))
+        driverId,
+    });
 }
 
 function createEmptyMessage(message) {
-    const emptyMessage = document.createElement('p')
-    emptyMessage.classList.add('empty-message')
-    emptyMessage.textContent = message
+    const emptyMessage = document.createElement("p");
+    emptyMessage.classList.add("empty-message");
+    emptyMessage.textContent = message;
 
-    return emptyMessage
+    return emptyMessage;
 }
 
 function createSessionItem(session) {
