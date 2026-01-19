@@ -2,7 +2,8 @@
 .session-item,
 .driver-item,
 .empty-message,
-.error-message {
+.error-message,
+#driver-button-close {
     display: flex;
     flex-direction: column;
     box-shadow: inset 0px 1px 0px 0px #ffffff;
@@ -20,6 +21,10 @@
     text-shadow: 0px 1px 0px #ffffff;
     margin: 0.25rem;
     gap: 0.2rem;
+}
+
+.panel-title {
+    cursor: default;
 }
 
 .interface-content {
@@ -41,8 +46,26 @@
     align-items: center;
 }
 
+.driver-panel {
+    position: relative;
+    width: 300px;
+    border: 1px solid #ccc;
+}
+
 .panel-header {
+    position: relative;
     padding: 1rem;
+    padding-right: 1rem;
+}
+
+#driver-panel-close {
+    position: absolute;
+    top: 1rem;
+    right: 1rem;
+    border: none;
+    font-size: 1.2rem;
+    cursor: pointer;
+    color: red;
 }
 
 .driver-item {

@@ -12,6 +12,7 @@ const driverNameInput = document.getElementById("driver-name");
 const driverAddError = document.getElementById("driver-add-error");
 const driverList = document.getElementById("driver-list");
 const driverPanel = document.getElementById("driver-panel");
+const driverPanelClose = document.getElementById("driver-panel-close");
 
 let sessions = [];
 let selectedSessionId = null;
@@ -251,6 +252,13 @@ driverList.addEventListener("submit", (e) => {
     }
 
     editDriver(driverId, newName);
+});
+
+driverPanelClose.addEventListener("click", () => {
+    driverPanel.classList.add("hidden");
+    body.classList.remove("driver-panel-visible");
+    selectedSessionId = null;
+    renderSessions();
 });
 
 // ---- FUNCTIONS ----
@@ -525,8 +533,6 @@ Adding sessions, drivers -> visual confirmation if successful
 Edit functionality fix -> if a new editing form is opened, close last
 
 Update display when session status changes
-
-Add close button for driver panel
 
 Input Validation
 - Server side validation
