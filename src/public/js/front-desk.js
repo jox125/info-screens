@@ -60,6 +60,11 @@ socket.on("sessions:update", (data) => {
     });
 });
 
+socket.on("state:update", (data) => {
+    syncSessionStatus(data.sessions);
+    renderSessions();
+});
+
 // ---- ERROR MESSAGES ----
 
 // General error messages (No name, session not found etc...)
@@ -525,14 +530,24 @@ function createDriverItem(driver, mutable) {
     return item;
 }
 
+function syncSessionStatus(serverSessions) {
+    serverSessions.forEach(serverSession => {
+        const localSession = sessions.find(s => s.id === serverSession.id);
+
+        if(!localSession) return;
+
+        if(localSession.status !== serverSession.status) {
+            localSession.status = serverSession.status;
+        }
+    });
+}
+
 /* TODO
 Front Desk/Receptionist
 
 Adding sessions, drivers -> visual confirmation if successful
 
 Edit functionality fix -> if a new editing form is opened, close last
-
-Update display when session status changes
 
 Input Validation
 - Server side validation
