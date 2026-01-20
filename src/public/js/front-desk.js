@@ -5,11 +5,11 @@ const socket = io();
 const body = document.body;
 const addSessionForm = document.getElementById("add-session-form");
 const sessionNameInput = document.getElementById("session-name");
-const sessionAddError = document.getElementById("session-add-error");
+const sessionFeedback = document.getElementById("session-feedback");
 const sessionList = document.getElementById("session-list");
 const addDriverForm = document.getElementById("add-driver-form");
 const driverNameInput = document.getElementById("driver-name");
-const driverAddError = document.getElementById("driver-add-error");
+const driverFeedback = document.getElementById("driver-feedback");
 const driverList = document.getElementById("driver-list");
 const driverPanel = document.getElementById("driver-panel");
 const driverPanelClose = document.getElementById("driver-panel-close");
@@ -33,11 +33,8 @@ socket.on("sessions:update", (data) => {
         renderDrivers();
     }
 
-    sessionAddError.classList.add("hidden");
-    sessionAddError.textContent = "";
-
-    driverAddError.classList.add("hidden");
-    driverAddError.textContent = "";
+    resetSessionFeedback();
+    resetDriverFeedback();
 
     document.querySelectorAll(".edit-session-form").forEach((form) => {
         form.classList.add("hidden");
@@ -65,19 +62,40 @@ socket.on("state:update", (data) => {
     renderSessions();
 });
 
-// ---- ERROR MESSAGES ----
+// ---- FEEDBACK MESSAGES ----
+
+// Successful session action messages
+socket.on("session:success", (data) => {
+    sessionFeedback.textContent = data.message;
+    sessionFeedback.classList.add("success-message");
+    sessionFeedback.classList.remove("hidden");
+});
+
+// Successful driver action messages
+socket.on("driver:success", (data) => {
+    driverFeedback.textContent = data.message;
+    driverFeedback.classList.add("success-message");
+    driverFeedback.classList.remove("hidden");
+});
 
 // General error messages (No name, session not found etc...)
 socket.on("session:error", (data) => {
-    sessionAddError.textContent = data.message;
-    sessionAddError.classList.remove("hidden");
+    resetSessionFeedback();
+    resetDriverFeedback();
+
+    sessionFeedback.textContent = data.message;
+    sessionFeedback.classList.add("error-message");
+    sessionFeedback.classList.remove("hidden");
 
     // If no name is given, focus input box
-    if (data.focus) sessionAddError.focus();
+    if (data.focus) sessionFeedback.focus();
 });
 
 // Error message if something went wrong trying to edit a session
 socket.on("session:edit:error", (data) => {
+    resetSessionFeedback();
+    resetDriverFeedback();
+
     const sessionItem = document.querySelector(
         `.session-item[data-session-id="${data.sessionId}"]`,
     );
@@ -97,13 +115,20 @@ socket.on("session:edit:error", (data) => {
 
 // Error message if something went wrong trying to add a driver
 socket.on("driver:error", (data) => {
-    driverAddError.textContent = data.message;
-    driverAddError.classList.remove("hidden");
+    resetSessionFeedback();
+    resetDriverFeedback();
+
+    driverFeedback.textContent = data.message;
+    driverFeedback.classList.add("error-message");
+    driverFeedback.classList.remove("hidden", "success-message");
     driverNameInput.focus();
 });
 
 // Error message if something went wrong trying to edit a driver
 socket.on("driver:edit:error", (data) => {
+    resetSessionFeedback();
+    resetDriverFeedback();
+
     const driverItem = document.querySelector(
         `.driver-item[data-driver-id="${data.driverId}"]`,
     );
@@ -130,8 +155,9 @@ addSessionForm.addEventListener("submit", (e) => {
     const sessionName = sessionNameInput.value.trim();
 
     if (!sessionName) {
-        sessionAddError.textContent = "Session name is required";
-        sessionAddError.classList.remove("hidden");
+        sessionFeedback.textContent = "Session name is required";
+        sessionFeedback.classList.add("error-message");
+        sessionFeedback.classList.remove("hidden", "success-message");
         sessionNameInput.focus();
         return;
     }
@@ -207,8 +233,9 @@ addDriverForm.addEventListener("submit", (e) => {
     const driverName = driverNameInput.value.trim();
 
     if (!driverName) {
-        driverAddError.textContent = "Driver name is required";
-        driverAddError.classList.remove("hidden");
+        driverFeedback.textContent = "Driver name is required";
+        driverFeedback.classList.add("error-message");
+        driverFeedback.classList.remove("hidden", "success-message");
         driverNameInput.focus();
         return;
     }
@@ -271,8 +298,8 @@ driverPanelClose.addEventListener("click", () => {
 // Renders the session list
 function renderSessions() {
     sessionList.innerHTML = "";
-    sessionAddError.textContent = "";
-    sessionAddError.classList.add("hidden");
+    sessionFeedback.textContent = "";
+    sessionFeedback.classList.add("hidden");
 
     if (sessions.length === 0) {
         const emptyMessage = createEmptyMessage(
@@ -337,8 +364,8 @@ function renderSessions() {
 // Render drivers for selected session
 function renderDrivers() {
     driverList.innerHTML = "";
-    driverAddError.textContent = "";
-    driverAddError.classList.add("hidden");
+    driverFeedback.textContent = "";
+    driverFeedback.classList.add("hidden");
 
     const session = sessions.find((s) => s.id === selectedSessionId);
 
@@ -542,10 +569,20 @@ function syncSessionStatus(serverSessions) {
     });
 }
 
+function resetSessionFeedback() {
+    sessionFeedback.classList.add("hidden");
+    sessionFeedback.classList.remove("success-message", "error-message");
+    sessionFeedback.textContent = "";
+}
+
+function resetDriverFeedback() {
+    driverFeedback.classList.add("hidden");
+    driverFeedback.classList.remove("success-message", "error-message");
+    driverFeedback.textContent = "";
+}
+
 /* TODO
 Front Desk/Receptionist
-
-Adding sessions, drivers -> visual confirmation if successful
 
 Edit functionality fix -> if a new editing form is opened, close last
 

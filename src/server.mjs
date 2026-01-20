@@ -54,6 +54,7 @@ io.on("connection", (socket) => {
 
         raceState.sessions.push(session);
         io.emit("sessions:update", raceState.sessions);
+        socket.emit("session:success", { message: "Session added successfully" });
         console.log(`[session:add] id=${session.id} name="${session.name}"`);
     });
 
@@ -84,6 +85,7 @@ io.on("connection", (socket) => {
         const oldName = session.name;
         session.name = normalizedName;
         io.emit("sessions:update", raceState.sessions);
+        socket.emit("session:success", { message: "Session edited successfully" });
         console.log(
             `[session:edit] id=${session.id} name="${oldName}" -> "${session.name}"`,
         );
@@ -108,6 +110,7 @@ io.on("connection", (socket) => {
             (s) => s.id !== session.id,
         );
         io.emit("sessions:update", raceState.sessions);
+        socket.emit("session:success", { message: "Session removed successfully" });
         console.log(`[session:remove] id=${session.id} name="${session.name}"`);
     });
 
@@ -131,7 +134,7 @@ io.on("connection", (socket) => {
         const isFull = !carNum;
         if (isFull) {
             console.warn(`Session is full`);
-            return socket.emit("driver:add:error", {
+            return socket.emit("driver:error", {
                 message: "Session is full",
             });
         }
@@ -156,6 +159,7 @@ io.on("connection", (socket) => {
         session.drivers.push(newDriver);
 
         io.emit("sessions:update", raceState.sessions);
+        socket.emit("driver:success", { message: "Driver added successfully" });
         console.log(
             `[driver:add] session=${session.id} driver=${newDriver.id} name="${newDriver.name}"`,
         );
@@ -211,6 +215,7 @@ io.on("connection", (socket) => {
         const oldName = driver.name;
         driver.name = normalizedName;
         io.emit("sessions:update", raceState.sessions);
+        socket.emit("driver:success", { message: "Driver edited successfully" });
         console.log(
             `[driver:edit] session=${session.id} driver=${driver.id} name="${oldName}" -> "${driver.name}"`,
         );
@@ -240,6 +245,7 @@ io.on("connection", (socket) => {
         session.drivers = session.drivers.filter((d) => d.id !== driver.id);
 
         io.emit("sessions:update", raceState.sessions);
+        socket.emit("driver:success", { message: "Driver removed successfully" });
         console.log(
             `[driver:remove] session=${session.id} driver=${driver.id} name="${driver.name}"`,
         );
