@@ -50,7 +50,6 @@
 .driver-panel {
     position: relative;
     width: 300px;
-    border: 1px solid #ccc;
 }
 
 .panel-header {
