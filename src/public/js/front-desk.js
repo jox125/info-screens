@@ -14,6 +14,10 @@ const driverList = document.getElementById("driver-list");
 const driverPanel = document.getElementById("driver-panel");
 const driverPanelClose = document.getElementById("driver-panel-close");
 
+const currentEditForm = {
+    sessionId: null,
+    driverId: null
+};
 let sessions = [];
 let selectedSessionId = null;
 
@@ -193,7 +197,17 @@ sessionList.addEventListener("click", (e) => {
     // Toggles edit form
     if (session.classList.contains("edit-session-button")) {
         const editForm = sessionItem.querySelector(".edit-session-form");
+        if(currentEditForm.sessionId === editForm.id) {
+            editForm.classList.add("hidden");
+            currentEditForm.sessionId = null;
+            currentEditForm.driverId = null;
+            return;
+        }
+        
+        closeLastEditForm();
         editForm.classList.toggle("hidden");
+        currentEditForm.sessionId = editForm.id;
+        currentEditForm.driverId = null;
         return;
     }
 
@@ -261,7 +275,17 @@ driverList.addEventListener("click", (e) => {
     // Toggles edit form
     if (driver.classList.contains("edit-driver-button")) {
         const editForm = driverItem.querySelector(".edit-driver-form");
+        if(currentEditForm.driverId === editForm.id) {
+            editForm.classList.add("hidden");
+            currentEditForm.sessionId = null;
+            currentEditForm.driverId = null;
+            return;
+        }
+        
+        closeLastEditForm();
         editForm.classList.toggle("hidden");
+        currentEditForm.sessionId = null;
+        currentEditForm.driverId = editForm.id;
     }
 });
 
@@ -300,6 +324,8 @@ function renderSessions() {
     sessionList.innerHTML = "";
     sessionFeedback.textContent = "";
     sessionFeedback.classList.add("hidden");
+    currentEditForm.sessionId = null;
+    currentEditForm.driverId = null;
 
     if (sessions.length === 0) {
         const emptyMessage = createEmptyMessage(
@@ -366,6 +392,8 @@ function renderDrivers() {
     driverList.innerHTML = "";
     driverFeedback.textContent = "";
     driverFeedback.classList.add("hidden");
+    currentEditForm.sessionId = null;
+    currentEditForm.driverId = null;
 
     const session = sessions.find((s) => s.id === selectedSessionId);
 
@@ -468,6 +496,7 @@ function createSessionItem(session, mutable) {
 
         const editForm = document.createElement("form");
         editForm.classList.add("edit-session-form", "hidden");
+        editForm.id = session.id;
 
         const nameInput = document.createElement("input");
         nameInput.type = "text";
@@ -527,6 +556,7 @@ function createDriverItem(driver, mutable) {
 
         const editForm = document.createElement("form");
         editForm.classList.add("edit-driver-form", "hidden");
+        editForm.id = driver.id;
 
         const nameInput = document.createElement("input");
         nameInput.type = "text";
@@ -581,10 +611,36 @@ function resetDriverFeedback() {
     driverFeedback.textContent = "";
 }
 
+function closeLastEditForm() {
+    const sessionColumns = document.querySelectorAll(".session-column");
+
+    sessionColumns.forEach((elem) => {
+        const status = elem
+            .querySelector(".session-status-header")
+            .textContent
+            .trim()
+            .toLowerCase();
+
+        if(IMMUTABLE_STATUSES.has(status)) return;
+
+        const sessionItems = elem.querySelectorAll(".session-item");
+        if(!sessionItems) return;
+        sessionItems.forEach(item => {
+            const editForm = item.querySelector(".edit-session-form");
+            editForm.classList.add("hidden");
+        });
+        
+        const driverItems = driverList.querySelectorAll(".driver-item");
+        if(!driverItems) return;
+        driverItems.forEach(item => {
+            const editForm = item.querySelector(".edit-driver-form");
+            editForm.classList.add("hidden");
+        });
+    });
+}
+
 /* TODO
 Front Desk/Receptionist
-
-Edit functionality fix -> if a new editing form is opened, close last
 
 Input Validation
 - Server side validation
