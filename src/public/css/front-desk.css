@@ -24,6 +24,13 @@
     gap: 0.2rem;
 }
 
+.login-panel {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+}
+
 .panel-title {
     cursor: default;
 }

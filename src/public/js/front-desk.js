@@ -1,8 +1,11 @@
 import { STATUS, IMMUTABLE_STATUSES } from "/shared/constants/status.js";
 
-const socket = io();
+const socket = io({
+    autoConnect: false
+});
 
 const body = document.body;
+const sessionPanel = document.getElementById("session-panel");
 const addSessionForm = document.getElementById("add-session-form");
 const sessionNameInput = document.getElementById("session-name");
 const sessionFeedback = document.getElementById("session-feedback");
@@ -21,6 +24,41 @@ const currentEditForm = {
 let sessions = [];
 let selectedSessionId = null;
 
+// Authentication
+const loginPanel = document.getElementById("login-panel");
+const loginForm = document.getElementById("login-form");
+const loginInput = document.getElementById("login-key");
+const loginFeedback = document.getElementById("login-feedback");
+
+loginForm.addEventListener("submit", (e) => {
+    e.preventDefault();
+    const role = "receptionist";
+    const key = loginInput.value.trim();
+    socket.auth = { role, key };
+    socket.connect();
+    loginInput.value = "";
+});
+
+socket.on("connect_error", (err) => {
+    console.log(err);
+    loginFeedback.textContent = "Wrong key";
+    loginFeedback.classList.remove("hidden");
+    loginInput.disabled = true;
+    loginInput.placeholder = "Disabled";
+    window.setTimeout(() => {
+        loginInput.disabled = false;
+        loginInput.placeholder = "Please enter key";
+    }, 500);
+});
+
+socket.on("auth:ok", (role) => {
+    if(role !== "receptionist") return;
+    document.querySelector(".interface-content").removeChild(loginPanel);
+    sessionPanel.classList.remove("hidden");
+});
+
+
+// After auth
 socket.on("connect", () => {
     console.log("Connected to server");
 
@@ -642,11 +680,6 @@ function closeLastEditForm() {
 /* TODO
 Front Desk/Receptionist
 
-Input Validation
-- Server side validation
-- Add authentication w/ access keys
-    Incorrect keys:
-    - Must delay server response by 500ms
-    - Must show an error message
-    - Must re-prompt for the key
+Move some things to constants
+Clean up code
 */

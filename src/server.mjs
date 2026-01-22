@@ -14,6 +14,23 @@ const server = createServer(app);
 const io = new Server(server);
 const __dirname = fileURLToPath(dirname(import.meta.url));
 
+// env keys
+const RECEPTIONIST_KEY = process.env.RECEPTIONIST_KEY;
+const OBSERVER_KEY = process.env.OBSERVER_KEY;
+const SAFETY_KEY = process.env.SAFETY_KEY;
+
+// Race state (currently in memory)
+// const raceState = {
+//     sessions: [],
+//     raceMode: 'safe',   // safe, hazard, danger, finish
+//     duration: 60000,    // Only 1 min races for now
+// }
+    
+if (!RECEPTIONIST_KEY || !OBSERVER_KEY || !SAFETY_KEY) {
+    console.error("ERROR: Missing required environment variables.");
+    process.exit(1);
+}
+
 app.use(serveStatic("src/public"));
 app.use("/shared", serveStatic("src/shared"));
 
@@ -21,17 +38,39 @@ app.get("/front-desk", (req, res) => {
     res.sendFile(join(__dirname, "/public/front-desk.html"));
 });
 
-// Race state (currently in memory)
-// const raceState = {
-//     sessions: [],
-//     currentRace: null,
-//     raceMode: 'safe',   // safe, hazard, danger, finish
-//     duration: 60000,    // Only 1 min races for now
-// }
+// ---- AUTH get key on handshake and set role or deny connect ----
+io.use((socket, next) => {
+  const { role, key } = socket.handshake.auth;
+
+  if (role === "public") {
+    socket.data.role = "public";
+    return next();
+  }
+  if (!key) {
+    return next(new Error("Key required"));
+  }
+  if (role === "receptionist" && key === RECEPTIONIST_KEY) {
+    socket.data.role = "receptionist";
+    return next();
+  }
+  if (role === "observer" && key === OBSERVER_KEY) {
+    socket.data.role = "observer";
+    return next();
+  }
+  if (role === "safety-official" && key === SAFETY_KEY) {
+    socket.data.role = "safety-official";
+    return next();
+  }
+
+  return next(new Error("Unauthorized"));
+});
 
 // Connect with client
 io.on("connection", (socket) => {
     console.log("Client connected");
+    console.log(socket.data.role);
+
+    socket.emit("auth:ok", socket.data.role);
 
     // ---- SESSION MANAGEMENT ----
 

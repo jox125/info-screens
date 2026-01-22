@@ -9,7 +9,21 @@
 </head>
 <body>
     <div class="interface-content">
-      <div class="session-panel">
+      <div id="login-panel" class="login-panel">
+        <h2 class="panel-title">Front Desk</h2>
+        <form id="login-form" class="login-form">
+          <input
+            type="text"
+            id="login-key"
+            placeholder="Please enter key"
+          >
+          <button type="submit">Login</button>
+          <p id="login-feedback" class="error-message hidden"></p>
+        </form>
+      </div>
+
+
+      <div id="session-panel" class="session-panel hidden">
         <div class="panel-header">
           <h2 class="panel-title">Race Sessions</h2>
           <form id="add-session-form" class="add-form">
