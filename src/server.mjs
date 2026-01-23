@@ -76,6 +76,12 @@ io.on("connection", (socket) => {
 
     // Adding a session
     socket.on("session:add", (data) => {
+        if(socket.data.role !== "receptionist") {
+            return socket.emit("session:error", {
+                message: "Forbidden"
+            });
+        }
+
         const normalizedName = normalize(data.name);
         if (!normalizedName) {
             return socket.emit("session:error", {
@@ -99,6 +105,12 @@ io.on("connection", (socket) => {
 
     // Editing session name
     socket.on("session:edit", (data) => {
+        if(socket.data.role !== "receptionist") {
+            return socket.emit("session:error", {
+                message: "Forbidden"
+            });
+        }
+
         const session = findSession(data.sessionId);
         if (!session) {
             return socket.emit("session:error", {
@@ -131,6 +143,12 @@ io.on("connection", (socket) => {
     });
 
     socket.on("session:remove", (data) => {
+        if(socket.data.role !== "receptionist") {
+            return socket.emit("session:error", {
+                message: "Forbidden"
+            });
+        }
+
         const session = findSession(data.sessionId);
         if (!session) {
             return socket.emit("session:error", {
@@ -155,6 +173,12 @@ io.on("connection", (socket) => {
 
     // Adding a driver
     socket.on("driver:add", (data) => {
+        if(socket.data.role !== "receptionist") {
+            return socket.emit("session:error", {
+                message: "Forbidden"
+            });
+        }
+
         const normalizedName = normalize(data.name);
         if (!normalizedName) {
             return socket.emit("driver:error", {
@@ -206,8 +230,13 @@ io.on("connection", (socket) => {
 
     // Editing a driver
     socket.on("driver:edit", (data) => {
-        const normalizedName = normalize(data.newName);
+        if(socket.data.role !== "receptionist") {
+            return socket.emit("session:error", {
+                message: "Forbidden"
+            });
+        }
 
+        const normalizedName = normalize(data.newName);
         if (!normalizedName) {
             return socket.emit("driver:edit:error", {
                 sessionId: data.sessionId,
@@ -262,6 +291,12 @@ io.on("connection", (socket) => {
 
     // Removing a driver
     socket.on("driver:remove", (data) => {
+        if(socket.data.role !== "receptionist") {
+            return socket.emit("session:error", {
+                message: "Forbidden"
+            });
+        }
+
         const session = findSession(data.sessionId);
         if (!session) {
             return socket.emit("session:error", {
@@ -293,6 +328,12 @@ io.on("connection", (socket) => {
     // ---- REQUESTS ----
 
     socket.on("session:request", () => {
+        if(socket.data.role !== "receptionist") {
+            return socket.emit("session:error", {
+                message: "Forbidden"
+            });
+        }
+
         socket.emit("sessions:update", raceState.sessions);
     });
 
