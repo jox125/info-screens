@@ -5,7 +5,9 @@ import { createServer } from "http";
 import { Server } from "socket.io";
 import { fileURLToPath } from "url";
 import { join, dirname } from "path";
-import { STATUS, IMMUTABLE_STATUSES } from "./shared/constants/status.js"
+import { STATUS, IMMUTABLE_STATUSES } from "./shared/constants/status.js";
+import { ROLE } from "./shared/constants/roles.js";
+import { ERROR_CODES, SUCCESS_CODES } from "./shared/constants/codes.js";
 import { raceState } from "./testRaceState.js";
 
 // Initialize express, socketIO
@@ -42,23 +44,23 @@ app.get("/front-desk", (req, res) => {
 io.use((socket, next) => {
   const { role, key } = socket.handshake.auth;
 
-  if (role === "public") {
-    socket.data.role = "public";
+  if (role === ROLE.PUBLIC) {
+    socket.data.role = ROLE.PUBLIC;
     return next();
   }
   if (!key) {
     return next(new Error("Key required"));
   }
-  if (role === "receptionist" && key === RECEPTIONIST_KEY) {
-    socket.data.role = "receptionist";
+  if (role === ROLE.RECEPTIONIST && key === RECEPTIONIST_KEY) {
+    socket.data.role = ROLE.RECEPTIONIST;
     return next();
   }
-  if (role === "observer" && key === OBSERVER_KEY) {
-    socket.data.role = "observer";
+  if (role === ROLE.OBSERVER && key === OBSERVER_KEY) {
+    socket.data.role = ROLE.OBSERVER;
     return next();
   }
-  if (role === "safety-official" && key === SAFETY_KEY) {
-    socket.data.role = "safety-official";
+  if (role === ROLE.SAFETY_OFFICIAL && key === SAFETY_KEY) {
+    socket.data.role = ROLE.SAFETY_OFFICIAL;
     return next();
   }
 
@@ -76,16 +78,17 @@ io.on("connection", (socket) => {
 
     // Adding a session
     socket.on("session:add", (data) => {
-        if(socket.data.role !== "receptionist") {
+        if(socket.data.role !== ROLE.RECEPTIONIST) {
+            console.error(socket.data.role, ERROR_CODES.FORBIDDEN);
             return socket.emit("session:error", {
-                message: "Forbidden"
+                code: ERROR_CODES.FORBIDDEN
             });
         }
 
         const normalizedName = normalize(data.name);
         if (!normalizedName) {
             return socket.emit("session:error", {
-                message: "Session name is required",
+                code: ERROR_CODES.SESSION_NAME_REQUIRED,
                 focus: true,
             });
         }
@@ -99,22 +102,22 @@ io.on("connection", (socket) => {
 
         raceState.sessions.push(session);
         io.emit("sessions:update", raceState.sessions);
-        socket.emit("session:success", { message: "Session added successfully" });
+        socket.emit("session:success", { code: SUCCESS_CODES.SESSION_ADDED });
         console.log(`[session:add] id=${session.id} name="${session.name}"`);
     });
 
     // Editing session name
     socket.on("session:edit", (data) => {
-        if(socket.data.role !== "receptionist") {
+        if(socket.data.role !== ROLE.RECEPTIONIST) {
             return socket.emit("session:error", {
-                message: "Forbidden"
+                code: ERROR_CODES.FORBIDDEN
             });
         }
 
         const session = findSession(data.sessionId);
         if (!session) {
             return socket.emit("session:error", {
-                message: "Session not found",
+                code: ERROR_CODES.SESSION_NOT_FOUND
             });
         }
 
@@ -122,44 +125,44 @@ io.on("connection", (socket) => {
         if (!normalizedName) {
             return socket.emit("session:edit:error", {
                 sessionId: data.sessionId,
-                message: "Name is required",
+                code: ERROR_CODES.NAME_REQUIRED
             });
         }
 
         const status = session.status;
         if(IMMUTABLE_STATUSES.has(status)) {
             return socket.emit("session:error", {
-                message: `Session cannot be modified because session is ${status}`,
+                status,
+                code: ERROR_CODES.SESSION_LOCKED
             });
         }
 
         const oldName = session.name;
         session.name = normalizedName;
         io.emit("sessions:update", raceState.sessions);
-        socket.emit("session:success", { message: "Session edited successfully" });
-        console.log(
-            `[session:edit] id=${session.id} name="${oldName}" -> "${session.name}"`,
-        );
+        socket.emit("session:success", { code: SUCCESS_CODES.SESSION_UPDATED });
+        console.log(`[session:edit] id=${session.id} name="${oldName}" -> "${session.name}"`);
     });
 
     socket.on("session:remove", (data) => {
-        if(socket.data.role !== "receptionist") {
+        if(socket.data.role !== ROLE.RECEPTIONIST) {
             return socket.emit("session:error", {
-                message: "Forbidden"
+                code: ERROR_CODES.FORBIDDEN
             });
         }
 
         const session = findSession(data.sessionId);
         if (!session) {
             return socket.emit("session:error", {
-                message: "Session not found",
+                code: ERROR_CODES.SESSION_NOT_FOUND
             });
         }
 
         const status = session.status
         if(IMMUTABLE_STATUSES.has(status)) {
             return socket.emit("session:error", {
-                message: `Session cannot be modified because session is ${status}`,
+                status,
+                code: ERROR_CODES.SESSION_LOCKED
             });
         }
 
@@ -167,50 +170,48 @@ io.on("connection", (socket) => {
             (s) => s.id !== session.id,
         );
         io.emit("sessions:update", raceState.sessions);
-        socket.emit("session:success", { message: "Session removed successfully" });
+        socket.emit("session:success", { code: SUCCESS_CODES.SESSION_DELETED });
         console.log(`[session:remove] id=${session.id} name="${session.name}"`);
     });
 
     // Adding a driver
     socket.on("driver:add", (data) => {
-        if(socket.data.role !== "receptionist") {
+        if(socket.data.role !== ROLE.RECEPTIONIST) {
             return socket.emit("session:error", {
-                message: "Forbidden"
+                code: ERROR_CODES.FORBIDDEN
             });
         }
 
         const normalizedName = normalize(data.name);
         if (!normalizedName) {
             return socket.emit("driver:error", {
-                message: "Driver name is required",
+                code: ERROR_CODES.DRIVER_NAME_REQUIRED
             });
         }
 
         const session = findSession(data.sessionId);
         if (!session) {
             return socket.emit("session:error", {
-                message: "Session not found",
+                code: ERROR_CODES.SESSION_NOT_FOUND
             });
         }
 
         const carNum = assignCar(session);
         const isFull = !carNum;
         if (isFull) {
-            console.warn(`Session is full`);
             return socket.emit("driver:error", {
-                message: "Session is full",
+                code: ERROR_CODES.SESSION_FULL
             });
         }
 
         const driver = session.drivers.find(
-            (d) => normalize(d.name, true) === normalize(data.name, true),
+            (d) => normalize(d.name, true) === normalize(data.name, { lowerCase: true }),
         );
         if (driver) {
-            console.warn(
-                `[driver:add] session=${session.id} driver="${driver.name}" already exists`,
-            );
+            console.warn(`[driver:add] session=${session.id} driver="${driver.name}" already exists`);
             return socket.emit("driver:error", {
-                message: `${driver.name} already exists`,
+                name: normalize(driver.name),
+                code: ERROR_CODES.DRIVER_EXISTS
             });
         }
 
@@ -222,17 +223,15 @@ io.on("connection", (socket) => {
         session.drivers.push(newDriver);
 
         io.emit("sessions:update", raceState.sessions);
-        socket.emit("driver:success", { message: "Driver added successfully" });
-        console.log(
-            `[driver:add] session=${session.id} driver=${newDriver.id} name="${newDriver.name}"`,
-        );
+        socket.emit("driver:success", { code: SUCCESS_CODES.DRIVER_ADDED });
+        console.log(`[driver:add] session=${session.id} driver=${newDriver.id} name="${newDriver.name}"`);
     });
 
     // Editing a driver
     socket.on("driver:edit", (data) => {
-        if(socket.data.role !== "receptionist") {
+        if(socket.data.role !== ROLE.RECEPTIONIST) {
             return socket.emit("session:error", {
-                message: "Forbidden"
+                code: ERROR_CODES.FORBIDDEN
             });
         }
 
@@ -241,27 +240,28 @@ io.on("connection", (socket) => {
             return socket.emit("driver:edit:error", {
                 sessionId: data.sessionId,
                 driverId: data.driverId,
-                message: "Name is required",
+                code: ERROR_CODES.DRIVER_EXISTS
             });
         }
 
         const session = findSession(data.sessionId);
         if (!session) {
             return socket.emit("session:error", {
-                message: "Session not found",
+                code: ERROR_CODES.SESSION_NOT_FOUND
             });
         }
 
         const status = session.status;
         if(IMMUTABLE_STATUSES.has(status)) {
             return socket.emit("session:error", {
-                message: `Driver cannot be modified because session is ${status}`,
+                status,
+                code: ERROR_CODES.DRIVER_LOCKED
             });
         }
 
         const driver = findDriver(data.sessionId, data.driverId);
         if (!driver) {
-            return socket.emit("driver:error", { message: "Driver not found" });
+            return socket.emit("driver:error", { code: ERROR_CODES.DRIVER_NOT_FOUND });
         }
 
         const duplicate = session.drivers.find(
@@ -274,63 +274,60 @@ io.on("connection", (socket) => {
                 `[driver:edit] session=${session.id} driver="${duplicate.name}" already exists`,
             );
             return socket.emit("driver:edit:error", {
-                sessionId: data.sessionId,
                 driverId: data.driverId,
-                message: `${duplicate.name} already exists`,
+                name: duplicate.name,
+                code: ERROR_CODES.DRIVER_EXISTS
             });
         }
 
         const oldName = driver.name;
         driver.name = normalizedName;
         io.emit("sessions:update", raceState.sessions);
-        socket.emit("driver:success", { message: "Driver edited successfully" });
-        console.log(
-            `[driver:edit] session=${session.id} driver=${driver.id} name="${oldName}" -> "${driver.name}"`,
-        );
+        socket.emit("driver:success", { code: SUCCESS_CODES.DRIVER_UPDATED });
+        console.log(`[driver:edit] session=${session.id} driver=${driver.id} name="${oldName}" -> "${driver.name}"`);
     });
 
     // Removing a driver
     socket.on("driver:remove", (data) => {
-        if(socket.data.role !== "receptionist") {
+        if(socket.data.role !== ROLE.RECEPTIONIST) {
             return socket.emit("session:error", {
-                message: "Forbidden"
+                code: ERROR_CODES.FORBIDDEN
             });
         }
 
         const session = findSession(data.sessionId);
         if (!session) {
             return socket.emit("session:error", {
-                message: "Session not found",
+                code: ERROR_CODES.SESSION_NOT_FOUND
             });
         }
 
         const status = session.status;
         if(IMMUTABLE_STATUSES.has(status)) {
             return socket.emit("session:error", {
-                message: `Driver cannot be modified because session is ${status}`,
-            })
+                status,
+                code: ERROR_CODES.DRIVER_LOCKED
+            });
         }
 
         const driver = findDriver(data.sessionId, data.driverId);
         if (!driver) {
-            return socket.emit("driver:error", { message: "Driver not found" });
+            return socket.emit("driver:error", { code: ERROR_CODES.DRIVER_NOT_FOUND });
         }
 
         session.drivers = session.drivers.filter((d) => d.id !== driver.id);
 
         io.emit("sessions:update", raceState.sessions);
-        socket.emit("driver:success", { message: "Driver removed successfully" });
-        console.log(
-            `[driver:remove] session=${session.id} driver=${driver.id} name="${driver.name}"`,
-        );
+        socket.emit("driver:success", { code: SUCCESS_CODES.DRIVER_DELETED });
+        console.log(`[driver:remove] session=${session.id} driver=${driver.id} name="${driver.name}"`);
     });
 
     // ---- REQUESTS ----
 
     socket.on("session:request", () => {
-        if(socket.data.role !== "receptionist") {
+        if(socket.data.role !== ROLE.RECEPTIONIST) {
             return socket.emit("session:error", {
-                message: "Forbidden"
+                code: ERROR_CODES.FORBIDDEN
             });
         }
 
@@ -367,9 +364,7 @@ function findDriver(sessionId, driverId) {
     const driver = session.drivers.find((d) => d.id === Number(driverId));
 
     if (!driver) {
-        console.warn(
-            `Invalid driverId recieved: ${driverId} in session: ${sessionId}`,
-        );
+        console.warn(`Invalid driverId recieved: ${driverId} in session: ${sessionId}`);
         return;
     }
 

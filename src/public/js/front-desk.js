@@ -1,4 +1,6 @@
+import { ROLE } from "../../shared/constants/roles.js";
 import { STATUS, IMMUTABLE_STATUSES } from "/shared/constants/status.js";
+import { ERROR_MESSAGES, SUCCESS_MESSAGES } from "./constants/messages.js";
 
 const socket = io({
     autoConnect: false
@@ -32,7 +34,7 @@ const loginFeedback = document.getElementById("login-feedback");
 
 loginForm.addEventListener("submit", (e) => {
     e.preventDefault();
-    const role = "receptionist";
+    const role = ROLE.RECEPTIONIST;
     const key = loginInput.value.trim();
     socket.auth = { role, key };
     socket.connect();
@@ -52,7 +54,7 @@ socket.on("connect_error", (err) => {
 });
 
 socket.on("auth:ok", (role) => {
-    if(role !== "receptionist") return;
+    if(role !== ROLE.RECEPTIONIST) return;
     document.querySelector(".interface-content").removeChild(loginPanel);
     sessionPanel.classList.remove("hidden");
 });
@@ -108,14 +110,14 @@ socket.on("state:update", (data) => {
 
 // Successful session action messages
 socket.on("session:success", (data) => {
-    sessionFeedback.textContent = data.message;
+    sessionFeedback.textContent = SUCCESS_MESSAGES[data.code];
     sessionFeedback.classList.add("success-message");
     sessionFeedback.classList.remove("hidden");
 });
 
 // Successful driver action messages
 socket.on("driver:success", (data) => {
-    driverFeedback.textContent = data.message;
+    driverFeedback.textContent = SUCCESS_MESSAGES[data.code];
     driverFeedback.classList.add("success-message");
     driverFeedback.classList.remove("hidden");
 });
@@ -125,7 +127,8 @@ socket.on("session:error", (data) => {
     resetSessionFeedback();
     resetDriverFeedback();
 
-    sessionFeedback.textContent = data.message;
+    const message = data.status ? ERROR_MESSAGES[data.code].replace("${status}", data.status) : ERROR_MESSAGES[data.code];
+    sessionFeedback.textContent = message;
     sessionFeedback.classList.add("error-message");
     sessionFeedback.classList.remove("hidden");
 
@@ -138,9 +141,7 @@ socket.on("session:edit:error", (data) => {
     resetSessionFeedback();
     resetDriverFeedback();
 
-    const sessionItem = document.querySelector(
-        `.session-item[data-session-id="${data.sessionId}"]`,
-    );
+    const sessionItem = document.querySelector(`.session-item[data-session-id="${data.sessionId}"]`);
 
     if (!sessionItem) return;
 
@@ -148,7 +149,7 @@ socket.on("session:edit:error", (data) => {
     const errorElement = editForm.querySelector(".error-message");
     const input = editForm.querySelector(".edit-session-name");
 
-    errorElement.textContent = data.message;
+    errorElement.textContent = ERROR_MESSAGES[data.code];
     errorElement.classList.remove("hidden");
 
     editForm.classList.remove("hidden");
@@ -160,7 +161,8 @@ socket.on("driver:error", (data) => {
     resetSessionFeedback();
     resetDriverFeedback();
 
-    driverFeedback.textContent = data.message;
+    const message = data.name ? ERROR_MESSAGES[data.code].replace("${name}", data.name) : ERROR_MESSAGES[data.code];
+    driverFeedback.textContent = message;
     driverFeedback.classList.add("error-message");
     driverFeedback.classList.remove("hidden", "success-message");
     driverNameInput.focus();
@@ -171,9 +173,7 @@ socket.on("driver:edit:error", (data) => {
     resetSessionFeedback();
     resetDriverFeedback();
 
-    const driverItem = document.querySelector(
-        `.driver-item[data-driver-id="${data.driverId}"]`,
-    );
+    const driverItem = document.querySelector(`.driver-item[data-driver-id="${data.driverId}"]`);
 
     if (!driverItem) return;
 
@@ -181,7 +181,8 @@ socket.on("driver:edit:error", (data) => {
     const errorElement = editForm.querySelector(".error-message");
     const input = editForm.querySelector(".edit-driver-name");
 
-    errorElement.textContent = data.message;
+    const message = data.name ? ERROR_MESSAGES[data.code].replace("${name}", data.name) : ERROR_MESSAGES[data.code];
+    errorElement.textContent = message;
     errorElement.classList.remove("hidden");
 
     editForm.classList.remove("hidden");
@@ -197,7 +198,7 @@ addSessionForm.addEventListener("submit", (e) => {
     const sessionName = sessionNameInput.value.trim();
 
     if (!sessionName) {
-        sessionFeedback.textContent = "Session name is required";
+        sessionFeedback.textContent = ERROR_MESSAGES.SESSION_NAME_REQUIRED;
         sessionFeedback.classList.add("error-message");
         sessionFeedback.classList.remove("hidden", "success-message");
         sessionNameInput.focus();
@@ -270,7 +271,7 @@ sessionList.addEventListener("submit", (e) => {
     const errorElement = e.target.querySelector(".error-message");
 
     if (!newName) {
-        errorElement.textContent = "Name is required";
+        errorElement.textContent = ERROR_MESSAGES.SESSION_NAME_REQUIRED;
         errorElement.classList.remove("hidden");
         input.focus();
         return;
@@ -285,7 +286,7 @@ addDriverForm.addEventListener("submit", (e) => {
     const driverName = driverNameInput.value.trim();
 
     if (!driverName) {
-        driverFeedback.textContent = "Driver name is required";
+        driverFeedback.textContent = ERROR_MESSAGES.DRIVER_NAME_REQUIRED;
         driverFeedback.classList.add("error-message");
         driverFeedback.classList.remove("hidden", "success-message");
         driverNameInput.focus();
@@ -339,7 +340,7 @@ driverList.addEventListener("submit", (e) => {
     const errorElement = e.target.querySelector(".error-message");
 
     if (!newName) {
-        errorElement.textContent = "Name is required";
+        errorElement.textContent = ERROR_MESSAGES.DRIVER_NAME_REQUIRED;
         errorElement.classList.remove("hidden");
         input.focus();
         return;
@@ -366,9 +367,7 @@ function renderSessions() {
     currentEditForm.driverId = null;
 
     if (sessions.length === 0) {
-        const emptyMessage = createEmptyMessage(
-            "No sessions yet. Add one to get started.",
-        );
+        const emptyMessage = createEmptyMessage("No sessions yet. Add one to get started.");
         emptyMessage.classList.add("empty-message--sessions");
 
         sessionList.appendChild(emptyMessage);
@@ -436,9 +435,7 @@ function renderDrivers() {
     const session = sessions.find((s) => s.id === selectedSessionId);
 
     if (!session || session.drivers.length === 0) {
-        const emptyMessage = createEmptyMessage(
-            "No drivers yet. Add one to get started.",
-        );
+        const emptyMessage = createEmptyMessage("No drivers yet. Add one to get started.");
         emptyMessage.classList.add("empty-message--drivers");
         driverList.appendChild(emptyMessage);
         return;
@@ -584,6 +581,7 @@ function createDriverItem(driver, mutable) {
     header.appendChild(driverCar);
     item.appendChild(header);
 
+    // If mutable, add buttons for editing, removing
     if(mutable) {
         const buttonContainer = document.createElement("div");
         buttonContainer.classList.add("button-container");
@@ -680,6 +678,7 @@ function closeLastEditForm() {
 /* TODO
 Front Desk/Receptionist
 
-Move some things to constants
+Fix ability to add drivers to locked sessions
+
 Clean up code
 */
