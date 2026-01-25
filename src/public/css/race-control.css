@@ -11,6 +11,15 @@
     align-content: center;
 }
 
+#state-indicator {
+    width: 200px;
+    height: 150px;
+    border-radius: 20px;
+    box-shadow: 0 0 10px;
+    margin: auto;
+    margin-top: 20px;
+}
+
 @media (max-width: 481px) {
     .panel {
         width: 100%;
@@ -51,4 +60,19 @@
 }
 #finish-button{
     background: repeating-conic-gradient(#808080 0 25%, #0000 0 50%) 50% / 30px 30px;
+}
+#state-indicator.safe {
+    background: forestgreen;
+}
+
+#state-indicator.hazard {
+    background: gold;
+}
+
+#state-indicator.danger {
+    background: firebrick;
+}
+
+#state-indicator.finished {
+    background: repeating-conic-gradient(#808080 0 25%, #0000 0 50%) 50% / 30px 30px;;
 }

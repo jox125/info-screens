@@ -127,12 +127,24 @@ socket.on("auth:ok", (role) => {
       socket.emit("race:action", { type: "END_SESSION" });
     };
     controlPanel.appendChild(endSessionButton);
+
+    //Race state indicator
+    const stateIndicator = document.createElement("div");
+    stateIndicator.id = "state-indicator"; 
+    //stateIndicator.classList.add("hidden");   
+    controlPanel.appendChild(stateIndicator);
   }
 });
 
 socket.on("state:update", (state) => {
   //update state data
   Object.assign(raceState, state);
+  //change state indicator color
+  const stateIndicator = document.getElementById("state-indicator");
+  stateIndicator.classList.remove("safe", "hazard", "danger", "finished");
+  stateIndicator.classList.add(raceState.raceMode);
+  
+
   // view 1. no race on, and no next races
   if (
     !raceState.sessions.find((session) => session.status === "in progress") &&
@@ -252,6 +264,9 @@ socket.on("state:update", (state) => {
       const nextRaceInfo = document.getElementById("next-info");
       nextRaceInfo.classList.add("hidden");
       nextRaceInfo.innerHTML = "";
+      //show current state flag
+      const stateIndicator = document.getElementById("state-indicator");
+      stateIndicator.classList.remove("hidden");     
     } catch (err) {
       console.log("Control panel not ready in race started.");
     }
@@ -297,3 +312,5 @@ const convertTime = (millis) => {
   var seconds = ((millis % 60000) / 1000).toFixed(0);
   return minutes + ":" + (seconds < 10 ? "0" : "") + seconds;
 };
+
+
