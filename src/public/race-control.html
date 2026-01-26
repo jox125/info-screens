@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Race control</title>
+    <link rel="stylesheet" href="css/main.css">
+    <link rel="stylesheet" href="css/race-control.css">
+</head>
+<body>
+    <div class="interface-content">
+      <div id="panel" class="panel">
+        <div class="panel-header">
+          <h2>Race control</h2>
+        </div>
+        
+      <div id="login-panel">
+        <form id="login-form" class="login-form">
+          <input 
+            type="text" 
+            id="login-key" 
+            placeholder="Please enter key"
+          >
+          <button type="submit">Login</button>
+          <span id="loginError" class="error"></span>
+        </form>
+        <div id="login-error" class="error"></div>
+      </div>
+      </div>
+    </div>
+
+    <script src="/socket.io/socket.io.js"></script>
+    <script src="js/race-control.js"></script>
+</body>
+</html>

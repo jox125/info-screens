@@ -8,7 +8,10 @@ import { join, dirname } from "path";
 import { STATUS, IMMUTABLE_STATUSES } from "./shared/constants/status.js";
 import { ROLE } from "./shared/constants/roles.js";
 import { ERROR_CODES, SUCCESS_CODES } from "./shared/constants/codes.js";
-import { raceState } from "./testRaceState.js";
+import { raceState, RECEPTIONIST_KEY, OBSERVER_KEY, SAFETY_KEY, checkConfig } from "./config/config.mjs";
+import { ensureNextRace } from "./services/race-state.mjs";
+import { socketAuth } from "./sockets/auth.mjs";
+import { registerSocketHandlers } from "./sockets/index.mjs";
 
 // Initialize express, socketIO
 const app = express();
@@ -339,10 +342,30 @@ io.on("connection", (socket) => {
     });
 });
 
+
+checkConfig();
+
+app.use(serveStatic("src/public"));
+app.get("/race-control", (req, res) => {
+  res.sendFile(join(__dirname, "/public/race-control.html"));
+});
+
+//Mark race with smallest id to be next race
+ensureNextRace(raceState);
+
+//Authenticate session
+io.use(socketAuth( RECEPTIONIST_KEY, OBSERVER_KEY, SAFETY_KEY ));
+
+
+// register Socket Handlers
+io.use(registerSocketHandlers(io, { raceState }));
+
+
 const PORT = process.env.PORT || 3000;
 server.listen(PORT, () => {
-    console.log(`server running at http://localhost:${PORT}`);
+  console.log(`server running at http://localhost:${PORT}`);
 });
+
 
 // ---- FUNCTIONS ----
 

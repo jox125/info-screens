@@ -1,0 +1,78 @@
+.panel-header {
+    margin-bottom: 1.5em;
+
+}
+.panel {
+    background-color: aliceblue;
+    padding: 2rem;
+    border-radius: 10%;
+    min-width: 30%;
+    min-height: 30%;
+    align-content: center;
+}
+
+#state-indicator {
+    width: 200px;
+    height: 150px;
+    border-radius: 20px;
+    box-shadow: 0 0 10px;
+    margin: auto;
+    margin-top: 20px;
+}
+
+@media (max-width: 481px) {
+    .panel {
+        width: 100%;
+    }
+    .race-control-button {
+        margin: 0.2rem;
+    }
+}
+
+.info {
+    margin-top: 1rem;
+    margin-bottom: 1rem;
+}
+
+#timer {
+    font-weight: bold;
+}
+
+.race-control-button {
+    width: 20%;
+    padding: 5px;
+    aspect-ratio: 1/1;
+    border: darkgrey solid 1px;
+}
+.race-control-button span {
+    background: #f9f9f9;
+    padding: 5px;
+    border-radius: 5px;
+}
+#safe-button{
+    background: forestgreen;
+}
+#hazard-button{
+    background: gold;
+}
+#danger-button{
+    background: firebrick;
+}
+#finish-button{
+    background: repeating-conic-gradient(#808080 0 25%, #0000 0 50%) 50% / 30px 30px;
+}
+#state-indicator.safe {
+    background: forestgreen;
+}
+
+#state-indicator.hazard {
+    background: gold;
+}
+
+#state-indicator.danger {
+    background: firebrick;
+}
+
+#state-indicator.finished {
+    background: repeating-conic-gradient(#808080 0 25%, #0000 0 50%) 50% / 30px 30px;;
+}
