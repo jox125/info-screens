@@ -1,6 +1,7 @@
 import { ROLE } from "../../shared/constants/roles.js";
-import { STATUS, IMMUTABLE_STATUSES } from "/shared/constants/status.js";
+import { STATUS, IMMUTABLE_STATUSES } from "../../shared/constants/status.js";
 import { ERROR_MESSAGES, SUCCESS_MESSAGES } from "./constants/messages.js";
+import { SOCKET_DRIVER, SOCKET_SESSION } from "../../shared/constants/socketMessages.js";
 
 const socket = io({
     autoConnect: false
@@ -65,11 +66,11 @@ socket.on("connect", () => {
     console.log("Connected to server");
 
     // Request initial data
-    socket.emit("session:request");
+    socket.emit(SOCKET_SESSION.REQUEST);
 });
 
 // Render sessions after updates
-socket.on("sessions:update", (data) => {
+socket.on(SOCKET_SESSION.UPDATE, (data) => {
     sessions = data;
     renderSessions();
 
@@ -109,21 +110,21 @@ socket.on("state:update", (data) => {
 // ---- FEEDBACK MESSAGES ----
 
 // Successful session action messages
-socket.on("session:success", (data) => {
+socket.on(SOCKET_SESSION.SUCCESS, (data) => {
     sessionFeedback.textContent = SUCCESS_MESSAGES[data.code];
     sessionFeedback.classList.add("success-message");
     sessionFeedback.classList.remove("hidden");
 });
 
 // Successful driver action messages
-socket.on("driver:success", (data) => {
+socket.on(SOCKET_DRIVER.DELETE, (data) => {
     driverFeedback.textContent = SUCCESS_MESSAGES[data.code];
     driverFeedback.classList.add("success-message");
     driverFeedback.classList.remove("hidden");
 });
 
 // General error messages (No name, session not found etc...)
-socket.on("session:error", (data) => {
+socket.on(SOCKET_SESSION.ERROR, (data) => {
     resetSessionFeedback();
     resetDriverFeedback();
 
@@ -137,7 +138,7 @@ socket.on("session:error", (data) => {
 });
 
 // Error message if something went wrong trying to edit a session
-socket.on("session:edit:error", (data) => {
+socket.on(SOCKET_SESSION.EDIT_ERROR, (data) => {
     resetSessionFeedback();
     resetDriverFeedback();
 
@@ -157,7 +158,7 @@ socket.on("session:edit:error", (data) => {
 });
 
 // Error message if something went wrong trying to add a driver
-socket.on("driver:error", (data) => {
+socket.on(SOCKET_DRIVER.ERROR, (data) => {
     resetSessionFeedback();
     resetDriverFeedback();
 
@@ -169,7 +170,7 @@ socket.on("driver:error", (data) => {
 });
 
 // Error message if something went wrong trying to edit a driver
-socket.on("driver:edit:error", (data) => {
+socket.on(SOCKET_DRIVER.EDIT_ERROR, (data) => {
     resetSessionFeedback();
     resetDriverFeedback();
 
@@ -206,7 +207,7 @@ addSessionForm.addEventListener("submit", (e) => {
     }
 
     sessionNameInput.value = "";
-    socket.emit("session:add", { name: sessionName });
+    socket.emit(SOCKET_SESSION.ADD, { name: sessionName });
 });
 
 // Listener for toggling driverPanel visibility and removing session
@@ -294,7 +295,7 @@ addDriverForm.addEventListener("submit", (e) => {
     }
     driverNameInput.value = "";
 
-    socket.emit("driver:add", {
+    socket.emit(SOCKET_DRIVER.ADD, {
         sessionId: selectedSessionId,
         name: driverName,
     });
@@ -461,20 +462,20 @@ function renderDrivers() {
 }
 
 function editSession(sessionId, newName) {
-    socket.emit("session:edit", {
+    socket.emit(SOCKET_SESSION.EDIT, {
         sessionId,
         newName,
     });
 }
 
 function removeSession(sessionId) {
-    socket.emit("session:remove", {
+    socket.emit(SOCKET_SESSION.DELETE, {
         sessionId,
     });
 }
 
 function editDriver(driverId, newName) {
-    socket.emit("driver:edit", {
+    socket.emit(SOCKET_DRIVER.EDIT, {
         sessionId: selectedSessionId,
         driverId,
         newName,
@@ -482,7 +483,7 @@ function editDriver(driverId, newName) {
 }
 
 function removeDriver(driverId) {
-    socket.emit("driver:remove", {
+    socket.emit(SOCKET_DRIVER.DELETE, {
         sessionId: selectedSessionId,
         driverId,
     });
@@ -679,6 +680,7 @@ function closeLastEditForm() {
 Front Desk/Receptionist
 
 Fix ability to add drivers to locked sessions
+Fix car number assignment 11, 22 ... 88 instead of 1 - 8
 
 Clean up code
 */

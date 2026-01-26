@@ -1,4 +1,7 @@
 import { registerRaceActions } from "./race-actions.mjs";
+import { registerReceptionist } from "./receptionist.js";
+import { ROLE } from "../shared/constants/roles.js";
+import { SOCKET_SESSION } from "../shared/constants/socketMessages.js";
 
 export function registerSocketHandlers(io, { raceState }) {
     
@@ -10,21 +13,9 @@ export function registerSocketHandlers(io, { raceState }) {
     //register race actions
     registerRaceActions(socket, io, { raceState });
 
-    // ---- SESSION MANAGEMENT ----
+    // Register receptionist
+    registerReceptionist(socket, io, { raceState });
 
-    // Adding a session
-    socket.on("session:add", (data) => {
-      const session = {
-        name: data.name,
-        drivers: [],
-        status: "upcoming",
-      };
-      raceState.sessions.push(session);
-      io.emit("sessions:update", raceState.sessions);
-
-      // For debugging
-      console.log(raceState);
-    });
 
     // ---- REQUESTS ----
 
@@ -32,8 +23,14 @@ export function registerSocketHandlers(io, { raceState }) {
       socket.emit("state:update", raceState);
     });
 
-    socket.on("session:request", () => {
-      socket.emit("sessions:update", raceState.sessions);
+    socket.on(SOCKET_SESSION.REQUEST, () => {
+        if(socket.data.role !== ROLE.RECEPTIONIST) {
+            return socket.emit(SOCKET_SESSION.ERROR, {
+                code: ERROR_CODES.FORBIDDEN
+            });
+        }
+
+        socket.emit(SOCKET_SESSION.UPDATE, raceState.sessions);
     });
 
     socket.on("disconnect", () => {

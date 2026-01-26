@@ -114,6 +114,7 @@
 .empty-message {
     font-style: italic;
     text-align: center;
+    cursor: default;
 }
 
 .error-message {
