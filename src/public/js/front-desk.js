@@ -161,8 +161,14 @@ socket.on(SOCKET_SESSION.EDIT_ERROR, (data) => {
 socket.on(SOCKET_DRIVER.ERROR, (data) => {
     resetSessionFeedback();
     resetDriverFeedback();
+    let message = ERROR_MESSAGES[data.code];
 
-    const message = data.name ? ERROR_MESSAGES[data.code].replace("${name}", data.name) : ERROR_MESSAGES[data.code];
+    if(data.status) {
+        message = ERROR_MESSAGES[data.code].replace("${status}", data.status);
+    }
+    if(data.name) {
+        message = ERROR_MESSAGES[data.code].replace("${name}", data.name);
+    }
     driverFeedback.textContent = message;
     driverFeedback.classList.add("error-message");
     driverFeedback.classList.remove("hidden", "success-message");
@@ -675,12 +681,3 @@ function closeLastEditForm() {
         });
     });
 }
-
-/* TODO
-Front Desk/Receptionist
-
-Fix ability to add drivers to locked sessions
-Fix car number assignment 11, 22 ... 88 instead of 1 - 8
-
-Clean up code
-*/

@@ -3,7 +3,7 @@ export function loadMockData () {
   return {
     sessions: [
       {
-        id: 3,
+        id: 1,
         name: "Race nr 1",
         drivers: [
           {
@@ -20,7 +20,7 @@ export function loadMockData () {
         status: "upcoming", // upcoming, next, in progress, finished, closed
       },
       {
-        id: 1,
+        id: 2,
         name: "Race nr 2",
         drivers: [
           {

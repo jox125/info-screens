@@ -127,6 +127,13 @@ export function registerReceptionist(socket, io, { raceState }) {
             });
         }
 
+        if(session.status === STATUS.IN_PROGRESS || session.status === STATUS.FINISHED) {
+            return socket.emit(SOCKET_DRIVER.ERROR, {
+                status: session.status,
+                code: ERROR_CODES.SESSION_LOCKED
+            });
+        }
+
         const carNum = assignCar(session);
         const isFull = !carNum;
         if (isFull) {

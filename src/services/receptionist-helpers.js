@@ -23,12 +23,9 @@ export function findDriver(sessionId, driverId, { raceState }) {
     return driver;
 }
 
-// TODO: assign 11, 22 ... 88
 export function assignCar(session) {
+    const carNumbers = [ 11, 22, 33, 44, 55, 66, 77, 88];
     const assigned = new Set(session.drivers.map((d) => d.carNum));
-    const maxCars = 8;
-
-    for (let num = 1; num <= maxCars; num++) {
-        if (!assigned.has(num)) return num;
-    }
+    
+    return carNumbers.find(num => !assigned.has(num)) ?? null;
 }

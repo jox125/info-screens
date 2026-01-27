@@ -2,6 +2,7 @@ import { registerRaceActions } from "./race-actions.mjs";
 import { registerReceptionist } from "./receptionist.js";
 import { ROLE } from "../shared/constants/roles.js";
 import { SOCKET_SESSION } from "../shared/constants/socketMessages.js";
+import { ERROR_CODES } from "../shared/constants/codes.js";
 
 export function registerSocketHandlers(io, { raceState }) {
     
