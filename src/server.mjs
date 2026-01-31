@@ -18,7 +18,7 @@ const __dirname = fileURLToPath(dirname(import.meta.url));
 
 checkConfig();
 
-
+//register endpoints
 app.use(serveStatic("src/public"));
 app.use("/shared", serveStatic("src/shared"));
 
@@ -28,6 +28,10 @@ app.get("/race-control", (req, res) => {
 
 app.get("/front-desk", (req, res) => {
     res.sendFile(join(__dirname, "/public/front-desk.html"));
+});
+
+app.get("/next-race", (req, res) => {
+  res.sendFile(join(__dirname, "/public/next-race.html"));
 });
 
 //Mark race with smallest id to be next race
