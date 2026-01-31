@@ -9,6 +9,29 @@
 </head>
 <body>
     <div class="interface-content">
-
+        <div id="panel" class="panel">
+            <div class="panel-header">
+                <h1>Next Race Info</h1>
+            </div>  
+            <div id="next-race-info" class="info-table">
+                <div id="race-name-container">
+                    <h2>Race name: </h2>
+                    <p id="race-name">Race nr. 1</p>
+                </div>
+                <table id="cars-table">
+                    <tr>
+                        <th>Car nr.</th>
+                        <th>Driver</th>
+                    </tr>
+                    <tr>
+                        <td>66</td>
+                        <td>Pikne McQueen</td>
+                    </tr>
+                </table>
+                <button id="full-screen-button" type="button">Full Screen</button>
+            </div>      
+        </div>
     </div>
+    <script src="/socket.io/socket.io.js"></script>
+    <script type="module" src="js/next-race.js"></script>
 </body>

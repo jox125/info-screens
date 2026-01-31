@@ -1,0 +1,36 @@
+/*
+* {
+    outline: 1px solid red;
+}*/
+
+.panel-header {
+    margin-bottom: 1.5em;
+
+}
+.panel {
+    background-color: aliceblue;
+    padding: 2rem;
+    border-radius: 10%;
+    min-width: 30%;
+    min-height: 30%;
+    align-content: center;
+}
+#race-name-container{
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 1em;
+}
+table, th, td{
+    border: 1px solid black;
+    border-collapse: collapse;
+}
+th{
+    border-bottom: 2px solid black;
+}
+table{    
+    width: 100%;
+    max-width: 800px;
+    margin: auto;
+    margin-top: 1em;
+}
