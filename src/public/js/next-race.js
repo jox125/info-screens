@@ -2,7 +2,7 @@ const socket = io({
   autoConnect: false,
 });
 
-const raceState = {};
+const nextRace = {};
 const role = "public";
 socket.auth = { role };
 socket.connect();
@@ -43,4 +43,26 @@ socket.on("auth:ok", (role) => {
     } catch (err){}
 
   }
+});
+
+socket.on("state:update", (state) => {
+  //update state data
+  Object.assign(nextRace, state.sessions.find((session) => session.status === "next"));
+
+  //update view
+  try {
+    const raceName = document.getElementById("race-name");
+    const warning = document.getElementById("warnings");
+    if (nextRace.name) {
+      raceName.innerHTML = nextRace.name;
+      warning.innerHTML = "";
+      warning.classList.add("hidden");
+    }
+    else {
+      warning.innerHTML = "No next race coming";
+      warning.classList.remove("hidden");
+      raceName.innerHTML = "";
+    }
+  } catch (err) {};
+  
 });
