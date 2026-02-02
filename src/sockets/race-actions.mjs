@@ -82,6 +82,10 @@ export function registerRaceActions(socket, io, { raceState }) {
       //The Next Race screen switches to the subsequent race session.
 
       io.emit("state:update", raceState);
+      console.log("state:update:");
+      console.log(raceState);
+      console.log("Drivers:");
+      console.log(raceState.sessions.find((session) => session.status === "in progress").drivers);
     }
 
     //controlls active when race is on

@@ -4,6 +4,7 @@ import { STATUS, IMMUTABLE_STATUSES } from "../shared/constants/status.js";
 import { ERROR_CODES, SUCCESS_CODES } from "../shared/constants/codes.js";
 import { ROLE } from "../shared/constants/roles.js";
 import { SOCKET_DRIVER, SOCKET_SESSION } from "../shared/constants/socketMessages.js";
+import { ensureNextRace } from "../services/race-state.mjs"
 
 
 // ---- SESSION MANAGEMENT ----
@@ -32,6 +33,8 @@ export function registerReceptionist(socket, io, { raceState }) {
         };
 
         raceState.sessions.push(session);
+        //ensure next race
+        ensureNextRace(raceState);
         io.emit(SOCKET_SESSION.UPDATE, raceState.sessions);
         socket.emit(SOCKET_SESSION.SUCCESS, { code: SUCCESS_CODES.SESSION_ADDED });
         console.log(`[session:add] id=${session.id} name="${session.name}"`);
