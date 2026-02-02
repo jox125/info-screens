@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Race Countdown</title>
+    <link rel="stylesheet" href="css/main.css">
+    <link rel="stylesheet" href="css/race-countdown.css">
+</head>
+<body>
+    <div id="fullscreen-element" class="interface-content">
+        <div class="header">
+            <h1>Race Countdown</h1>
+        </div>
+        <button id="fullscreen-button" class="fullscreen-btn">
+            <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"/>
+            </svg>
+        </button>
+        <div class="countdown">
+            <h2 id="race-countdown">00:00</h2>
+        </div>
+    </div>
+    <script src="/socket.io/socket.io.js"></script>
+    <script type="module" src="js/race-countdown.js"></script>
+</body>
+</html>

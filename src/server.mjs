@@ -30,6 +30,10 @@ app.get("/front-desk", (req, res) => {
     res.sendFile(join(__dirname, "/public/front-desk.html"));
 });
 
+app.get("/race-countdown", (req, res) => {
+  res.sendFile(join(__dirname, "/public/race-countdown.html"));
+});
+
 //Mark race with smallest id to be next race
 ensureNextRace(raceState);
 

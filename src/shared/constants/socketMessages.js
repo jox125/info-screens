@@ -17,3 +17,8 @@ export const SOCKET_DRIVER = Object.freeze({
     EDIT_ERROR: "driver:edit:error",
     SUCCESS: "driver:success"
 });
+
+export const SOCKET_COUNTDOWN = Object.freeze({
+    REQUEST: "countdown:request",
+    UPDATE: "countdown:update"
+});

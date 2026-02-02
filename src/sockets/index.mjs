@@ -3,6 +3,7 @@ import { registerReceptionist } from "./receptionist.js";
 import { ROLE } from "../shared/constants/roles.js";
 import { SOCKET_SESSION } from "../shared/constants/socketMessages.js";
 import { ERROR_CODES } from "../shared/constants/codes.js";
+import { registerCountdown } from "./countdown.js";
 
 export function registerSocketHandlers(io, { raceState }) {
     
@@ -16,6 +17,9 @@ export function registerSocketHandlers(io, { raceState }) {
 
     // Register receptionist
     registerReceptionist(socket, io, { raceState });
+
+    // Register race countdown
+    registerCountdown(socket, io, { raceState });
 
 
     // ---- REQUESTS ----
