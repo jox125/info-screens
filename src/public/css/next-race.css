@@ -43,24 +43,16 @@ table{
       font-size: 3em;
   }
 #panel:fullscreen #race-name-container {
-    flex-direction: column;
-    gap: 0.2em;
+    gap: 2em;
     min-width: 0;
     overflow: hidden;
     white-space: nowrap;
 }
-@keyframes scroll-left {
-    0% {left: 0px}
-    100% {transform: translateX(-1000px)}
- 
-}
-
 #panel:fullscreen p {
+    display: inline-block;
     font-size: 2.5em;
     max-height: 200px;
     align-self: flex-start;
-    min-width: 0;
-    animation: scroll-left 15s linear infinite;
 }
 #panel:fullscreen {
     font-size: 2.5em;
@@ -69,5 +61,46 @@ table{
 @media (max-width: 481px) {
     .panel {
         width: 100%;
+    }
+}
+
+/* Container styles */
+.scrolling-text-container {
+    background-color: #eff5ff;
+    border-radius: 4px;
+    overflow: hidden;
+}
+
+/* Inner container styles */
+.scrolling-text-inner {
+    display: flex;
+    white-space: nowrap;
+    font-size: 16px;
+    font-weight: 600;
+    padding: 8px 0;
+}
+
+/* Text styles */
+.scrolling-text {
+    display: flex;
+}
+
+.scrolling-text-item {
+    padding: 0 30px;
+}
+
+/* Apply the animation to the text items */
+.scrolling-text-inner>div {
+    animation: var(--direction) var(--marquee-speed) linear infinite;
+}
+
+/* Setting the Animation using Keyframes */
+@keyframes scroll-left {
+    0% {
+        transform: translateX(0%);
+    }
+
+    100% {
+        transform: translateX(-100%);
     }
 }
