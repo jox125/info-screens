@@ -1,6 +1,5 @@
-
-* {
-    outline: 1px solid red;
+.overflow-hidden{
+    overflow: hidden;
 }
 .panel-header {
     margin-bottom: 1.5em;
@@ -20,7 +19,7 @@
 #race-name-container{
     display: flex;
     align-items: center;
-    justify-content: center;
+    justify-content: flex-start;
     gap: 1em;    
 }
 table, th, td{
@@ -52,7 +51,6 @@ table{
     display: inline-block;
     font-size: 2.5em;
     max-height: 200px;
-    align-self: flex-start;
 }
 #panel:fullscreen {
     font-size: 2.5em;
@@ -75,8 +73,6 @@ table{
 .scrolling-text-inner {
     display: flex;
     white-space: nowrap;
-    font-size: 16px;
-    font-weight: 600;
     padding: 8px 0;
 }
 

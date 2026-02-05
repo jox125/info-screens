@@ -12,74 +12,99 @@ socket.on("connect_error", (err) => {
   const warning = document.getElementById("warnings");
   warning.innerHTML = "Connection error, no realtime data.";
   warning.classList.remove("hidden");
-}); // --- FULL SCREEN ---
+});
+
+// ---- SCROLLING TEXT ----
+//Check for need to scroll
+function checkOverflow(id) {
+  try {
+    const element = document.getElementById(id);
+    if (element.scrollWidth > element.parentElement.offsetWidth) {
+      scrollText(id);
+    } else {
+      endScroll(id);
+    }
+  } catch (err) {
+    console.log("Error in checkOverflow:");
+    console.log(err);
+  }
+}
+//Start scroll
+const scrollText = (id) => {
+  const element = document.getElementById(id);
+  element.classList.add("scrolling-text-item");
+  const textCopy = element.cloneNode(true);
+  textCopy.id = element.id + "-copy";
+  const scrollElement = document.createElement("div");
+  scrollElement.id = "scroll-container";
+  scrollElement.classList.add("scrolling-text-container");
+  const innerElements = `<div class="scrolling-text-inner" role="marquee" style="--marquee-speed: 10s; --direction: scroll-left">
+                            <div class="scrolling-text">
+                              ${element.outerHTML}                               
+                            </div>
+                            <div class="scrolling-text">
+                              ${textCopy.outerHTML} 
+                            </div>
+                          </div>`;
+  scrollElement.innerHTML = innerElements;
+  element.replaceWith(scrollElement);
+};
+//End scroll
+const endScroll = (id) => {
+  try {
+    const element = document.getElementById(id);
+    if (element) {
+      element.classList.remove("scrolling-text-item");
+      const parent = document.getElementById("name");
+      parent.replaceChildren(element);
+    }
+  } catch (err) {
+    console.log("error in endScroll:");
+    console.log(err);
+  }
+};
+
+//Scroll race name if wont fit to screen
+
+//On window load
+window.addEventListener("load", () => {
+  endScroll("race-name");
+  checkOverflow("race-name");
+});
+//On text change
+/*
+const observer = new MutationObserver(() => {
+  endScroll("race-name");
+  checkOverflow("race-name");
+});
+observer.observe(document.getElementById("race-name"), {
+  characterData: false,
+  childList: true,
+  attributes: false,
+});*/
+//On resize
+const resizeObserver = new ResizeObserver(() => {
+  endScroll("race-name");
+  checkOverflow("race-name");
+});
+resizeObserver.observe(document.getElementById("race-name").parentElement);
+//On fullscreen change
+document.addEventListener("fullscreenchange", () => {
+  endScroll("race-name");
+  checkOverflow("race-name");
+});
+
+// --- FULL SCREEN ---
 const screen = document.getElementById("panel");
 const fullScreenButton = document.getElementById("full-screen-button");
 fullScreenButton.onclick = () => {
   screen.style = "border-radius:unset";
-
-  const raceName = document.getElementById("scrolling-text");
-
-  //if text wont fit to screen, scroll
-  if (raceName.offsetWidth > raceName.parentElement.offsetWidth) {
-    const scrollingTextInner = document.getElementsByClassName(
-      "scrolling-text-inner",
-    );
-    scrollingTextInner.style = "--marquee-speed: 10s; --direction: scroll-left";
-    const copy = raceName.cloneNode(true);
-    copy.id = "race-name-copy";
-    raceName.parentNode.insertBefore(copy, raceName);
-
-    const observer = new MutationObserver(() => {
-      const text = raceName.innerHTML;
-      copy.innerHTML = text;
-      if (raceName.offsetWidth > raceName.parentElement.offsetWidth) {
-        scrollingTextInner.style =
-          "--marquee-speed: 10s; --direction: scroll-left";
-      }
-    });
-    observer.observe(raceName, {
-      characterData: false,
-      childList: true,
-      attributes: false,
-    });
-  } else {
-    const observer = new MutationObserver(() => {
-      if (raceName.offsetWidth > raceName.parentElement.offsetWidth) {
-        const scrollingTextInner = document.getElementsByClassName(
-          "scrolling-text-inner",
-        );
-        scrollingTextInner.style =
-          "--marquee-speed: 10s; --direction: scroll-left";
-        const copy = raceName.cloneNode(true);
-        copy.id = "race-name-copy";
-        raceName.parentNode.insertBefore(copy, raceName);
-        const text = raceName.innerHTML;
-        copy.innerHTML = text;
-      }
-    });
-    observer.observe(raceName, {
-      characterData: false,
-      childList: true,
-      attributes: false,
-    });
-  }
-
   screen.requestFullscreen();
   fullScreenButton.classList.add("hidden");
 };
 document.addEventListener("fullscreenchange", () => {
   if (document.fullscreenElement !== screen) {
     screen.style = "";
-    try {
-      const copy = document.getElementById("race-name-copy");
-      copy.remove();
-    } catch (err) {}
-
-    const scrollingTextInner = document.getElementsByClassName(
-      "scrolling-text-inner",
-    );
-    scrollingTextInner.style = "";
     fullScreenButton.classList.remove("hidden");
   }
 });
@@ -123,6 +148,10 @@ const updateView = (sessions) => {
       warning.innerHTML = "";
       warning.classList.add("hidden");
 
+      //check if needs to scroll
+      endScroll("race-name");
+      checkOverflow("race-name");
+
       const driversTable = document.getElementById("cars-table");
       //empty drivers table
       driversTable.innerHTML = "<thead><th>Car nr.</th><th>Driver</th></thead>";
@@ -137,6 +166,8 @@ const updateView = (sessions) => {
       warning.innerHTML = "No next race coming";
       warning.classList.remove("hidden");
       raceName.innerHTML = "";
+      //stop scroll
+      endScroll("race-name");
       //empty drivers table
       const driversTable = document.getElementById("cars-table");
       driversTable.innerHTML = "<thead><th>Car nr.</th><th>Driver</th></thead>";
