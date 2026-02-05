@@ -1,0 +1,134 @@
+body {
+    background: url('../assets/car.jpg') no-repeat center center fixed;
+    background-size: cover;
+    margin: 0;
+    height: 100vh;
+    width: 100vw;
+    font-family: 'Inter', -apple-system, sans-serif;
+}
+
+.interface-content {
+    background: transparent;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    width: 100%;
+}
+
+.tracker-panel {
+    background-color: aliceblue;
+    padding: 2.5rem;
+    border-radius: 40px;
+    width: 90%;
+    max-width: 850px;
+    box-shadow: 0 15px 35px rgba(0,0,0,0.4);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    border: 1px solid rgba(255, 255, 255, 0.3);
+}
+
+.status-msg {
+    background-color: #fee2e2;
+    color: #b91c1c;
+    border: 2px solid #fecaca;
+    padding: 15px 25px;
+    border-radius: 15px;
+    font-weight: 700;
+    font-size: 1.2rem;
+    margin: 0 0 20px 0;
+    width: 100%;
+    box-sizing: border-box;
+    text-align: center;
+    display: block;
+}
+
+.hidden {
+    display: none;
+}
+
+.login-size {
+    max-width: 420px;
+    min-height: auto;
+}
+
+/* --- TIMER --- */
+.global-timer {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 3.5rem;
+    font-weight: 800;
+    color: #1e293b;
+    background: #f1f5f9;
+    padding: 10px 40px;
+    border-radius: 24px;
+    margin-bottom: 25px;
+    border: 1px solid rgba(0,0,0,0.1);
+}
+
+/* --- 4x2 GRID --- */
+.button-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    grid-template-rows: repeat(2, 95px);
+    gap: 15px;
+    width: 100%;
+}
+
+.button-grid button {
+    font-size: 2.5rem;
+    font-weight: 700;
+    border-radius: 20px;
+    background: #0f172a;
+    color: #ffffff;
+    border: none;
+    cursor: pointer;
+    transition: transform 0.1s, background 0.2s;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+}
+
+.button-grid button:active:not(:disabled) {
+    transform: scale(0.94);
+    background: #334155;
+}
+
+.button-grid button:disabled {
+    background: #cbd5e1;
+    color: #94a3b8;
+    box-shadow: none;
+    cursor: not-allowed;
+}
+
+/* --- ERROR & LOG STYLES --- */
+.error-message {
+    color: #e11d48;
+    font-weight: 600;
+    margin-top: 15px;
+}
+
+.history-panel {
+    margin-top: 30px;
+    width: 100%;
+}
+
+.lap-log {
+    max-height: 220px;
+    overflow-y: auto;
+    background: #ffffff;
+    border-radius: 20px;
+    padding: 15px;
+    border: 1px solid #e2e8f0;
+    scroll-behavior: smooth;
+}
+
+.log-entry {
+    font-family: 'Courier New', monospace;
+    font-size: 1.2rem;
+    padding: 10px;
+    border-bottom: 1px solid #f1f5f9;
+    display: flex;
+    justify-content: space-between;
+}
+
+.time { color: #10b981; font-weight: bold; }
+

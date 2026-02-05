@@ -7,7 +7,7 @@ export function registerRaceActions(socket, io, { raceState }) {
 
   // ---- COUNTDOWN ----
   const startCountdown = (duration) => {
-    console.log("Start countown");
+    console.log("Start countdown");
     raceState.timer.startedAt = Date.now();
     raceState.timer.running = true;
     raceState.timeLeft = duration;
@@ -22,7 +22,7 @@ export function registerRaceActions(socket, io, { raceState }) {
       raceState.timer.startedAt = null;
       raceState.timer.running = false;
       io.emit("tic-tac", raceState.timeLeft);
-      
+
     }, duration);
   };
   // ---- RACE MODES MANAGEMENT ----
@@ -88,7 +88,7 @@ export function registerRaceActions(socket, io, { raceState }) {
       console.log(raceState.sessions.find((session) => session.status === "in progress").drivers);
     }
 
-    //controlls active when race is on
+    //controls active when race is on
     if (
       raceState.sessions.find((session) => session.status === "in progress") &&
       action.type === "GREEN_FLAG"
@@ -145,10 +145,34 @@ export function registerRaceActions(socket, io, { raceState }) {
     }
   });
 
+    // ---- RECORD LAP TIME ----
+    socket.on("race:lap", (data) => {
+        if (socket.data.role !== "observer") return;
+        const session = raceState.sessions.find(s => s.id === data.sessionId);
+        if (!session || session.status === "closed") return;
+        const driver = session.drivers.find(d => d.carNum === data.carNum);
+        if (!driver) return;
+
+        const now = Date.now();
+        const startTime = driver.lastLapAt || raceState.timer.startedAt || now;
+        const lapTime = now - startTime;
+
+        driver.laps = (driver.laps || 0) + 1;
+        driver.lastLapAt = now;
+
+        // Logic for Fastest Lap
+        if (!driver.fastestLap || lapTime < driver.fastestLap) {
+            driver.fastestLap = lapTime;
+        }
+
+        console.log(`Lap recorded for Car ${data.carNum}: ${lapTime}ms`);
+        io.emit("state:update", raceState); // Push update to Leaderboard!
+    });
+
   // ---- FINISH RACE HELPER ----
   const finishRace = () => {
     raceState.raceMode = "finished";
-    console.log("checquered flag");
+    console.log("checkered flag");
     raceState.sessions[
       raceState.sessions.findIndex(
         (session) => session.status === "in progress",

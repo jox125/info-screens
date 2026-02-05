@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lap-line Tracker</title>
+    <link rel="stylesheet" href="css/main.css">
+    <link rel="stylesheet" href="css/lap-line-tracker.css">
+</head>
+<body>
+<div class="interface-content">
+
+    <div id="login-panel" class="tracker-panel login-size">
+        <h2 class="tracker-title">Lap-line Tracker</h2>
+        <form id="login-form" class="login-form">
+            <input type="text" id="login-key" placeholder="Please enter key">
+            <button type="submit">Login</button>
+            <p id="login-feedback" class="error-message hidden"></p>
+        </form>
+    </div>
+
+    <div id="tracker-panel" class="tracker-panel hidden">
+        <div class="panel-header">
+            <h2 class="tracker-title">Race Observer</h2>
+            <div id="global-timer" class="global-timer">00:00:000s</div>
+        </div>
+
+        <div id="session-status-msg" class="status-msg hidden">
+            Session Ended. Waiting for next race...
+        </div>
+
+        <div id="button-grid" class="button-grid">
+        </div>
+
+        <div class="history-panel">
+            <h3>Lap History</h3>
+            <div id="lap-log" class="lap-log">
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<script src="/socket.io/socket.io.js"></script>
+<script type="module" src="js/lap-line-tracker.js"></script>
+</body>
+</html>
