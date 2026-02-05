@@ -8,6 +8,8 @@ const loginForm = document.getElementById("login-form");
 const loginInput = document.getElementById("login-key");
 const loginError = document.getElementById("login-error");
 const panel = document.getElementById("panel");
+const sessionStatusMsg = document.getElementById("session-status-msg");
+let lastActiveSessionId = null; // This "remembers" the previous race ID
 
 loginForm.addEventListener("submit", (e) => {
   e.preventDefault();
