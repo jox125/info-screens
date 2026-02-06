@@ -38,6 +38,10 @@ app.get("/lap-line-tracker", (req, res) => {
     res.sendFile(join(__dirname, "/public/lap-line-tracker.html"));
 });
 
+app.get("/race-flags", (req, res) => {
+  res.sendFile(join(__dirname, "/public/race-flags.html"));
+});
+
 //Mark race with smallest id to be next race
 ensureNextRace(raceState);
 
