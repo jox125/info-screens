@@ -4,7 +4,7 @@ export function loadMockData () {
     sessions: [
       {
         id: 1,
-        name: "Wery long race name that must scroll Race nr 1",
+        name: "Very long race name that must scroll Race nr 1",
         drivers: [
           {
             id: 1,
