@@ -42,6 +42,10 @@ app.get("/race-flags", (req, res) => {
   res.sendFile(join(__dirname, "/public/race-flags.html"));
 });
 
+app.get("/leader-board", (req, res) => {
+    res.sendFile(join(__dirname, "/public/leaderboard.html"));
+});
+
 //Mark race with smallest id to be next race
 ensureNextRace(raceState);
 
