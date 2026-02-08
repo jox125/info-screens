@@ -138,7 +138,7 @@ socket.on("auth:ok", (role) => {
   }
 });
 
-socket.on("state:update", (state) => {
+const updateView = (state) => {
   //update state data
   Object.assign(raceState, state);
   //change state indicator color
@@ -187,6 +187,10 @@ socket.on("state:update", (state) => {
     raceState.sessions.find((session) => session.status === "next")
   ) {
     try {
+      // hide no next race warning
+      const warning = document.getElementById("warning");
+      warning.innerHTML = "";
+      warning.classList.add("hidden");
       // hide current race info
       const currentInfo = document.getElementById("current-info");
       currentInfo.innerHTML = "";
@@ -302,6 +306,14 @@ socket.on("state:update", (state) => {
       console.log("Control panel not ready in race finished.");
     }
   }
+};
+
+socket.on("session:update", (sessions) => {
+  raceState.sessions = sessions;
+  updateView(raceState);
+});
+socket.on("state:update", (state) => {
+  updateView(state);
 });
 
 socket.on("tic-tac", (timeLeft) => {
