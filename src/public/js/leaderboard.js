@@ -5,7 +5,7 @@ const socket = io({
 socket.auth = { role: "public" };
 socket.connect();
 
-// --- 1. UI ELEMENTS ---
+// --- 1. UI ELEMENTS & STATE ---
 const timerDisplay = document.getElementById("race-timer");
 const flagStatus = document.getElementById("flag-status");
 const sessionName = document.getElementById("session-name");
@@ -13,55 +13,73 @@ const leaderboardBody = document.getElementById("leaderboard-body");
 const fsBtn = document.getElementById("fs-btn");
 
 let globalRaceState = null;
+let localTimerInterval = null;
 
 // --- 2. SOCKET LISTENERS ---
-
 socket.on("connect", () => {
-    console.log("Connected to Leaderboard stream");
+    console.log("Connected to Leaderboard");
     socket.emit("state:request");
 });
 
-socket.on("connect_error", (err) => {
-    console.error("Connection failed:", err.message);
-    sessionName.textContent = "Connecting...";
-});
-
 socket.on("state:update", (state) => {
-    if (globalRaceState && globalRaceState.timer?.running && state.timer?.running) {
-        delete state.timeLeft;
+    globalRaceState = state;
+
+    if (globalRaceState.timer?.running && globalRaceState.timer?.startedAt) {
+        startLocalTimer(globalRaceState.duration, globalRaceState.timer.startedAt);
+    } else {
+        stopLocalTimer();
+        timerDisplay.innerText = formatTime(globalRaceState.timeLeft);
     }
 
-    globalRaceState = state;
     renderLeaderboard();
 });
 
 socket.on("tic-tac", (timeLeft) => {
-    if (!globalRaceState) return;
 
-    globalRaceState.timeLeft = timeLeft;
+    if (globalRaceState) globalRaceState.timeLeft = timeLeft;
 
-    if (globalRaceState.timer?.running || timeLeft > 0) {
+    if (!localTimerInterval && globalRaceState?.timer?.running) {
         timerDisplay.innerText = formatTime(timeLeft);
     }
 });
 
-// --- 3. RENDER LOGIC ---
+// --- 3. TIMER ENGINE  ---
+
+function startLocalTimer(duration, startedAt) {
+    if (localTimerInterval) clearInterval(localTimerInterval);
+
+    localTimerInterval = setInterval(() => {
+        const now = Date.now();
+        const elapsed = now - startedAt;
+        const timeLeft = Math.max(0, duration - elapsed);
+
+        timerDisplay.innerText = formatTime(timeLeft);
+
+        if (timeLeft <= 0) {
+            stopLocalTimer();
+        }
+    }, 33);
+}
+
+function stopLocalTimer() {
+    if (localTimerInterval) {
+        clearInterval(localTimerInterval);
+        localTimerInterval = null;
+    }
+}
+
+// --- 4. RENDER LOGIC ---
 
 function renderLeaderboard() {
     if (!globalRaceState) return;
 
-    // --- A. FIND ACTIVE SESSION ---
     let activeSession = globalRaceState.sessions.find(s => s.status === "in progress");
-
-    // 2. If none running, look for the most recent FINISHED or CLOSED race
     if (!activeSession) {
-        const pastSessions = [...globalRaceState.sessions]
+        activeSession = [...globalRaceState.sessions]
             .reverse()
             .find(s => ["finished", "closed"].includes(s.status));
-        activeSession = pastSessions;
     }
 
-    // --- B. UPDATE HEADER INFO ---
     if (activeSession) {
         const statusText = activeSession.status === "in progress" ? "(LIVE)" : "(FINAL)";
         sessionName.textContent = `${activeSession.name} ${statusText}`;
@@ -72,28 +90,17 @@ function renderLeaderboard() {
         return;
     }
 
-    // Update Flag Color/Text
     updateFlagStatus(globalRaceState.raceMode);
 
-    // --- C. SORT DRIVERS ---
-    // 1. Fastest Lap (Ascending)
-    // 2. Drivers with no time go to bottom
-    // 3. Tie-breaker: Car Number
     const sortedDrivers = [...activeSession.drivers].sort((a, b) => {
         const timeA = a.fastestLap;
         const timeB = b.fastestLap;
-
-        // Both have times -> Fastest wins
         if (timeA !== undefined && timeB !== undefined) return timeA - timeB;
-        // Only A has time -> A wins
         if (timeA !== undefined) return -1;
-        // Only B has time -> B wins
         if (timeB !== undefined) return 1;
-        // Neither has time -> Sort by Car Number
         return a.carNum - b.carNum;
     });
 
-    // --- D. GENERATE TABLE ROWS ---
     leaderboardBody.innerHTML = sortedDrivers.map((driver, index) => {
         const hasTime = driver.fastestLap !== undefined && driver.fastestLap !== null;
         const formattedTime = hasTime ? formatTime(driver.fastestLap) : "--:--:--";
@@ -112,11 +119,10 @@ function renderLeaderboard() {
     }).join("");
 }
 
-// --- 4. HELPER FUNCTIONS ---
+// --- 5. HELPER FUNCTIONS ---
 
 function updateFlagStatus(mode) {
     flagStatus.className = "flag-indicator";
-
     switch (mode) {
         case "safe":
             flagStatus.classList.add("flag-safe");
@@ -148,12 +154,10 @@ function formatTime(ms) {
     return `${m}:${s}:${msPart}`;
 }
 
-// --- 5. FULL SCREEN TOGGLE ---
+// --- 6. FULL SCREEN TOGGLE ---
 fsBtn.addEventListener("click", () => {
     if (!document.fullscreenElement) {
-        document.documentElement.requestFullscreen().catch(err => {
-            console.error(`Error attempting to enable full-screen mode: ${err.message}`);
-        });
+        document.documentElement.requestFullscreen().catch(err => console.log(err));
         fsBtn.textContent = "Exit Full Screen";
     } else {
         if (document.exitFullscreen) {

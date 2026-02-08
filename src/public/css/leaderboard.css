@@ -57,10 +57,12 @@ body {
 }
 
 .race-timer {
+    font-family: 'Courier New', Courier, monospace;
     font-size: 3rem;
     font-weight: 800;
-    font-variant-numeric: tabular-nums;
     color: #222;
+    text-align: center;
+    min-width: 300px;
 }
 
 #session-name {
