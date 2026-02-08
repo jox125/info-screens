@@ -1,7 +1,7 @@
 .panel {
     background-color: aliceblue;
     padding: 2rem;
-    border-radius: 40;
+    border-radius: 40px;
     min-width: 30%;
     min-height: 30%;
     align-content: center;
