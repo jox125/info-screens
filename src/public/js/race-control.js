@@ -40,8 +40,12 @@ socket.on("connect_error", (err) => {
 // ---- AUTH OK, LOAD control panel ----
 socket.on("auth:ok", (role) => {
   if (role === "safety-official") {
+    //clear view
+    const oldControlPanel = document.getElementById("control-panel");
+    if (oldControlPanel) oldControlPanel.remove();
+
     const loginPanel = document.getElementById("login-panel");
-    loginPanel.remove();
+    if (loginPanel) loginPanel.remove();
 
     // Request initial data
     socket.emit("state:request");
