@@ -103,6 +103,7 @@ export function registerReceptionist(socket, io, { raceState }) {
         raceState.sessions = raceState.sessions.filter(
             (s) => s.id !== session.id,
         );
+        ensureNextRace(raceState);
         io.emit(SOCKET_SESSION.UPDATE, raceState.sessions);
         socket.emit(SOCKET_SESSION.SUCCESS, { code: SUCCESS_CODES.SESSION_DELETED });
         console.log(`[session:remove] id=${session.id} name="${session.name}"`);
