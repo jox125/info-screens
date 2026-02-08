@@ -1,5 +1,6 @@
 .overflow-hidden{
     overflow: hidden;
+    white-space: nowrap;
 }
 .panel-header {
     margin-bottom: 1.5em;
