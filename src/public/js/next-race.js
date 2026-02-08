@@ -1,3 +1,6 @@
+import { ERROR_CODES } from "../../shared/constants/codes.js";
+import { ERROR_MESSAGES } from "./constants/messages.js";
+
 const socket = io({
   autoConnect: false,
 });
@@ -71,17 +74,6 @@ window.addEventListener("load", () => {
   endScroll("race-name");
   checkOverflow("race-name");
 });
-//On text change
-/*
-const observer = new MutationObserver(() => {
-  endScroll("race-name");
-  checkOverflow("race-name");
-});
-observer.observe(document.getElementById("race-name"), {
-  characterData: false,
-  childList: true,
-  attributes: false,
-});*/
 //On resize
 const resizeObserver = new ResizeObserver(() => {
   endScroll("race-name");
@@ -124,7 +116,7 @@ socket.on("auth:ok", (role) => {
   }
 });
 
-// --- UPDATE VIEW HELPER ---
+// --- UPDATE VIEW ---
 const updateView = (sessions) => {
   //update state data if found one, else clear
   if (sessions.find((session) => session.status === "next")) {
@@ -163,7 +155,7 @@ const updateView = (sessions) => {
       });
     } else {
       //show no next race warning
-      warning.innerHTML = "No next race coming";
+      warning.innerHTML = ERROR_MESSAGES[ERROR_CODES.NO_NEXT_RACE];
       warning.classList.remove("hidden");
       raceName.innerHTML = "";
       //stop scroll
