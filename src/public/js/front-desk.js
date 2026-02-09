@@ -15,6 +15,7 @@ const sessionFeedback = document.getElementById("session-feedback");
 const sessionList = document.getElementById("session-list");
 const addDriverForm = document.getElementById("add-driver-form");
 const driverNameInput = document.getElementById("driver-name");
+const driverCarNumInput = document.getElementById("driver-car");
 const driverFeedback = document.getElementById("driver-feedback");
 const driverList = document.getElementById("driver-list");
 const driverPanel = document.getElementById("driver-panel");
@@ -163,6 +164,9 @@ socket.on(SOCKET_DRIVER.ERROR, (data) => {
     resetDriverFeedback();
     let message = ERROR_MESSAGES[data.code];
 
+    if(data.carExists) {
+        message = ERROR_MESSAGES[data.code].replace("${carNum}", data.carNum);
+    }
     if(data.status) {
         message = ERROR_MESSAGES[data.code].replace("${status}", data.status);
     }
@@ -291,6 +295,7 @@ sessionList.addEventListener("submit", (e) => {
 addDriverForm.addEventListener("submit", (e) => {
     e.preventDefault();
     const driverName = driverNameInput.value.trim();
+    const carNum = driverCarNumInput.value;
 
     if (!driverName) {
         driverFeedback.textContent = ERROR_MESSAGES.DRIVER_NAME_REQUIRED;
@@ -300,10 +305,12 @@ addDriverForm.addEventListener("submit", (e) => {
         return;
     }
     driverNameInput.value = "";
+    driverCarNumInput.value = "";
 
     socket.emit(SOCKET_DRIVER.ADD, {
         sessionId: selectedSessionId,
         name: driverName,
+        carNum
     });
 });
 

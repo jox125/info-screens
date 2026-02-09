@@ -138,12 +138,24 @@ export function registerReceptionist(socket, io, { raceState }) {
             });
         }
 
-        const carNum = assignCar(session);
-        const isFull = !carNum;
-        if (isFull) {
-            return socket.emit(SOCKET_DRIVER.ERROR, {
-                code: ERROR_CODES.SESSION_FULL
-            });
+        const carNum = data.carNum === "" ? null : Number(data.carNum);
+        const result = assignCar(session, carNum);
+
+        switch(result) {
+            case ERROR_CODES.SESSION_FULL:
+                return socket.emit(SOCKET_DRIVER.ERROR, {
+                    code: ERROR_CODES.SESSION_FULL
+                });
+            case ERROR_CODES.CAR_OUT_OF_RANGE:
+                return socket.emit(SOCKET_DRIVER.ERROR, {
+                    code: ERROR_CODES.CAR_OUT_OF_RANGE
+                });
+            case ERROR_CODES.CAR_EXISTS:
+                return socket.emit(SOCKET_DRIVER.ERROR, {
+                    code: ERROR_CODES.CAR_EXISTS,
+                    carExists: true,
+                    carNum: data.carNum
+                });
         }
 
         const driver = session.drivers.find(
@@ -160,7 +172,7 @@ export function registerReceptionist(socket, io, { raceState }) {
         const newDriver = {
             id: Date.now(),
             name: normalizedName,
-            carNum,
+            carNum: result,
         };
         session.drivers.push(newDriver);
 

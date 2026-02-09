@@ -1,3 +1,5 @@
+import { ERROR_CODES } from "../shared/constants/codes.js";
+
 export function findSession(sessionId, { raceState }) {
     const session = raceState.sessions.find((s) => s.id === Number(sessionId));
 
@@ -23,9 +25,17 @@ export function findDriver(sessionId, driverId, { raceState }) {
     return driver;
 }
 
-export function assignCar(session) {
-    const carNumbers = [ 11, 22, 33, 44, 55, 66, 77, 88];
+export function assignCar(session, carNum = null) {
     const assigned = new Set(session.drivers.map((d) => d.carNum));
-    
-    return carNumbers.find(num => !assigned.has(num)) ?? null;
+    if(assigned.size >= 8) return ERROR_CODES.SESSION_FULL;
+
+    // If carNum is provided use it
+    if(carNum !== null) {
+        if(carNum < 0 || carNum > 999) return ERROR_CODES.CAR_OUT_OF_RANGE;
+        return assigned.has(carNum) ? ERROR_CODES.CAR_EXISTS : carNum;
+    }
+
+    // Otherwise get first available number from here
+    const carNumbers = [ 11, 22, 33, 44, 55, 66, 77, 88 ];
+    return carNumbers.find(num => !assigned.has(num)) ?? ERROR_CODES.CAR_EXISTS;
 }
