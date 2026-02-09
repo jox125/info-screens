@@ -1,0 +1,36 @@
+.panel {
+    background-color: aliceblue;
+    padding: 2rem;
+    border-radius: 40px;
+    min-width: 30%;
+    min-height: 30%;
+    align-content: center;
+}
+#flag {
+    width: 200px;
+    height: 150px;
+    border-radius: 20px;
+    box-shadow: 0 0 10px;
+    margin: auto;
+    margin-top: 20px;
+}
+#flag.safe {
+    background: forestgreen;
+}
+
+#flag.hazard {
+    background: gold;
+}
+
+#flag.danger {
+    background: firebrick;
+}
+
+#flag.finished {
+    background: repeating-conic-gradient(#808080 0 25%, #0000 0 50%) 50% / 30px 30px;
+    ;
+}
+#flag.finished:fullscreen {
+    background: repeating-conic-gradient(#dfdfdf 0 25%, #0000 0 50%) 50% / 10vw 10vw;
+    ;
+}

@@ -1,0 +1,155 @@
+body {
+    margin: 0;
+    padding: 0;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    color: #333;
+    background-color: #333;
+    height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    overflow: hidden;
+}
+
+.background-container {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: url('../assets/car.jpg') no-repeat center center fixed;
+    background-size: cover;
+    z-index: -1;
+}
+
+.leaderboard-container {
+    background: rgba(255, 255, 255, 0.95);
+    width: 90%;
+    max-width: 1000px;
+    height: 85vh;
+    border-radius: 12px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+    padding: 30px;
+    display: flex;
+    flex-direction: column;
+    overflow-y: auto;
+}
+
+.leaderboard-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 2px solid #ddd;
+    padding-bottom: 15px;
+    margin-bottom: 20px;
+}
+
+.timer-group {
+    text-align: right;
+}
+
+.timer-label {
+    font-size: 0.85rem;
+    color: #666;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-bottom: -5px;
+}
+
+.race-timer {
+    font-family: 'Courier New', Courier, monospace;
+    font-size: 3rem;
+    font-weight: 800;
+    color: #222;
+    text-align: center;
+    min-width: 300px;
+}
+
+#session-name {
+    margin-top: 0;
+    font-size: 1.5rem;
+    color: #444;
+    border-left: 5px solid #333;
+    padding-left: 15px;
+    margin-bottom: 20px;
+}
+
+.flag-indicator {
+    padding: 15px 30px;
+    border-radius: 8px;
+    font-weight: 900;
+    color: white;
+    text-transform: uppercase;
+    font-size: 1.5rem;
+    letter-spacing: 1px;
+    min-width: 200px;
+    text-align: center;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+}
+
+.flag-safe { background-color: forestgreen; }
+.flag-hazard { background-color: gold; color: black; }
+.flag-danger { background-color: firebrick; }
+.flag-finished {
+    background: repeating-conic-gradient(#808080 0 25%, #0000 0 50%) 50% / 30px 30px;
+    color: black;
+    border: 2px solid #000;
+}
+
+.leaderboard-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.leaderboard-table th {
+    text-align: left;
+    padding: 12px;
+    background-color: #f4f4f4;
+    color: #555;
+    font-size: 0.9rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    border-bottom: 2px solid #ccc;
+}
+
+.leaderboard-row {
+    border-bottom: 1px solid #eee;
+    transition: background 0.2s;
+}
+
+.leaderboard-row td {
+    padding: 15px 12px;
+    vertical-align: middle;
+    font-size: 1.2rem;
+}
+
+.leaderboard-row:nth-child(1) td { background-color: #e8f5e9; font-weight: bold; font-size: 1.3rem; }
+.leaderboard-row:nth-child(2) td { background-color: white; font-size: 1.2rem; }
+.leaderboard-row:nth-child(3) td { background-color: white; font-size: 1.2rem; }
+
+.pos-col { width: 50px; color: #888; font-weight: bold; text-align: center; }
+.car-col { font-weight: 900; color: #222; }
+.driver-col { color: #444; }
+.laps-col { text-align: center; font-weight: bold; color: #555; }
+.time-col { text-align: right; font-family: 'Courier New', monospace; font-weight: 900; color: #000; }
+
+#fs-btn {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    background: rgba(0, 0, 0, 0.7);
+    color: white;
+    border: none;
+    padding: 12px 20px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 0.9rem;
+    transition: background 0.3s;
+    z-index: 100;
+}
+
+#fs-btn:hover {
+    background: rgba(0, 0, 0, 0.9);
+}
+
+.hidden { display: none; }

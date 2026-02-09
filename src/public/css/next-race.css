@@ -1,0 +1,103 @@
+.overflow-hidden{
+    overflow: hidden;
+    white-space: nowrap;
+}
+.panel-header {
+    margin-bottom: 1.5em;
+
+}
+.panel {
+    background-color: aliceblue;
+    padding: 2rem;
+    border-radius: 40px;
+    min-width: 30%;
+    min-height: 30%;
+    align-content: center;
+}
+.panel h2{
+    text-wrap-mode: nowrap;
+}
+#race-name-container{
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+    gap: 1em;    
+}
+table, th, td{
+    border: 1px solid black;
+    border-collapse: collapse;
+}
+th{
+    border-bottom: 2px solid black;
+}
+table{    
+    width: 100%;
+    max-width: 800px;
+    margin: auto;
+    margin-top: 1em;
+}
+ #panel:fullscreen h1 {
+    font-size: 4em;
+ }
+#panel:fullscreen h2 {
+      font-size: 3em;
+  }
+#panel:fullscreen #race-name-container {
+    gap: 2em;
+    min-width: 0;
+    overflow: hidden;
+    white-space: nowrap;
+}
+#panel:fullscreen p {
+    display: inline-block;
+    font-size: 2.5em;
+    max-height: 200px;
+}
+#panel:fullscreen {
+    font-size: 2.5em;
+}
+
+@media (max-width: 481px) {
+    .panel {
+        width: 100%;
+    }
+}
+
+/* Container styles */
+.scrolling-text-container {
+    background-color: #eff5ff;
+    border-radius: 4px;
+    overflow: hidden;
+}
+
+/* Inner container styles */
+.scrolling-text-inner {
+    display: flex;
+    white-space: nowrap;
+    padding: 8px 0;
+}
+
+/* Text styles */
+.scrolling-text {
+    display: flex;
+}
+
+.scrolling-text-item {
+    padding: 0 30px;
+}
+
+/* Apply the animation to the text items */
+.scrolling-text-inner>div {
+    animation: var(--direction) var(--marquee-speed) linear infinite;
+}
+
+/* Setting the Animation using Keyframes */
+@keyframes scroll-left {
+    0% {
+        transform: translateX(0%);
+    }
+
+    100% {
+        transform: translateX(-100%);
+    }
+}

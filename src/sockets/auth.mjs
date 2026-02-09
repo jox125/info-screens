@@ -10,7 +10,7 @@ export function socketAuth(RECEPTIONIST_KEY, OBSERVER_KEY, SAFETY_KEY) {
       return next();
     }
     if (!key) {
-      return next(new Error("Key required"));
+      return next(new Error("Key/Role required"));
     }
     if (role === ROLE.RECEPTIONIST && key === RECEPTIONIST_KEY) {
       socket.data.role = ROLE.RECEPTIONIST;

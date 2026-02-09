@@ -1,3 +1,6 @@
+import { ERROR_MESSAGES } from "./constants/messages.js";
+import { ERROR_CODES } from "../../shared/constants/codes.js";
+
 const socket = io({
   autoConnect: false,
 });
@@ -8,6 +11,8 @@ const loginForm = document.getElementById("login-form");
 const loginInput = document.getElementById("login-key");
 const loginError = document.getElementById("login-error");
 const panel = document.getElementById("panel");
+const sessionStatusMsg = document.getElementById("session-status-msg");
+let lastActiveSessionId = null; // This "remembers" the previous race ID
 
 loginForm.addEventListener("submit", (e) => {
   e.preventDefault();
@@ -35,8 +40,12 @@ socket.on("connect_error", (err) => {
 // ---- AUTH OK, LOAD control panel ----
 socket.on("auth:ok", (role) => {
   if (role === "safety-official") {
+    //clear view
+    const oldControlPanel = document.getElementById("control-panel");
+    if (oldControlPanel) oldControlPanel.remove();
+
     const loginPanel = document.getElementById("login-panel");
-    loginPanel.remove();
+    if (loginPanel) loginPanel.remove();
 
     // Request initial data
     socket.emit("state:request");
@@ -130,20 +139,19 @@ socket.on("auth:ok", (role) => {
 
     //Race state indicator
     const stateIndicator = document.createElement("div");
-    stateIndicator.id = "state-indicator"; 
-    //stateIndicator.classList.add("hidden");   
+    stateIndicator.id = "state-indicator";
+    //stateIndicator.classList.add("hidden");
     controlPanel.appendChild(stateIndicator);
   }
 });
 
-socket.on("state:update", (state) => {
+const updateView = (state) => {
   //update state data
   Object.assign(raceState, state);
   //change state indicator color
   const stateIndicator = document.getElementById("state-indicator");
   stateIndicator.classList.remove("safe", "hazard", "danger", "finished");
   stateIndicator.classList.add(raceState.raceMode);
-  
 
   // view 1. no race on, and no next races
   if (
@@ -151,13 +159,6 @@ socket.on("state:update", (state) => {
     !raceState.sessions.find((session) => session.status === "next")
   ) {
     try {
-      //show no upcoming races warning
-      const warning = document.getElementById("warning");
-      warning.innerHTML = `
-      <p>No upcoming races</p>
-      <p>Add races from /front-desk</p>
-      `;
-      warning.classList.remove("hidden");
       //remove info about upcoming races
       const nextInfo = document.getElementById("next-info");
       nextInfo.innerHTML = "";
@@ -202,7 +203,7 @@ socket.on("state:update", (state) => {
       const nextInfo = document.getElementById("next-info");
       nextInfo.classList.remove("hidden");
       const nextRace = raceState.sessions.find(
-        (session) => session.status === "next"
+        (session) => session.status === "next",
       );
       nextInfo.innerHTML = `
         <h4>Next race:</h4>
@@ -215,7 +216,7 @@ socket.on("state:update", (state) => {
             <span><strong>Car nr: </strong>${driver.carNum}</span>
             <span><strong>Driver: </strong>${driver.name}</span>
             </div>
-            `
+            `,
           )
           .join("")}</div>
       `;
@@ -232,13 +233,13 @@ socket.on("state:update", (state) => {
       startButton.classList.add("hidden");
       //show race control buttons
       const controlButtons = document.getElementById(
-        "race-control-buttons-container"
+        "race-control-buttons-container",
       );
       controlButtons.classList.remove("hidden");
       //show current race info
       const info = document.getElementById("current-info");
       const currentRace = raceState.sessions.find(
-        (session) => session.status === "in progress"
+        (session) => session.status === "in progress",
       );
       info.innerHTML = `
         <h4>Current race:</h4>
@@ -251,7 +252,7 @@ socket.on("state:update", (state) => {
             <span><strong>Car nr: </strong>${driver.carNum}</span>
             <span><strong>Driver: </strong>${driver.name}</span>
             </div>
-            `
+            `,
           )
           .join("")}</div>
       `;
@@ -266,7 +267,7 @@ socket.on("state:update", (state) => {
       nextRaceInfo.innerHTML = "";
       //show current state flag
       const stateIndicator = document.getElementById("state-indicator");
-      stateIndicator.classList.remove("hidden");     
+      stateIndicator.classList.remove("hidden");
     } catch (err) {
       console.log("Control panel not ready in race started.");
     }
@@ -284,7 +285,7 @@ socket.on("state:update", (state) => {
       startButton.classList.add("hidden");
       //hide control buttons
       const controlButtons = document.getElementById(
-        "race-control-buttons-container"
+        "race-control-buttons-container",
       );
       controlButtons.classList.add("hidden");
       //show End Session button
@@ -300,6 +301,35 @@ socket.on("state:update", (state) => {
       console.log("Control panel not ready in race finished.");
     }
   }
+  console.log(raceState);
+  //Show or hide no-next-race warning
+  if (
+    !raceState.sessions ||
+    raceState.sessions.length < 1 ||
+    !raceState.sessions.find((session) => session.status === "next")
+  ) {
+    try {
+      //show no next race warning
+      const warning = document.getElementById("warning");
+      warning.innerHTML = ERROR_MESSAGES[ERROR_CODES.NO_NEXT_RACE];
+      warning.classList.remove("hidden");
+    } catch (err) {}
+  } else {
+    //hide no next race warning
+    try {
+      const warning = document.getElementById("warning");
+      warning.innerHTML = "";
+      warning.classList.add("hidden");
+    } catch (err) {}
+  }
+};
+
+socket.on("session:update", (sessions) => {
+  raceState.sessions = sessions;
+  updateView(raceState);
+});
+socket.on("state:update", (state) => {
+  updateView(state);
 });
 
 socket.on("tic-tac", (timeLeft) => {
@@ -312,5 +342,3 @@ const convertTime = (millis) => {
   var seconds = ((millis % 60000) / 1000).toFixed(0);
   return minutes + ":" + (seconds < 10 ? "0" : "") + seconds;
 };
-
-

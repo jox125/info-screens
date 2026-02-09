@@ -18,7 +18,7 @@ const __dirname = fileURLToPath(dirname(import.meta.url));
 
 checkConfig();
 
-
+//register endpoints
 app.use(serveStatic("src/public"));
 app.use("/shared", serveStatic("src/shared"));
 
@@ -32,6 +32,23 @@ app.get("/front-desk", (req, res) => {
 
 app.get("/race-countdown", (req, res) => {
   res.sendFile(join(__dirname, "/public/race-countdown.html"));
+});
+
+app.get("/next-race", (req, res) => {
+  res.sendFile(join(__dirname, "/public/next-race.html"));
+});
+
+app.get("/lap-line-tracker", (req, res) => {
+    res.sendFile(join(__dirname, "/public/lap-line-tracker.html"));
+});
+
+app.get("/race-flags", (req, res) => {
+  res.sendFile(join(__dirname, "/public/race-flags.html"));
+});
+
+app.get("/leader-board", (req, res) => {
+    res.sendFile(join(__dirname, "/public/leaderboard.html"));
+
 });
 
 //Mark race with smallest id to be next race
