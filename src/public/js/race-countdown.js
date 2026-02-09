@@ -11,7 +11,7 @@ const countdown = document.getElementById("race-countdown");
 const fsElement = document.getElementById("fullscreen-element");
 const fsButton = document.getElementById("fullscreen-button");
 
-// Initial populating
+// Updates countdown on page load or when race-control ends session
 socket.emit(SOCKET_COUNTDOWN.REQUEST);
 socket.on(SOCKET_COUNTDOWN.UPDATE, (timeLeft) => {
     countdown.textContent = convertTime(timeLeft);

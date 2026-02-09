@@ -1,4 +1,5 @@
 import { clearInterval } from "timers";
+import { SOCKET_COUNTDOWN } from "../shared/constants/socketMessages.js";
 
 export function registerRaceActions(socket, io, { raceState }) {
   //timers
@@ -138,6 +139,7 @@ export function registerRaceActions(socket, io, { raceState }) {
       console.log("Race state data:");
       console.log(raceState);
       io.emit("state:update", raceState);
+      io.emit(SOCKET_COUNTDOWN.UPDATE, raceState.duration);
     }
   });
 
