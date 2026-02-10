@@ -138,7 +138,7 @@ export function registerReceptionist(socket, io, { raceState }) {
             });
         }
 
-        const carNum = data.carNum === "" ? null : Number(data.carNum);
+        const carNum = Number(data.carNum);
         const result = assignCar(session, carNum);
 
         switch(result) {
@@ -162,7 +162,6 @@ export function registerReceptionist(socket, io, { raceState }) {
             (d) => normalize(d.name, true) === normalize(data.name, { lowerCase: true }),
         );
         if (driver) {
-            console.warn(`[driver:add] session=${session.id} driver="${driver.name}" already exists`);
             return socket.emit(SOCKET_DRIVER.ERROR, {
                 name: normalize(driver.name),
                 code: ERROR_CODES.DRIVER_EXISTS
@@ -194,7 +193,7 @@ export function registerReceptionist(socket, io, { raceState }) {
             return socket.emit(SOCKET_DRIVER.EDIT_ERROR, {
                 sessionId: data.sessionId,
                 driverId: data.driverId,
-                code: ERROR_CODES.DRIVER_EXISTS
+                code: ERROR_CODES.DRIVER_NAME_REQUIRED
             });
         }
 
@@ -215,28 +214,59 @@ export function registerReceptionist(socket, io, { raceState }) {
 
         const driver = findDriver(data.sessionId, data.driverId, { raceState });
         if (!driver) {
-            return socket.emit(SOCKET_DRIVER.ERROR, { code: ERROR_CODES.DRIVER_NOT_FOUND });
+            return socket.emit(SOCKET_DRIVER.ERROR, {
+                code: ERROR_CODES.DRIVER_NOT_FOUND
+            });
         }
 
-        const duplicate = session.drivers.find(
-            (d) => normalize(d.name, true) === normalize(data.newName, true),
+        const duplicateName = session.drivers.find(
+            d => normalize(d.name, true) === normalize(data.newName, true),
         );
 
         // Check if a driver with the new name already exists
-        if (duplicate) {
-            console.warn(`[driver:edit] session=${session.id} driver="${duplicate.name}" already exists`);
+        if (duplicateName) {
             return socket.emit(SOCKET_DRIVER.EDIT_ERROR, {
                 driverId: data.driverId,
-                name: duplicate.name,
+                name: duplicateName.name,
                 code: ERROR_CODES.DRIVER_EXISTS
             });
         }
 
+        // Check if carNum is provided and usable
+        const oldCarNum = driver.carNum;
+        if(data.newCarNum !== null && data.newCarNum !== undefined && data.newCarNum !== "") {
+            const carNum = Number(data.newCarNum);
+            
+            if(isNaN(carNum) || carNum < 0 || carNum > 999) {
+                return socket.emit(SOCKET_DRIVER.EDIT_ERROR, {
+                    sessionId: data.sessionId,
+                    driverId: data.driverId,
+                    code: ERROR_CODES.CAR_OUT_OF_RANGE
+                });
+            }
+
+            const duplicateCar = session.drivers.find(
+                d => d.carNum === carNum
+            );
+            
+            // Check for duplicate car number
+            if(duplicateCar) {
+                return socket.emit(SOCKET_DRIVER.EDIT_ERROR, {
+                    driverId: data.driverId,
+                    carNum,
+                    code: ERROR_CODES.CAR_EXISTS
+                });
+            }
+
+            driver.carNum = carNum;
+        }
+
+        const carNumChange = oldCarNum !== driver.carNum ? `carNum="${oldCarNum}" -> "${data.newCarNum}"` : "";
         const oldName = driver.name;
         driver.name = normalizedName;
         io.emit(SOCKET_SESSION.UPDATE, raceState.sessions);
         socket.emit(SOCKET_DRIVER.SUCCESS, { code: SUCCESS_CODES.DRIVER_UPDATED });
-        console.log(`[driver:edit] session=${session.id} driver=${driver.id} name="${oldName}" -> "${driver.name}"`);
+        console.log(`[driver:edit] session=${session.id} driver=${driver.id} name="${oldName}" -> "${driver.name}" ${carNumChange}`);
     });
 
     // Removing a driver

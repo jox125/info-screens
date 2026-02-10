@@ -31,7 +31,7 @@ export function assignCar(session, carNum = null) {
 
     // If carNum is provided use it
     if(carNum !== null) {
-        if(carNum < 0 || carNum > 999) return ERROR_CODES.CAR_OUT_OF_RANGE;
+        if(isNaN(carNum) || carNum < 0 || carNum > 999) return ERROR_CODES.CAR_OUT_OF_RANGE;
         return assigned.has(carNum) ? ERROR_CODES.CAR_EXISTS : carNum;
     }
 

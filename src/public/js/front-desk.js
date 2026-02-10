@@ -190,15 +190,26 @@ socket.on(SOCKET_DRIVER.EDIT_ERROR, (data) => {
 
     const editForm = driverItem.querySelector(".edit-driver-form");
     const errorElement = editForm.querySelector(".error-message");
-    const input = editForm.querySelector(".edit-driver-name");
+    const nameInput = editForm.querySelector(".edit-driver-name");
+    const carNumInput = editForm.querySelector(".edit-car-number");
 
-    const message = data.name ? ERROR_MESSAGES[data.code].replace("${name}", data.name) : ERROR_MESSAGES[data.code];
+    let message = ERROR_MESSAGES[data.code];
+
+    if(data.name) {
+        message = ERROR_MESSAGES[data.code].replace("${name}", data.name);
+    }
+
+    if(data.carNum) {
+        message = ERROR_MESSAGES[data.code].replace("${carNum}", data.carNum);
+    }
+
     errorElement.textContent = message;
     errorElement.classList.remove("hidden");
 
     editForm.classList.remove("hidden");
-    input.value = "";
-    input.focus();
+    nameInput.value = "";
+    carNumInput.value = "";
+    nameInput.focus();
 });
 
 // ---- EVENT LISTENERS ----
@@ -349,18 +360,19 @@ driverList.addEventListener("submit", (e) => {
 
     const driverItem = e.target.closest(".driver-item");
     const driverId = driverItem.dataset.driverId;
-    const input = driverItem.querySelector(".edit-driver-name");
-    const newName = input.value.trim();
+    const nameInput = driverItem.querySelector(".edit-driver-name");
+    const newName = nameInput.value.trim();
+    const newCarNum = driverItem.querySelector(".edit-car-number").value;
     const errorElement = e.target.querySelector(".error-message");
 
     if (!newName) {
         errorElement.textContent = ERROR_MESSAGES.DRIVER_NAME_REQUIRED;
         errorElement.classList.remove("hidden");
-        input.focus();
+        nameInput.focus();
         return;
     }
 
-    editDriver(driverId, newName);
+    editDriver(driverId, newName, newCarNum);
 });
 
 driverPanelClose.addEventListener("click", () => {
@@ -487,11 +499,12 @@ function removeSession(sessionId) {
     });
 }
 
-function editDriver(driverId, newName) {
+function editDriver(driverId, newName, newCarNum) {
     socket.emit(SOCKET_DRIVER.EDIT, {
         sessionId: selectedSessionId,
         driverId,
         newName,
+        newCarNum
     });
 }
 
@@ -614,6 +627,15 @@ function createDriverItem(driver, mutable) {
         nameInput.id = `driver-${driver.id}`;
         nameInput.placeholder = "New driver name";
 
+        const carNumInput = document.createElement("input");
+        carNumInput.classList.add("edit-car-number");
+        carNumInput.id = `car-${driver.id}`;
+        carNumInput.placeholder = "New car number";
+        carNumInput.type = "number";
+        carNumInput.min = "0";
+        carNumInput.max = "999";
+        carNumInput.step = "1";
+
         const editError = document.createElement("p");
         editError.classList.add("error-message", "hidden");
 
@@ -628,6 +650,7 @@ function createDriverItem(driver, mutable) {
         buttonContainer.appendChild(editButton);
         buttonContainer.appendChild(removeButton);
         editForm.appendChild(nameInput);
+        editForm.appendChild(carNumInput);
         editForm.appendChild(editError);
         editForm.appendChild(saveButton);
         item.appendChild(buttonContainer);
