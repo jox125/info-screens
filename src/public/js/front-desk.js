@@ -365,10 +365,9 @@ driverList.addEventListener("submit", (e) => {
     const newCarNum = driverItem.querySelector(".edit-car-number").value;
     const errorElement = e.target.querySelector(".error-message");
 
-    if (!newName) {
-        errorElement.textContent = ERROR_MESSAGES.DRIVER_NAME_REQUIRED;
+    if(!newName && !newCarNum) {
+        errorElement.textContent = ERROR_MESSAGES.AT_LEAST_ONE_FIELD_REQUIRED;
         errorElement.classList.remove("hidden");
-        nameInput.focus();
         return;
     }
 

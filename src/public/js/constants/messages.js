@@ -12,7 +12,8 @@ export const ERROR_MESSAGES = {
     [ERROR_CODES.DRIVER_LOCKED]: "Driver cannot be modified because session is \${status}",
     [ERROR_CODES.CAR_EXISTS]: "Car with number \${carNum} exists",
     [ERROR_CODES.CAR_OUT_OF_RANGE]: "Car number must be between 0 and 999",
-    [ERROR_CODES.NO_NEXT_RACE]: "<p>No next race coming</p><p>Add races from /front-desk</p>"
+    [ERROR_CODES.NO_NEXT_RACE]: "<p>No next race coming</p><p>Add races from /front-desk</p>",
+    [ERROR_CODES.AT_LEAST_ONE_FIELD_REQUIRED]: "At least one field must be provided"
 }
 
 export const SUCCESS_MESSAGES = {

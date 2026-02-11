@@ -188,13 +188,25 @@ export function registerReceptionist(socket, io, { raceState }) {
             });
         }
 
-        const normalizedName = normalize(data.newName);
-        if (!normalizedName) {
+        if(!data.newName && !data.newCarNum) {
             return socket.emit(SOCKET_DRIVER.EDIT_ERROR, {
                 sessionId: data.sessionId,
                 driverId: data.driverId,
-                code: ERROR_CODES.DRIVER_NAME_REQUIRED
+                code: ERROR_CODES.AT_LEAST_ONE_FIELD_REQUIRED
             });
+        }
+
+        let normalizedName;
+        if(data.newName) {
+            normalizedName = normalize(data.newName);
+
+            if(!normalizedName) {
+                return socket.emit(SOCKET_DRIVER.EDIT_ERROR, {
+                    sessionId: data.sessionId,
+                    driverId: data.driverId,
+                    code: ERROR_CODES.DRIVER_NAME_REQUIRED
+                });
+            }
         }
 
         const session = findSession(data.sessionId, { raceState });
@@ -219,17 +231,22 @@ export function registerReceptionist(socket, io, { raceState }) {
             });
         }
 
-        const duplicateName = session.drivers.find(
-            d => normalize(d.name, true) === normalize(data.newName, true),
-        );
+        const oldName = driver.name;
+        if(normalizedName && normalizedName !== driver.name) {
+            const duplicateName = session.drivers.find(
+                d => normalize(d.name, true) === normalize(data.newName, true),
+            );
+    
+            // Check if a driver with the new name already exists
+            if (duplicateName) {
+                return socket.emit(SOCKET_DRIVER.EDIT_ERROR, {
+                    driverId: data.driverId,
+                    name: duplicateName.name,
+                    code: ERROR_CODES.DRIVER_EXISTS
+                });
+            }
 
-        // Check if a driver with the new name already exists
-        if (duplicateName) {
-            return socket.emit(SOCKET_DRIVER.EDIT_ERROR, {
-                driverId: data.driverId,
-                name: duplicateName.name,
-                code: ERROR_CODES.DRIVER_EXISTS
-            });
+            driver.name = normalizedName;
         }
 
         // Check if carNum is provided and usable
@@ -262,11 +279,10 @@ export function registerReceptionist(socket, io, { raceState }) {
         }
 
         const carNumChange = oldCarNum !== driver.carNum ? `carNum="${oldCarNum}" -> "${data.newCarNum}"` : "";
-        const oldName = driver.name;
-        driver.name = normalizedName;
+        const nameChange = oldName !== driver.name ? `name="${oldName}" -> "${driver.name}"` : "";
         io.emit(SOCKET_SESSION.UPDATE, raceState.sessions);
         socket.emit(SOCKET_DRIVER.SUCCESS, { code: SUCCESS_CODES.DRIVER_UPDATED });
-        console.log(`[driver:edit] session=${session.id} driver=${driver.id} name="${oldName}" -> "${driver.name}" ${carNumChange}`);
+        console.log(`[driver:edit] session=${session.id} driver=${driver.id} ${nameChange} ${carNumChange}`);
     });
 
     // Removing a driver
