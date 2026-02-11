@@ -118,7 +118,7 @@ socket.on(SOCKET_SESSION.SUCCESS, (data) => {
 });
 
 // Successful driver action messages
-socket.on(SOCKET_DRIVER.DELETE, (data) => {
+socket.on(SOCKET_DRIVER.SUCCESS, (data) => {
     driverFeedback.textContent = SUCCESS_MESSAGES[data.code];
     driverFeedback.classList.add("success-message");
     driverFeedback.classList.remove("hidden");
