@@ -8,7 +8,7 @@ export const ERROR_MESSAGES = {
     [ERROR_CODES.SESSION_LOCKED]: "Session cannot be modified because session is \${status}",
     [ERROR_CODES.DRIVER_NOT_FOUND]: "Driver not found",
     [ERROR_CODES.DRIVER_NAME_REQUIRED]: "Driver name is required",
-    [ERROR_CODES.DRIVER_EXISTS]: "\${name} already exists",
+    [ERROR_CODES.DRIVER_EXISTS]: "Driver \${name} already exists",
     [ERROR_CODES.DRIVER_LOCKED]: "Driver cannot be modified because session is \${status}",
     [ERROR_CODES.CAR_EXISTS]: "Car with number \${carNum} exists",
     [ERROR_CODES.CAR_OUT_OF_RANGE]: "Car number must be between 0 and 999",

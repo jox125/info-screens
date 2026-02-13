@@ -392,7 +392,7 @@ function renderSessions() {
     currentEditForm.driverId = null;
 
     if (sessions.length === 0) {
-        const emptyMessage = createEmptyMessage("No sessions yet. Add one to get started.");
+        const emptyMessage = createEmptyMessage("No upcoming sessions. Add one to get started.");
         emptyMessage.classList.add("empty-message--sessions");
 
         sessionList.appendChild(emptyMessage);
@@ -401,51 +401,8 @@ function renderSessions() {
         return;
     }
 
-    const statusOrder = [STATUS.IN_PROGRESS, STATUS.NEXT, STATUS.UPCOMING, STATUS.FINISHED];
-    const groupedSessions = {
-        [STATUS.IN_PROGRESS]: [],
-        [STATUS.NEXT]: [],
-        [STATUS.UPCOMING]: [],
-        [STATUS.FINISHED]: [],
-    };
-
-    // Group sessions by status
     sessions.forEach((session) => {
-        if (groupedSessions[session.status]) {
-            groupedSessions[session.status].push(session);
-        }
-    });
-
-    // Render groups with a status header
-    statusOrder.forEach((status) => {
-        const sessionsInGroup = groupedSessions[status];
-        let mutable = null;
-
-        if(IMMUTABLE_STATUSES.has(status)) {
-            mutable = false;
-        } else {
-            mutable = true;
-        }
-
-        const column = document.createElement("div");
-        column.classList.add("session-column");
-
-        const header = document.createElement("h2");
-        header.classList.add("session-status-header");
-        header.textContent = status.charAt(0).toUpperCase() + status.slice(1);
-        column.appendChild(header);
-
-        if (sessionsInGroup.length === 0) {
-            const emptyMessage = createEmptyMessage(`No ${status} sessions`);
-            column.appendChild(emptyMessage);
-        } else {
-            sessionsInGroup.forEach((session) => {
-                const item = createSessionItem(session, mutable);
-                column.appendChild(item);
-            });
-        }
-
-        sessionList.appendChild(column);
+        sessionList.appendChild(createSessionItem(session));
     });
 }
 
@@ -472,15 +429,7 @@ function renderDrivers() {
 
     sortedDrivers.forEach((driver) => {
         const status = session.status;
-        let mutable = null;
-
-        if(IMMUTABLE_STATUSES.has(status)) {
-            mutable = false;
-        } else {
-            mutable = true;
-        }
-
-        const item = createDriverItem(driver, mutable);
+        const item = createDriverItem(driver);
         driverList.appendChild(item);
     });
 }
@@ -522,7 +471,7 @@ function createEmptyMessage(message) {
     return emptyMessage;
 }
 
-function createSessionItem(session, mutable) {
+function createSessionItem(session) {
     const item = document.createElement("div");
     item.classList.add("session-item");
     item.classList.add("list-container");
@@ -546,49 +495,46 @@ function createSessionItem(session, mutable) {
     header.appendChild(driverCount);
     item.appendChild(header);
 
-    // If mutable, add buttons for editing, removing
-    if(mutable) {
-        const buttonContainer = document.createElement("div");
-        buttonContainer.classList.add("button-container");
+    const buttonContainer = document.createElement("div");
+    buttonContainer.classList.add("button-container");
 
-        const editButton = document.createElement("button");
-        editButton.classList.add("edit-session-button");
-        editButton.textContent = "Edit Session";
+    const editButton = document.createElement("button");
+    editButton.classList.add("edit-session-button");
+    editButton.textContent = "Edit Session";
 
-        const editForm = document.createElement("form");
-        editForm.classList.add("edit-session-form", "hidden");
-        editForm.id = session.id;
+    const editForm = document.createElement("form");
+    editForm.classList.add("edit-session-form", "hidden");
+    editForm.id = session.id;
 
-        const nameInput = document.createElement("input");
-        nameInput.type = "text";
-        nameInput.classList.add("edit-session-name");
-        nameInput.id = `session-${session.id}`;
-        nameInput.placeholder = "New session name";
+    const nameInput = document.createElement("input");
+    nameInput.type = "text";
+    nameInput.classList.add("edit-session-name");
+    nameInput.id = `session-${session.id}`;
+    nameInput.placeholder = "New session name";
 
-        const editError = document.createElement("p");
-        editError.classList.add("error-message", "hidden");
+    const editError = document.createElement("p");
+    editError.classList.add("error-message", "hidden");
 
-        const saveButton = document.createElement("button");
-        saveButton.type = "submit";
-        saveButton.textContent = "Save session";
+    const saveButton = document.createElement("button");
+    saveButton.type = "submit";
+    saveButton.textContent = "Save session";
 
-        const removeButton = document.createElement("button");
-        removeButton.classList.add("remove-session-button");
-        removeButton.textContent = "Remove Session";
+    const removeButton = document.createElement("button");
+    removeButton.classList.add("remove-session-button");
+    removeButton.textContent = "Remove Session";
 
-        buttonContainer.appendChild(editButton);
-        buttonContainer.appendChild(removeButton);
-        editForm.appendChild(nameInput);
-        editForm.appendChild(editError);
-        editForm.appendChild(saveButton);
-        item.appendChild(buttonContainer);
-        item.appendChild(editForm);
-    }
+    buttonContainer.appendChild(editButton);
+    buttonContainer.appendChild(removeButton);
+    editForm.appendChild(nameInput);
+    editForm.appendChild(editError);
+    editForm.appendChild(saveButton);
+    item.appendChild(buttonContainer);
+    item.appendChild(editForm);
 
     return item;
 }
 
-function createDriverItem(driver, mutable) {
+function createDriverItem(driver) {
     const item = document.createElement("div");
     item.classList.add("driver-item", "list-container");
     item.dataset.driverId = driver.id;
@@ -607,54 +553,51 @@ function createDriverItem(driver, mutable) {
     header.appendChild(driverCar);
     item.appendChild(header);
 
-    // If mutable, add buttons for editing, removing
-    if(mutable) {
-        const buttonContainer = document.createElement("div");
-        buttonContainer.classList.add("button-container");
+    const buttonContainer = document.createElement("div");
+    buttonContainer.classList.add("button-container");
 
-        const editButton = document.createElement("button");
-        editButton.classList.add("edit-driver-button");
-        editButton.textContent = "Edit Driver";
+    const editButton = document.createElement("button");
+    editButton.classList.add("edit-driver-button");
+    editButton.textContent = "Edit Driver";
 
-        const editForm = document.createElement("form");
-        editForm.classList.add("edit-driver-form", "hidden");
-        editForm.id = driver.id;
+    const editForm = document.createElement("form");
+    editForm.classList.add("edit-driver-form", "hidden");
+    editForm.id = driver.id;
 
-        const nameInput = document.createElement("input");
-        nameInput.type = "text";
-        nameInput.classList.add("edit-driver-name");
-        nameInput.id = `driver-${driver.id}`;
-        nameInput.placeholder = "New driver name";
+    const nameInput = document.createElement("input");
+    nameInput.type = "text";
+    nameInput.classList.add("edit-driver-name");
+    nameInput.id = `driver-${driver.id}`;
+    nameInput.placeholder = "New driver name";
 
-        const carNumInput = document.createElement("input");
-        carNumInput.classList.add("edit-car-number");
-        carNumInput.id = `car-${driver.id}`;
-        carNumInput.placeholder = "New car number";
-        carNumInput.type = "number";
-        carNumInput.min = "0";
-        carNumInput.max = "999";
-        carNumInput.step = "1";
+    const carNumInput = document.createElement("input");
+    carNumInput.classList.add("edit-car-number");
+    carNumInput.id = `car-${driver.id}`;
+    carNumInput.placeholder = "New car number";
+    carNumInput.type = "number";
+    carNumInput.min = "0";
+    carNumInput.max = "999";
+    carNumInput.step = "1";
 
-        const editError = document.createElement("p");
-        editError.classList.add("error-message", "hidden");
+    const editError = document.createElement("p");
+    editError.classList.add("error-message", "hidden");
 
-        const saveButton = document.createElement("button");
-        saveButton.type = "submit";
-        saveButton.textContent = "Save driver";
+    const saveButton = document.createElement("button");
+    saveButton.type = "submit";
+    saveButton.textContent = "Save driver";
 
-        const removeButton = document.createElement("button");
-        removeButton.classList.add("remove-driver-button");
-        removeButton.textContent = "Remove Driver";
+    const removeButton = document.createElement("button");
+    removeButton.classList.add("remove-driver-button");
+    removeButton.textContent = "Remove Driver";
 
-        buttonContainer.appendChild(editButton);
-        buttonContainer.appendChild(removeButton);
-        editForm.appendChild(nameInput);
-        editForm.appendChild(carNumInput);
-        editForm.appendChild(editError);
-        editForm.appendChild(saveButton);
-        item.appendChild(buttonContainer);
-        item.appendChild(editForm);
-    }
+    buttonContainer.appendChild(editButton);
+    buttonContainer.appendChild(removeButton);
+    editForm.appendChild(nameInput);
+    editForm.appendChild(carNumInput);
+    editForm.appendChild(editError);
+    editForm.appendChild(saveButton);
+    item.appendChild(buttonContainer);
+    item.appendChild(editForm);
 
     return item;
 }

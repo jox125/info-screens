@@ -95,14 +95,6 @@
     gap: 0.5rem;
 }
 
-.session-status-header {
-    padding: 0.5rem;
-    background: #f0f0f0;
-    border-radius: 10px;
-    text-align: center;
-    cursor: default;
-}
-
 .edit-session-form,
 .edit-driver-form,
 .edit-session-form input,
@@ -175,6 +167,7 @@
 .driver-header h3,
 .session-header h3 {
   margin: 0;
+  overflow-wrap: anywhere;
 }
 
 .driver-car,
