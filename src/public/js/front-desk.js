@@ -391,7 +391,7 @@ function renderSessions() {
     currentEditForm.sessionId = null;
     currentEditForm.driverId = null;
 
-    if (sessions.length === 0) {
+    if (!sessions.find(s => s.status === STATUS.UPCOMING)) {
         const emptyMessage = createEmptyMessage("No upcoming sessions. Add one to get started.");
         emptyMessage.classList.add("empty-message--sessions");
 
@@ -402,6 +402,7 @@ function renderSessions() {
     }
 
     sessions.forEach((session) => {
+        if(session.status !== STATUS.UPCOMING) return;
         sessionList.appendChild(createSessionItem(session));
     });
 }
