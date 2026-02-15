@@ -1,31 +1,32 @@
 import { clearInterval } from "timers";
 import { SOCKET_COUNTDOWN } from "../shared/constants/socketMessages.js";
+import { createCountdown } from "../services/timer.mjs";
 
 export function registerRaceActions(socket, io, { raceState }) {
-  //timers
-  let ticTac = null;
-  let timer = null;
+  // ---- FINISH RACE HELPER ----
+  const finishRace = () => {
+    raceState.raceMode = "finished";
+    console.log("checkered flag");
+    raceState.sessions[
+      raceState.sessions.findIndex(
+        (session) => session.status === "in progress",
+      )
+    ].status = "finished";
+    raceState.timeLeft = 0;
+    raceState.timer.startedAt = null;
+    raceState.timer.running = false;
+    io.emit("state:update", raceState);
+    countdown.stopCountdown();
 
-  // ---- COUNTDOWN ----
-  const startCountdown = (duration) => {
-    console.log("Start countdown");
-    raceState.timer.startedAt = Date.now();
-    raceState.timer.running = true;
-    raceState.timeLeft = duration;
-    ticTac = setInterval(() => {
-      raceState.timeLeft -= 1000;
-      io.emit("tic-tac", raceState.timeLeft);
-      //console.log("Race is on. Time left: " + raceState.timeLeft);
-    }, 1000);
-    timer = setTimeout(() => {
-      finishRace();
-      raceState.timeLeft = 0;
-      raceState.timer.startedAt = null;
-      raceState.timer.running = false;
-      io.emit("tic-tac", raceState.timeLeft);
-
-    }, duration);
+    console.log("Race state data:");
+    console.log(raceState);
   };
+  // ---- COUNTDOWN ----
+  const countdown = createCountdown({
+    raceState,
+    io,
+    finishRace,
+  });  
   // ---- RACE MODES MANAGEMENT ----
   socket.on("race:action", (action) => {
     if (socket.data.role !== "safety-official") {
@@ -77,16 +78,16 @@ export function registerRaceActions(socket, io, { raceState }) {
       }
 
       //start timer
-      startCountdown(raceState.duration);
-      // --- TODO ---
-      //The leader board changes to the current race.
-      //The Next Race screen switches to the subsequent race session.
+      countdown.startCountdown(raceState.duration);
 
       io.emit("state:update", raceState);
       console.log("state:update:");
       console.log(raceState);
       console.log("Drivers:");
-      console.log(raceState.sessions.find((session) => session.status === "in progress").drivers);
+      console.log(
+        raceState.sessions.find((session) => session.status === "in progress")
+          .drivers,
+      );
     }
 
     //controls active when race is on
@@ -147,47 +148,27 @@ export function registerRaceActions(socket, io, { raceState }) {
     }
   });
 
-    // ---- RECORD LAP TIME ----
-    socket.on("race:lap", (data) => {
-        if (socket.data.role !== "observer") return;
-        const session = raceState.sessions.find(s => s.id === data.sessionId);
-        if (!session || session.status === "closed") return;
-        const driver = session.drivers.find(d => d.carNum === data.carNum);
-        if (!driver) return;
+  // ---- RECORD LAP TIME ----
+  socket.on("race:lap", (data) => {
+    if (socket.data.role !== "observer") return;
+    const session = raceState.sessions.find((s) => s.id === data.sessionId);
+    if (!session || session.status === "closed") return;
+    const driver = session.drivers.find((d) => d.carNum === data.carNum);
+    if (!driver) return;
 
-        const now = Date.now();
-        const startTime = driver.lastLapAt || raceState.timer.startedAt || now;
-        const lapTime = now - startTime;
+    const now = Date.now();
+    const startTime = driver.lastLapAt || raceState.timer.startedAt || now;
+    const lapTime = now - startTime;
 
-        driver.laps = (driver.laps || 0) + 1;
-        driver.lastLapAt = now;
+    driver.laps = (driver.laps || 0) + 1;
+    driver.lastLapAt = now;
 
-        // Logic for Fastest Lap
-        if (!driver.fastestLap || lapTime < driver.fastestLap) {
-            driver.fastestLap = lapTime;
-        }
+    // Logic for Fastest Lap
+    if (!driver.fastestLap || lapTime < driver.fastestLap) {
+      driver.fastestLap = lapTime;
+    }
 
-        console.log(`Lap recorded for Car ${data.carNum}: ${lapTime}ms`);
-        io.emit("state:update", raceState); // Push update to Leaderboard!
-    });
-
-  // ---- FINISH RACE HELPER ----
-  const finishRace = () => {
-    raceState.raceMode = "finished";
-    console.log("checkered flag");
-    raceState.sessions[
-      raceState.sessions.findIndex(
-        (session) => session.status === "in progress",
-      )
-    ].status = "finished";
-    raceState.timeLeft = 0;
-    raceState.timer.startedAt = null;
-    raceState.timer.running = false;
-    io.emit("state:update", raceState);    
-    clearInterval(ticTac);
-    clearTimeout(timer);
-
-    console.log("Race state data:");
-    console.log(raceState);
-  };
+    console.log(`Lap recorded for Car ${data.carNum}: ${lapTime}ms`);
+    io.emit("state:update", raceState); // Push update to Leaderboard!
+  });
 }
