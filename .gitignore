@@ -1,5 +1,8 @@
 # github node.gitignore
 
+# persist state file
+src/config/race-state.json
+
 # Logs
 logs
 *.log
