@@ -1,10 +1,10 @@
-import { clearInterval } from "timers";
 import { SOCKET_COUNTDOWN } from "../shared/constants/socketMessages.js";
-import { createCountdown } from "../services/timer.mjs";
+import { countdown, finishRace } from "../server.mjs"; 
+
 
 export function registerRaceActions(socket, io, { raceState }) {
   // ---- FINISH RACE HELPER ----
-  const finishRace = () => {
+  /*const finishRace = () => {
     raceState.raceMode = "finished";
     console.log("checkered flag");
     raceState.sessions[
@@ -20,13 +20,8 @@ export function registerRaceActions(socket, io, { raceState }) {
 
     console.log("Race state data:");
     console.log(raceState);
-  };
-  // ---- COUNTDOWN ----
-  const countdown = createCountdown({
-    raceState,
-    io,
-    finishRace,
-  });  
+  };*/
+ 
   // ---- RACE MODES MANAGEMENT ----
   socket.on("race:action", (action) => {
     if (socket.data.role !== "safety-official") {
@@ -128,7 +123,8 @@ export function registerRaceActions(socket, io, { raceState }) {
       raceState.sessions.find((session) => session.status === "in progress") &&
       action.type === "CHEQUERED_FLAG"
     ) {
-      finishRace();
+      countdown.stopCountdown();
+      finishRace.finishRace();
     }
 
     if (

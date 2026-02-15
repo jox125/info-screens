@@ -1,5 +1,4 @@
-import { raceState } from "./config.mjs";
-import { startCountdown } from "../sockets/race-actions.mjs"
+import { countdown } from "../server.mjs";
 
 const defaultRaceState = {
   sessions: [],
@@ -12,7 +11,10 @@ const defaultRaceState = {
   },
 };
 
-export function loadStateFromFile () {
+
+
+export function loadStateFromFile (raceState) {
+
       try {
         const raw = fs.readFileSync("race-state.json", "utf8");
         const persisted = JSON.parse(raw);
@@ -23,6 +25,6 @@ export function loadStateFromFile () {
 
       // If race in progress, continue timer
       if (raceState.timer.running && raceState.timeLeft > 0) {
-         startCountdown(raceState.timeLeft);
+         countdown.startCountdown(raceState.timeLeft);
       }
 }

@@ -35,5 +35,8 @@ export function checkConfig(){
     console.log("Mock race state data loaded:");
     console.log(raceState);
     }
+    if (process.env.NODE_ENV === "production") {
+      loadStateFromFile(raceState, io, finishRace);
+    }
 }
 

@@ -17,7 +17,7 @@ export function createCountdown({ raceState, io, finishRace }) {
     }, 1000);
 
     timer = setTimeout(() => {
-      finishRace();
+      finishRace.finishRace();
       raceState.timeLeft = 0;
       raceState.timer.startedAt = null;
       raceState.timer.running = false;      

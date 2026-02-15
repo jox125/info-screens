@@ -9,6 +9,8 @@ import { raceState, RECEPTIONIST_KEY, OBSERVER_KEY, SAFETY_KEY, checkConfig } fr
 import { ensureNextRace } from "./services/race-state.mjs";
 import { socketAuth } from "./sockets/auth.mjs";
 import { registerSocketHandlers } from "./sockets/index.mjs";
+import { createCountdown } from "./services/timer.mjs";
+import { createFinishRace } from "./services/race-actions-helpers.mjs";
 
 // Initialize express, socketIO
 const app = express();
@@ -16,6 +18,12 @@ const server = createServer(app);
 const io = new Server(server);
 const __dirname = fileURLToPath(dirname(import.meta.url));
 
+// Initialize Finish Race Helper
+export const finishRace = createFinishRace( { raceState, io } );
+// Initialize timer
+export const countdown = createCountdown( { raceState, io, finishRace } );
+
+// Check Config
 checkConfig();
 
 //register endpoints
