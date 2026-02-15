@@ -1,26 +1,9 @@
 import { SOCKET_COUNTDOWN } from "../shared/constants/socketMessages.js";
 import { countdown, finishRace } from "../server.mjs"; 
+import { saveStateToFile } from "../config/persist-state.mjs";
 
 
 export function registerRaceActions(socket, io, { raceState }) {
-  // ---- FINISH RACE HELPER ----
-  /*const finishRace = () => {
-    raceState.raceMode = "finished";
-    console.log("checkered flag");
-    raceState.sessions[
-      raceState.sessions.findIndex(
-        (session) => session.status === "in progress",
-      )
-    ].status = "finished";
-    raceState.timeLeft = 0;
-    raceState.timer.startedAt = null;
-    raceState.timer.running = false;
-    io.emit("state:update", raceState);
-    countdown.stopCountdown();
-
-    console.log("Race state data:");
-    console.log(raceState);
-  };*/
  
   // ---- RACE MODES MANAGEMENT ----
   socket.on("race:action", (action) => {
@@ -142,6 +125,8 @@ export function registerRaceActions(socket, io, { raceState }) {
       io.emit("state:update", raceState);
       io.emit(SOCKET_COUNTDOWN.UPDATE, raceState.duration);
     }
+    //Save state
+    saveStateToFile(raceState);
   });
 
   // ---- RECORD LAP TIME ----
@@ -166,5 +151,7 @@ export function registerRaceActions(socket, io, { raceState }) {
 
     console.log(`Lap recorded for Car ${data.carNum}: ${lapTime}ms`);
     io.emit("state:update", raceState); // Push update to Leaderboard!
+    //Save state 
+    saveStateToFile(raceState);
   });
 }

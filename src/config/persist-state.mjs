@@ -1,4 +1,6 @@
 import { countdown } from "../server.mjs";
+import fs from "fs";
+import { raceState } from "./config.mjs";
 
 const defaultRaceState = {
   sessions: [],
@@ -14,17 +16,33 @@ const defaultRaceState = {
 
 
 export function loadStateFromFile (raceState) {
-
       try {
-        const raw = fs.readFileSync("race-state.json", "utf8");
+        const raw = fs.readFileSync("./src/config/race-state.json", "utf8");
         const persisted = JSON.parse(raw);
         Object.assign(raceState, defaultRaceState, persisted);
-      } catch {
+        console.log("file loaded...");
+        console.log(raceState);
+      } catch (err) {
+        console.log("Load Failed", err);
         Object.assign(raceState, defaultRaceState);
+        console.log ("defaults loaded: ");
+        console.log (raceState);
       }
 
       // If race in progress, continue timer
       if (raceState.timer.running && raceState.timeLeft > 0) {
          countdown.startCountdown(raceState.timeLeft);
       }
+}
+
+export function saveStateToFile (raceState) {
+    try {
+        const json = JSON.stringify(raceState, null, 2);
+        fs.writeFileSync("./src/config/race-state.json", json);
+        //console.log("State saved.");
+        
+    } catch (err){
+        console.log("Failed to save state: " + err);
+    }
+
 }

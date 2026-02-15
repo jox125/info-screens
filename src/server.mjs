@@ -11,6 +11,7 @@ import { socketAuth } from "./sockets/auth.mjs";
 import { registerSocketHandlers } from "./sockets/index.mjs";
 import { createCountdown } from "./services/timer.mjs";
 import { createFinishRace } from "./services/race-actions-helpers.mjs";
+import { saveStateToFile } from "./config/persist-state.mjs";
 
 // Initialize express, socketIO
 const app = express();
@@ -73,4 +74,16 @@ const PORT = process.env.PORT || 3000;
 server.listen(PORT, () => {
   console.log(`server running at http://localhost:${PORT}`);
 });
+
+//Save state on server stop
+process.on("SIGINT", () => {
+  saveStateToFile(raceState);
+  process.exit(0);
+});
+
+process.on("SIGTERM", () => {
+  saveStateToFile(raceState);
+  process.exit(0);
+});
+
 

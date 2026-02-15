@@ -1,0 +1,194 @@
+{
+  "sessions": [
+    {
+      "id": 1,
+      "name": "Very long race name that must scroll Race nr 1",
+      "drivers": [
+        {
+          "id": 1,
+          "name": "Driver 1",
+          "carNum": 11
+        },
+        {
+          "id": 2,
+          "name": "Driver 2",
+          "carNum": 22
+        }
+      ],
+      "status": "closed"
+    },
+    {
+      "id": 2,
+      "name": "Race nr 2",
+      "drivers": [
+        {
+          "id": 1,
+          "name": "Driver 3",
+          "carNum": 33
+        },
+        {
+          "id": 2,
+          "name": "Driver 4",
+          "carNum": 44
+        }
+      ],
+      "status": "closed"
+    },
+    {
+      "id": 3,
+      "name": "Race nr 3",
+      "drivers": [
+        {
+          "id": 1,
+          "name": "Driver 5",
+          "carNum": 55
+        },
+        {
+          "id": 2,
+          "name": "Driver 6",
+          "carNum": 66
+        }
+      ],
+      "status": "closed"
+    },
+    {
+      "id": 1771163005547,
+      "name": "Race 4",
+      "drivers": [
+        {
+          "id": 1771163010859,
+          "name": "juhan",
+          "carNum": 1
+        },
+        {
+          "id": 1771163014419,
+          "name": "pikne mcqueen",
+          "carNum": 2
+        }
+      ],
+      "status": "closed"
+    },
+    {
+      "id": 1771163855719,
+      "name": "session 1",
+      "drivers": [
+        {
+          "id": 1771163861959,
+          "name": "pikne mcqueen",
+          "carNum": 3
+        },
+        {
+          "id": 1771163868670,
+          "name": "aadu",
+          "carNum": 4
+        },
+        {
+          "id": 1771163875431,
+          "name": "juku",
+          "carNum": 5
+        }
+      ],
+      "status": "closed"
+    },
+    {
+      "id": 1771171081518,
+      "name": "Race is coming soon for many drivers tomorrow afternoon maybe",
+      "drivers": [],
+      "status": "closed"
+    },
+    {
+      "id": 1771171534280,
+      "name": "Race is coming soon for many drivers tomorrow afternoon maybe",
+      "drivers": [
+        {
+          "id": 1771171546785,
+          "name": "juhan",
+          "carNum": 1
+        },
+        {
+          "id": 1771171573954,
+          "name": "pikne mcqueen",
+          "carNum": 2
+        }
+      ],
+      "status": "closed"
+    },
+    {
+      "id": 1771173169276,
+      "name": "Race 4",
+      "drivers": [],
+      "status": "next"
+    },
+    {
+      "id": 1771173193955,
+      "name": "Race 5",
+      "drivers": [
+        {
+          "id": 1771173198917,
+          "name": "juhan",
+          "carNum": 0
+        },
+        {
+          "id": 1771173202004,
+          "name": "Driver 1",
+          "carNum": 1
+        },
+        {
+          "id": 1771173205708,
+          "name": "pikne mcqueen",
+          "carNum": 2
+        },
+        {
+          "id": 1771173211284,
+          "name": "aadu",
+          "carNum": 3
+        }
+      ],
+      "status": "upcoming"
+    },
+    {
+      "id": 1771173229116,
+      "name": "Race 6",
+      "drivers": [
+        {
+          "id": 1771173233917,
+          "name": "juku",
+          "carNum": 0
+        },
+        {
+          "id": 1771173239755,
+          "name": "uku",
+          "carNum": 1
+        },
+        {
+          "id": 1771173261269,
+          "name": "aadu",
+          "carNum": 2
+        },
+        {
+          "id": 1771173271677,
+          "name": "beedu",
+          "carNum": 3
+        },
+        {
+          "id": 1771173280397,
+          "name": "ceedu",
+          "carNum": 4
+        },
+        {
+          "id": 1771173289021,
+          "name": "deedu",
+          "carNum": 5
+        }
+      ],
+      "status": "upcoming"
+    }
+  ],
+  "raceMode": "danger",
+  "duration": 60000,
+  "timeLeft": 0,
+  "timer": {
+    "startedAt": null,
+    "running": false
+  }
+}

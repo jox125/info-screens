@@ -1,5 +1,6 @@
 import "dotenv/config";
 import { loadMockData } from "../dev-helpers/load-mock-data.mjs";
+import { loadStateFromFile } from "./persist-state.mjs";
 
 // env keys
 export const RECEPTIONIST_KEY = process.env.RECEPTIONIST_KEY;
@@ -25,18 +26,22 @@ export function checkConfig(){
     }
     //In development mode load mock data
     if (process.env.NODE_ENV === "development") {
-    Object.assign(raceState, loadMockData());
+      loadStateFromFile(raceState);
+      if (raceState.sessions.length < 1) {
+        Object.assign(raceState, loadMockData());
+        console.log("Mock race state data loaded:");
+        console.log(raceState);
+      }    
     console.log({
         NODE_ENV: process.env.NODE_ENV,
         RECEPTIONIST_KEY: process.env.RECEPTIONIST_KEY,
         OBSERVER_KEY: process.env.OBSERVER_KEY,
         SAFETY_KEY: process.env.SAFETY_KEY,
     });
-    console.log("Mock race state data loaded:");
-    console.log(raceState);
+    
     }
     if (process.env.NODE_ENV === "production") {
-      loadStateFromFile(raceState, io, finishRace);
+      loadStateFromFile(raceState);
     }
 }
 
