@@ -27,18 +27,24 @@ export function checkConfig(){
     //In development mode load mock data
     if (process.env.NODE_ENV === "development") {
       loadStateFromFile(raceState);
+      //ensure 1min duration
+      if (raceState.duration != 60000) raceState.duration = 60000;
+      //check that timer data is correct
+      //if (raceState.timeLeft === 0) raceState.timer.running = false;
+      //if (!raceState.timer.running) raceState.timeLeft = 0;
+      console.log(raceState);
       if (raceState.sessions.length < 1) {
         Object.assign(raceState, loadMockData());
+
         console.log("Mock race state data loaded:");
         console.log(raceState);
-      }    
-    console.log({
+      }
+      console.log({
         NODE_ENV: process.env.NODE_ENV,
         RECEPTIONIST_KEY: process.env.RECEPTIONIST_KEY,
         OBSERVER_KEY: process.env.OBSERVER_KEY,
         SAFETY_KEY: process.env.SAFETY_KEY,
-    });
-    
+      });
     }
     if (process.env.NODE_ENV === "production") {
       loadStateFromFile(raceState);

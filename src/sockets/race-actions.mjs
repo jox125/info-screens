@@ -25,8 +25,8 @@ export function registerRaceActions(socket, io, { raceState }) {
       ].status = "in progress";
 
       console.log("START recieved:");
-      console.log("Race state data:");
-      console.log(raceState);
+      //console.log("Race state data:");
+      //console.log(raceState);
 
       //if more upcoming races, find next
       if (!raceState.sessions.find((session) => session.status === "next")) {
@@ -49,9 +49,9 @@ export function registerRaceActions(socket, io, { raceState }) {
           }
           raceState.sessions[raceState.sessions.indexOf(nextSession)].status =
             "next";
-          console.log("Updated next race:");
-          console.log("Race state data:");
-          console.log(raceState);
+          //console.log("Updated next race:");
+          //console.log("Race state data:");
+          //console.log(raceState);
         }
       }
 
@@ -59,13 +59,13 @@ export function registerRaceActions(socket, io, { raceState }) {
       countdown.startCountdown(raceState.duration);
 
       io.emit("state:update", raceState);
-      console.log("state:update:");
-      console.log(raceState);
-      console.log("Drivers:");
-      console.log(
-        raceState.sessions.find((session) => session.status === "in progress")
-          .drivers,
-      );
+      //console.log("state:update:");
+      //console.log(raceState);
+      //console.log("Drivers:");
+      //console.log(
+      //  raceState.sessions.find((session) => session.status === "in progress")
+      //    .drivers,
+      //);
     }
 
     //controls active when race is on
@@ -75,8 +75,8 @@ export function registerRaceActions(socket, io, { raceState }) {
     ) {
       raceState.raceMode = "safe";
       console.log("green flag");
-      console.log("Race state data:");
-      console.log(raceState);
+      //console.log("Race state data:");
+      //console.log(raceState);
       io.emit("state:update", raceState);
     }
 
@@ -86,8 +86,8 @@ export function registerRaceActions(socket, io, { raceState }) {
     ) {
       raceState.raceMode = "hazard";
       console.log("yellow flag");
-      console.log("Race state data:");
-      console.log(raceState);
+      //console.log("Race state data:");
+      //console.log(raceState);
       io.emit("state:update", raceState);
     }
 
@@ -97,8 +97,8 @@ export function registerRaceActions(socket, io, { raceState }) {
     ) {
       raceState.raceMode = "danger";
       console.log("red flag");
-      console.log("Race state data:");
-      console.log(raceState);
+      //console.log("Race state data:");
+      //console.log(raceState);
       io.emit("state:update", raceState);
     }
 
@@ -118,10 +118,11 @@ export function registerRaceActions(socket, io, { raceState }) {
       raceState.sessions[
         raceState.sessions.findIndex((session) => session.status === "finished")
       ].status = "closed";
+      raceState.timeLeft = 0;
       raceState.raceMode = "danger";
       console.log("end session");
-      console.log("Race state data:");
-      console.log(raceState);
+      //console.log("Race state data:");
+      //console.log(raceState);
       io.emit("state:update", raceState);
       io.emit(SOCKET_COUNTDOWN.UPDATE, raceState.duration);
     }

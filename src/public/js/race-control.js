@@ -11,8 +11,6 @@ const loginForm = document.getElementById("login-form");
 const loginInput = document.getElementById("login-key");
 const loginError = document.getElementById("login-error");
 const panel = document.getElementById("panel");
-const sessionStatusMsg = document.getElementById("session-status-msg");
-let lastActiveSessionId = null; // This "remembers" the previous race ID
 
 loginForm.addEventListener("submit", (e) => {
   e.preventDefault();
@@ -131,6 +129,7 @@ socket.on("auth:ok", (role) => {
     //End session button
     const endSessionButton = document.createElement("button");
     endSessionButton.id = "end-session-button";
+    endSessionButton.classList.add("hidden");
     endSessionButton.innerHTML = "End Session";
     endSessionButton.onclick = () => {
       socket.emit("race:action", { type: "END_SESSION" });
@@ -140,7 +139,7 @@ socket.on("auth:ok", (role) => {
     //Race state indicator
     const stateIndicator = document.createElement("div");
     stateIndicator.id = "state-indicator";
-    //stateIndicator.classList.add("hidden");
+    stateIndicator.classList.add("hidden");
     controlPanel.appendChild(stateIndicator);
   }
 });
@@ -175,6 +174,9 @@ const updateView = (state) => {
       const endSessionButton = document.getElementById("end-session-button");
       endSessionButton.disabled = true;
       endSessionButton.classList.add("hidden");
+      //show current state flag
+      const stateIndicator = document.getElementById("state-indicator");
+      stateIndicator.classList.remove("hidden");
     } catch (err) {
       console.log("Control panel not ready in no upcoming.");
     }
@@ -259,7 +261,7 @@ const updateView = (state) => {
       //show timer
       const timer = document.getElementById("timer");
       if (timer.textContent.trim() === "") {
-        timer.innerHTML = convertTime(raceState.duration);
+        timer.innerHTML = convertTime(raceState.timeLeft);
       }
       //hide next race info
       const nextRaceInfo = document.getElementById("next-info");
@@ -295,8 +297,11 @@ const updateView = (state) => {
       //show timer
       const timer = document.getElementById("timer");
       if (timer.textContent.trim() === "") {
-        timer.innerHTML = convertTime(raceState.duration);
+        timer.innerHTML = convertTime(raceState.timeLeft);
       }
+      //show current state flag
+      const stateIndicator = document.getElementById("state-indicator");
+      stateIndicator.classList.remove("hidden");
     } catch (err) {
       console.log("Control panel not ready in race finished.");
     }

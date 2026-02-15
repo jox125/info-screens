@@ -1,6 +1,6 @@
 import { countdown } from "../server.mjs";
 import fs from "fs";
-import { raceState } from "./config.mjs";
+
 
 const defaultRaceState = {
   sessions: [],
