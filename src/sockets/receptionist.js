@@ -186,7 +186,10 @@ export function registerReceptionist(socket, io, { raceState }) {
         });
       }
 
-      const carNum = Number(data.carNum);
+      const carNum = 
+        data.carNum === null || data.carNum === undefined || data.carNum === ""
+          ? null
+          : Number(data.carNum);
       const result = assignCar(session, carNum);
 
       switch (result) {
@@ -227,7 +230,7 @@ export function registerReceptionist(socket, io, { raceState }) {
       io.emit(SOCKET_SESSION.UPDATE, raceState.sessions);
       socket.emit(SOCKET_DRIVER.SUCCESS, { code: SUCCESS_CODES.DRIVER_ADDED });
       console.log(
-        `[driver:add] session=${session.id} driver=${newDriver.id} name="${newDriver.name}"`,
+        `[driver:add] session=${session.id} driver=${newDriver.id} name="${newDriver.name}" carNum="${carNum}"`,
       );
       //Save state
       saveStateToFile(raceState);
