@@ -17,7 +17,7 @@ export function loadMockData () {
             carNum: 22,
           },
         ],
-        status: "upcoming", // upcoming, next, in progress, finished, closed
+        status: "upcoming", // planned, upcoming, next, in progress, finished, closed
       },
       {
         id: 2,
@@ -34,7 +34,7 @@ export function loadMockData () {
             carNum: 44,
           },
         ],
-        status: "upcoming", // upcoming, next, in progress, finished, closed
+        status: "upcoming", // planned, upcoming, next, in progress, finished, closed
       },
       {
         id: 3,
@@ -51,7 +51,7 @@ export function loadMockData () {
             carNum: 66,
           },
         ],
-        status: "upcoming", // upcoming, next, in progress, finished, closed
+        status: "upcoming", // planned, upcoming, next, in progress, finished, closed
       },
     ],
     //currentRace: null,

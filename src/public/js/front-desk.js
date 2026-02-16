@@ -112,6 +112,9 @@ socket.on("state:update", (data) => {
 
 // Successful session action messages
 socket.on(SOCKET_SESSION.SUCCESS, (data) => {
+    if(SUCCESS_MESSAGES[data.code] === SUCCESS_MESSAGES.SESSION_CONFIRMED) {
+        driverPanel.classList.add("hidden");
+    }
     sessionFeedback.textContent = SUCCESS_MESSAGES[data.code];
     sessionFeedback.classList.add("success-message");
     sessionFeedback.classList.remove("hidden");
@@ -241,13 +244,13 @@ sessionList.addEventListener("click", (e) => {
 
     // Remove session
     const isRemoveButton = session.classList.contains("remove-session-button");
-    const id = Number(sessionItem.dataset.sessionId);
+    const sessionId = Number(sessionItem.dataset.sessionId);
 
     if (isRemoveButton) {
-        removeSession(id);
+        removeSession(sessionId);
 
         // Hide driver panel if session was selected
-        if (selectedSessionId === id) {
+        if (selectedSessionId === sessionId) {
             selectedSessionId = null;
             driverPanel.classList.add("hidden");
             body.classList.remove("driver-panel-visible");
@@ -272,8 +275,14 @@ sessionList.addEventListener("click", (e) => {
         return;
     }
 
+    // Sends confirmation of session to server
+    const confirmButton = session.classList.contains("confirm-session-button");
+    if(confirmButton) {
+        return socket.emit(SOCKET_SESSION.CONFIRM, { sessionId });
+    }
+
     // Toggles driverPanel visibility based on if a session is selected or not
-    selectedSessionId = selectedSessionId === id ? null : id;
+    selectedSessionId = selectedSessionId === sessionId ? null : sessionId;
     driverPanel.classList.toggle("hidden", selectedSessionId === null);
     body.classList.toggle("driver-panel-visible", selectedSessionId !== null);
 
@@ -391,8 +400,8 @@ function renderSessions() {
     currentEditForm.sessionId = null;
     currentEditForm.driverId = null;
 
-    if (!sessions.find(s => s.status === STATUS.UPCOMING)) {
-        const emptyMessage = createEmptyMessage("No upcoming sessions. Add one to get started.");
+    if (!sessions.find(s => s.status === STATUS.PLANNED)) {
+        const emptyMessage = createEmptyMessage("No sessions. Add one to get started.");
         emptyMessage.classList.add("empty-message--sessions");
 
         sessionList.appendChild(emptyMessage);
@@ -402,7 +411,7 @@ function renderSessions() {
     }
 
     sessions.forEach((session) => {
-        if(session.status !== STATUS.UPCOMING) return;
+        if(IMMUTABLE_STATUSES.has(session.status)) return;
         sessionList.appendChild(createSessionItem(session));
     });
 }
@@ -524,6 +533,11 @@ function createSessionItem(session) {
     removeButton.classList.add("remove-session-button");
     removeButton.textContent = "Remove Session";
 
+    const confirmButton = document.createElement("button");
+    confirmButton.classList.add("confirm-session-button");
+    confirmButton.textContent = "Confirm Session";
+
+    buttonContainer.appendChild(confirmButton);
     buttonContainer.appendChild(editButton);
     buttonContainer.appendChild(removeButton);
     editForm.appendChild(nameInput);

@@ -25,6 +25,7 @@ export function findDriver(sessionId, driverId, { raceState }) {
     return driver;
 }
 
+// TODO: AUTOMATIC CAR ASSIGNMENT BROKEN
 export function assignCar(session, carNum = null) {
     const assigned = new Set(session.drivers.map((d) => d.carNum));
     if(assigned.size >= 8) return ERROR_CODES.SESSION_FULL;

@@ -30,7 +30,7 @@ export function registerReceptionist(socket, io, { raceState }) {
             id: Date.now(),
             name: normalizedName,
             drivers: [],
-            status: STATUS.UPCOMING, // upcoming, next, in progress, finished
+            status: STATUS.PLANNED
         };
 
         raceState.sessions.push(session);
@@ -123,6 +123,40 @@ export function registerReceptionist(socket, io, { raceState }) {
       saveStateToFile(raceState);
     });
 
+    // Confirming a session
+    socket.on(SOCKET_SESSION.CONFIRM, (data) => {
+      if(socket.data.role !== ROLE.RECEPTIONIST) {
+        return socket.emit(SOCKET_SESSION.ERROR, {
+          code: ERROR_CODES.FORBIDDEN
+        });
+      }
+
+      const sessionId = data.sessionId;
+      const session = findSession(sessionId, { raceState });
+      if(!session) {
+        return socket.emit(SOCKET_SESSION.ERROR, {
+          code: ERROR_CODES.SESSION_NOT_FOUND
+        });
+      }
+
+      // Only allow confirmation of sessions with 2+ drivers
+      if(session.drivers.length < 2) {
+        return socket.emit(SOCKET_SESSION.ERROR, {
+          code: ERROR_CODES.SESSION_DRIVERS_REQUIRED
+        });
+      }
+
+      session.status = STATUS.UPCOMING;
+      io.emit(SOCKET_SESSION.UPDATE, raceState.sessions);
+      socket.emit(SOCKET_SESSION.SUCCESS, {
+        code: SUCCESS_CODES.SESSION_CONFIRMED
+      });
+      console.log(`[session:confirm] id=${session.id} name="${session.name}"`);
+
+      ensureNextRace(raceState);
+      saveStateToFile(raceState);
+    });
+
     // Adding a driver
     socket.on(SOCKET_DRIVER.ADD, (data) => {
       if (socket.data.role !== ROLE.RECEPTIONIST) {
@@ -145,10 +179,7 @@ export function registerReceptionist(socket, io, { raceState }) {
         });
       }
 
-      if (
-        session.status === STATUS.IN_PROGRESS ||
-        session.status === STATUS.FINISHED
-      ) {
+      if (IMMUTABLE_STATUSES.has(session.status)) {
         return socket.emit(SOCKET_DRIVER.ERROR, {
           status: session.status,
           code: ERROR_CODES.SESSION_LOCKED,

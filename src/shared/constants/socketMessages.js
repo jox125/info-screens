@@ -6,7 +6,8 @@ export const SOCKET_SESSION = Object.freeze({
     EDIT_ERROR: "session:edit:error",
     SUCCESS: "session:success",
     REQUEST: "session:request",
-    UPDATE: "session:update"
+    UPDATE: "session:update",
+    CONFIRM: "session:confirm"
 });
 
 export const SOCKET_DRIVER = Object.freeze({

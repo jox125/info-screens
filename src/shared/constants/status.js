@@ -1,13 +1,17 @@
 export const STATUS = {
+    PLANNED: "planned",
     IN_PROGRESS: "in progress",
     NEXT: "next",
     UPCOMING: "upcoming",
-    FINISHED: "finished"
+    FINISHED: "finished",
+    CLOSED: "closed"
 };
 
-// Used by front desk so only upcoming sessions can be edited
+// Used by front desk so only planned sessions are visible and can be edited
 export const IMMUTABLE_STATUSES = new Set([
     STATUS.IN_PROGRESS,
     STATUS.FINISHED,
-    STATUS.NEXT
+    STATUS.NEXT,
+    STATUS.UPCOMING,
+    STATUS.CLOSED
 ]);
