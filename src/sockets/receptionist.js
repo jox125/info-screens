@@ -145,15 +145,16 @@ export function registerReceptionist(socket, io, { raceState }) {
           code: ERROR_CODES.SESSION_DRIVERS_REQUIRED
         });
       }
-
+      
       session.status = STATUS.UPCOMING;
+      ensureNextRace(raceState);
+
       io.emit(SOCKET_SESSION.UPDATE, raceState.sessions);
       socket.emit(SOCKET_SESSION.SUCCESS, {
         code: SUCCESS_CODES.SESSION_CONFIRMED
       });
       console.log(`[session:confirm] id=${session.id} name="${session.name}"`);
-
-      ensureNextRace(raceState);
+      
       saveStateToFile(raceState);
     });
 
