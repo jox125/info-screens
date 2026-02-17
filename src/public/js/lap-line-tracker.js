@@ -16,6 +16,21 @@ let lastActiveSessionId = null;
 let lastSyncTimestamp = 0;
 let lapCount = 0;
 
+// 1. DETECT SERVER CONNECTION
+socket.on("connect", () => {
+    console.log("Connected to server");
+
+    socket.emit("state:request");
+});
+
+socket.on("disconnect", () => {
+    console.log("Lost connection to server");
+
+    if (globalRaceState && globalRaceState.timer?.running) {
+        calculateTimer();
+    }
+});
+
 // --- 1. LOGIN & AUTH ---
 loginForm.addEventListener("submit", (e) => {
     e.preventDefault();
@@ -126,6 +141,18 @@ function renderGrid() {
     });
 }
 
+function calculateTimer() {
+    const now = Date.now();
+    const serverTimeAtLastPacket = globalRaceState.duration - globalRaceState.timeLeft;
+    const localTimeSincePacket = now - lastSyncTimestamp;
+
+    let elapsed = serverTimeAtLastPacket + localTimeSincePacket;
+
+    if (elapsed >= globalRaceState.duration) elapsed = globalRaceState.duration;
+
+    globalTimer.innerText = formatTime(elapsed);
+}
+
 function addLapToLog(carNum, lapTime) {
     lapCount++;
     const entry = document.createElement("div");
@@ -144,7 +171,7 @@ function formatTime(ms) {
 }
 
 function tick() {
-    if (!globalRaceState || !globalTimer) {
+    if (!socket.connected || !globalRaceState || !globalTimer) {
         requestAnimationFrame(tick);
         return;
     }
@@ -154,15 +181,7 @@ function tick() {
     if (isFinished) {
         globalTimer.innerText = formatTime(globalRaceState.duration);
     } else if (globalRaceState.timer?.running) {
-        const now = Date.now();
-        const serverTimeAtLastPacket = globalRaceState.duration - globalRaceState.timeLeft;
-        const localTimeSincePacket = now - lastSyncTimestamp;
-
-        let elapsed = serverTimeAtLastPacket + localTimeSincePacket;
-
-        if (elapsed >= globalRaceState.duration) elapsed = globalRaceState.duration;
-
-        globalTimer.innerText = formatTime(elapsed);
+        calculateTimer();
     }
 
     requestAnimationFrame(tick);

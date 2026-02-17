@@ -15,17 +15,36 @@ const fsBtn = document.getElementById("fs-btn");
 let globalRaceState = null;
 let localTimerInterval = null;
 
+
+
 // --- 2. SOCKET LISTENERS ---
 socket.on("connect", () => {
     console.log("Connected to Leaderboard");
     socket.emit("state:request");
 });
 
+socket.on("disconnect", () => {
+    console.log("Lost connection to Leaderboard");
+
+    if(localTimerInterval) clearInterval(localTimerInterval);
+
+    if (globalRaceState && globalRaceState.timer?.running && globalRaceState.timer?.startedAt) {
+        const now = Date.now();
+        const elapsed = now - globalRaceState.timer.startedAt;
+        const timeLeft = Math.max(0, globalRaceState.duration - elapsed);
+        timerDisplay.innerText = formatTime(timeLeft);
+    }
+});
+
 socket.on("state:update", (state) => {
     globalRaceState = state;
 
-    if (globalRaceState.timer?.running && globalRaceState.timer?.startedAt) {
-        startLocalTimer(globalRaceState.duration, globalRaceState.timer.startedAt);
+    if (globalRaceState.timer?.running) {
+        const elapsed = globalRaceState.duration - globalRaceState.timeLeft;
+
+        const startedAt = Date.now() - elapsed;
+
+        startLocalTimer(globalRaceState.duration, startedAt);
     } else {
         stopLocalTimer();
         timerDisplay.innerText = formatTime(globalRaceState.timeLeft);
@@ -49,6 +68,10 @@ function startLocalTimer(duration, startedAt) {
     if (localTimerInterval) clearInterval(localTimerInterval);
 
     localTimerInterval = setInterval(() => {
+        if(!socket.connected) {
+            return;
+        }
+
         const now = Date.now();
         const elapsed = now - startedAt;
         const timeLeft = Math.max(0, duration - elapsed);
