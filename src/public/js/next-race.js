@@ -1,11 +1,17 @@
-import { ERROR_CODES } from "../../shared/constants/codes.js";
-import { ERROR_MESSAGES } from "./constants/messages.js";
+import { ROLE } from "../shared/constants/roles.js";
+import { STATUS } from "../../shared/constants/status.js";
+import {
+  SOCKET_STATE,
+  SOCKET_SESSION,
+} from "../../shared/constants/socketMessages.js";
 
 const socket = io({
   autoConnect: false,
 });
 
 const nextRace = {};
+let raceMode = "";
+let raceInProgress = false;
 const role = "public";
 socket.auth = { role };
 socket.connect();
@@ -103,9 +109,9 @@ document.addEventListener("fullscreenchange", () => {
 
 // --- Connection established ---
 socket.on("auth:ok", (role) => {
-  if (role === "public") {
+  if (role === ROLE.PUBLIC ) {
     // Request initial data
-    socket.emit("state:request");
+    socket.emit(SOCKET_STATE.REQUEST);
 
     // Hide warnings if exists
     try {
@@ -118,11 +124,17 @@ socket.on("auth:ok", (role) => {
 
 // --- UPDATE VIEW ---
 const updateView = (sessions) => {
+  //is race in progress?
+  raceInProgress = sessions.find(
+    (session) => session.status === STATUS.IN_PROGRESS,
+  )
+    ? true
+    : false;
   //update state data if found one, else clear
-  if (sessions.find((session) => session.status === "next")) {
+  if (sessions.find((session) => session.status === STATUS.NEXT)) {
     Object.assign(
       nextRace,
-      sessions.find((session) => session.status === "next"),
+      sessions.find((session) => session.status === STATUS.NEXT),
     );
   } else {
     for (let key in nextRace) {
@@ -133,13 +145,19 @@ const updateView = (sessions) => {
   //update view
   try {
     const raceName = document.getElementById("race-name");
-    const warning = document.getElementById("warnings");
+    const announcement = document.getElementById("announcement");
     if (nextRace.name) {
-      //hide warning
-      raceName.innerHTML = nextRace.name;
-      warning.innerHTML = "";
-      warning.classList.add("hidden");
+      //show proceed to paddock announcement
+      if (raceMode === "danger" && !raceInProgress) {
+        announcement.classList.remove("hidden");
+        announcement.innerHTML =
+          "<div>🚦 PROCEED TO PADDOCK 🚦</div> <div>Drivers please move to the paddock area.</div>";
+      } else {
+        announcement.innerHTML = "";
+        announcement.classList.add("hidden");
+      } 
 
+      raceName.innerHTML = nextRace.name;
       //check if needs to scroll
       endScroll("race-name");
       checkOverflow("race-name");
@@ -154,10 +172,11 @@ const updateView = (sessions) => {
         driversTable.appendChild(row);
       });
     } else {
-      //show no next race warning
-      warning.innerHTML = ERROR_MESSAGES[ERROR_CODES.NO_NEXT_RACE];
-      warning.classList.remove("hidden");
+      //empty next Race data
       raceName.innerHTML = "";
+      //hide announcement
+      announcement.innerHTML = "";
+      announcement.classList.add("hidden");
       //stop scroll
       endScroll("race-name");
       //empty drivers table
@@ -167,9 +186,10 @@ const updateView = (sessions) => {
   } catch (err) {}
 };
 
-socket.on("session:update", (sessions) => {
+socket.on(SOCKET_SESSION.UPDATE, (sessions) => {
   updateView(sessions);
 });
-socket.on("state:update", (state) => {
+socket.on(SOCKET_STATE.UPDATE, (state) => {
+  raceMode = state.raceMode;
   updateView(state.sessions);
 });
