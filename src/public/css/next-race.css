@@ -14,8 +14,73 @@
     min-height: 30%;
     align-content: center;
 }
+.panel h1 {
+    font-size: 1.5em;
+}
 .panel h2{
+    font-size: 1em;
     text-wrap-mode: nowrap;
+}
+#announcement {
+    display: flex;
+    flex-direction: column;
+    margin: 14px auto 12px;
+    padding: 12px 14px;
+    gap: 1em;
+    border-radius: 12px;
+    text-align: center;
+    background: #fff3a6;
+    border: 2px solid #e3b300;
+    box-shadow:
+        0 10px 28px rgba(0, 0, 0, 0.18),
+        0 0 0 6px rgba(255, 222, 89, 0.35);
+    color: #121212;
+    font-weight: 800;
+    letter-spacing: 0.4px;
+    opacity: 0;
+    transform: translateY(6px) scale(0.98);
+    animation:
+            paddockFadeIn 700ms ease-out forwards,
+            paddockPulse 800ms ease-in-out 900ms 5;
+}
+@keyframes paddockFadeIn {
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+@keyframes paddockPulse {
+    0% {
+        transform: translateY(0) scale(1);
+        background: #fff3a6;
+        box-shadow:
+            0 10px 28px rgba(0, 0, 0, 0.18),
+            0 0 0 6px rgba(255, 222, 89, 0.35);
+    }
+
+    50% {
+        transform: translateY(-1px) scale(1.025);
+        background: #ffe671;
+  
+        box-shadow:
+            0 14px 34px rgba(0, 0, 0, 0.22),
+            0 0 0 10px rgba(255, 214, 51, 0.55);
+    }
+
+    100% {
+        transform: translateY(0) scale(1);
+        background: #fff3a6;
+        box-shadow:
+            0 10px 28px rgba(0, 0, 0, 0.18),
+            0 0 0 6px rgba(255, 222, 89, 0.35);
+    }
+}
+@media (prefers-reduced-motion: reduce) {
+    .paddock-alert {
+        animation: none;
+        opacity: 1;
+        transform: none;
+    }
 }
 #race-name-container{
     display: flex;
@@ -37,10 +102,10 @@ table{
     margin-top: 1em;
 }
  #panel:fullscreen h1 {
-    font-size: 4em;
+    font-size: 2.5em;
  }
 #panel:fullscreen h2 {
-      font-size: 3em;
+      font-size: 2.5em;
   }
 #panel:fullscreen #race-name-container {
     gap: 2em;

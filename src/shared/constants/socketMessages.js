@@ -23,3 +23,8 @@ export const SOCKET_COUNTDOWN = Object.freeze({
     REQUEST: "countdown:request",
     UPDATE: "countdown:update"
 });
+
+export const SOCKET_STATE = Object.freeze({
+    REQUEST: "state:request",
+    UPDATE: "state:update"
+});

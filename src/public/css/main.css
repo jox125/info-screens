@@ -29,7 +29,8 @@ body {
 }
 
 .hidden {
-    display: none;
+    display: none !important;
+    animation: none !important;
 }
 
 button {
