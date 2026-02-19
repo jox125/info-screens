@@ -15,6 +15,7 @@ let currentSession = null;
 let lastActiveSessionId = null;
 let lastSyncTimestamp = 0;
 let lapCount = 0;
+let localAnchorTime = null;
 
 // 1. DETECT SERVER CONNECTION
 socket.on("connect", () => {
@@ -56,9 +57,18 @@ socket.on("state:update", (state) => {
     try {
         const previousSession = currentSession;
         globalRaceState = state;
-        const timerWasRunning = previousSession?.timer?.running;
-        if (state.timer?.running !== timerWasRunning || !lastSyncTimestamp) {
-            lastSyncTimestamp = Date.now();
+        const isRunning = state.timer?.running;
+        const timerWasRunning = globalRaceState?.timer?.running;
+        const serverStartedAt = state.timer?.startedAt;
+        const previousServerStartedAt = globalRaceState?.timer?.startedAt;
+
+        if (isRunning) {
+            if (!timerWasRunning || !localAnchorTime || serverStartedAt !== previousServerStartedAt) {
+                const elapsedAccordingToServer = state.duration - state.timeLeft;
+                localAnchorTime = Date.now() - elapsedAccordingToServer;
+            }
+        } else {
+            localAnchorTime = null;
         }
 
         const activeSession = state.sessions.find(s =>
@@ -142,14 +152,9 @@ function renderGrid() {
 }
 
 function calculateTimer() {
-    const now = Date.now();
-    const serverTimeAtLastPacket = globalRaceState.duration - globalRaceState.timeLeft;
-    const localTimeSincePacket = now - lastSyncTimestamp;
-
-    let elapsed = serverTimeAtLastPacket + localTimeSincePacket;
-
+    if (!localAnchorTime) return;
+    let elapsed = Date.now() - localAnchorTime;
     if (elapsed >= globalRaceState.duration) elapsed = globalRaceState.duration;
-
     globalTimer.innerText = formatTime(elapsed);
 }
 
