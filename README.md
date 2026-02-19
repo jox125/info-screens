@@ -20,8 +20,13 @@ tracks lap times, controls safety flags, and displays real-time leaderboards usi
    ```
   
 ## Running the application
+### Production config
+Race timer in production config is **10 minutes**
+```bash
+npm start
+```
 ### Development config
-Race timer in development config is 1 minute
+Race timer in development config is **1 minute**
 ```bash
 npm run dev
 ```
@@ -41,12 +46,27 @@ export OBSERVER_KEY=key3
 
 ## Interfaces
 ### 1. Front Desk
-- Can add, remove and edit sessions providing a name
-- Can add, remove and edit drivers providing a name and optionally a car number
-- Ability to view upcoming sessions and drivers
-- Cannot create multiple drivers with the same name or racecar number in one session
-- Accessible only with the receptionist key via "/front-desk"
-- Displays feedback based on operation type (successful, error)
+- **Route:** `/front-desk`
+- **Access:** Requires `RECEPTIONIST_KEY`
+#### **Features:**
+- **Session Management:**
+  - Create new sessions (with name)
+  - Edit existing sessions
+  - Delete sessions
+  - View list of upcoming sessions
+- **Session Visibility Rules:**
+  - Sessions editable until they are confirmed / safe to start
+  - Confirmed sessions disappear from Front Desk interface
+- **Driver Management:**
+  - Add drivers to a session (name required, car number optional)
+  - Edit driver details
+  - Remove drivers from a session
+  - Prevent duplicate driver names in a session
+  - Prevent duplicate car numbers in a session
+- **System Feedback:**
+  - Successful actions
+  - Failed actions
+  - Validation errors
 
 ### 2. Race Control (Safety Official)
 
@@ -129,4 +149,5 @@ The installation method depends on your operating system:
 
 Ngrok will generate a public URL (e.g., https://random-id.ngrok-free.dev) that tunnels directly to your local machine.
 
-*Note: Windows users may need to use ./ngrok.exe if the executable isn't in their PATH.* 
+> [!NOTE]
+> *Windows users may need to use ./ngrok.exe if the executable isn't in their PATH.* 
