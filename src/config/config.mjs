@@ -26,7 +26,7 @@ export function checkConfig(){
     }
     //In development mode load mock data
     if (process.env.NODE_ENV === "development") {
-      loadStateFromFile(raceState);
+      loadStateFromFile(raceState, setDurationFromEnv());
       //ensure 1min duration
       if (raceState.duration != 60000) raceState.duration = 60000;
       //check that timer data is correct
@@ -47,7 +47,12 @@ export function checkConfig(){
       });
     }
     if (process.env.NODE_ENV === "production") {
-      loadStateFromFile(raceState);
+      loadStateFromFile(raceState, setDurationFromEnv());
     }
 }
 
+function setDurationFromEnv() {
+  const ENV = process.env.NODE_ENV;
+  if(ENV === "development") return { duration: 60000 }; // 1min races on dev env
+  if(ENV === "production") return { duration: 600000 }; // 10min races on prod env
+}

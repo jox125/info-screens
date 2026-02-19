@@ -15,16 +15,16 @@ const defaultRaceState = {
 
 
 
-export function loadStateFromFile (raceState) {
+export function loadStateFromFile (raceState, duration) {
       try {
         const raw = fs.readFileSync("./src/config/race-state.json", "utf8");
         const persisted = JSON.parse(raw);
-        Object.assign(raceState, defaultRaceState, persisted);
+        Object.assign(raceState, defaultRaceState, persisted, duration);
         console.log("file loaded...");
         console.log(raceState);
       } catch (err) {
         console.log("Load Failed", err);
-        Object.assign(raceState, defaultRaceState);
+        Object.assign(raceState, defaultRaceState, duration);
         console.log ("defaults loaded: ");
         console.log (raceState);
       }
