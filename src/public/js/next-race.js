@@ -7,6 +7,10 @@ const socket = io({
 
 const nextRace = {};
 const role = "public";
+const urlParams = new URLSearchParams(window.location.search);
+const audioEnabled = urlParams.get('audio') === 'true';
+let lastAnnouncedSessionId = null;
+
 socket.auth = { role };
 socket.connect();
 
@@ -124,6 +128,7 @@ const updateView = (sessions) => {
       nextRace,
       sessions.find((session) => session.status === "next"),
     );
+    announceNextRace(nextRace);
   } else {
     for (let key in nextRace) {
       delete nextRace[key];
@@ -173,3 +178,14 @@ socket.on("session:update", (sessions) => {
 socket.on("state:update", (state) => {
   updateView(state.sessions);
 });
+
+// ---- BONUS FUNCTIONALITY ---- (Automated Track Announcer)
+function announceNextRace(race) {
+    if (!audioEnabled || !race || !race.drivers || race.id === lastAnnouncedSessionId) return;
+    lastAnnouncedSessionId = race.id;
+    const driverNames = race.drivers.map(d => d.name).join(", ");
+    const message = `Attention in the paddock. The next race, ${race.name}, is starting soon. Drivers ${driverNames}, please proceed to your cars.`;
+    const utterance = new SpeechSynthesisUtterance(message);
+    utterance.pitch = 1.0;
+    window.speechSynthesis.speak(utterance);
+}
