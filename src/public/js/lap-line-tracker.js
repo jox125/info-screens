@@ -116,7 +116,7 @@ socket.on("state:update", (state) => {
             currentSession.drivers.forEach(driver => {
                 const oldDriver = previousSession?.drivers?.find(d => d.carNum === driver.carNum);
                 if (oldDriver && driver.lastLapAt !== oldDriver.lastLapAt) {
-                    const startRef = oldDriver.lastLapAt || localAnchorTime || globalRaceState.timer.startedAt || driver.lastLapAt;
+                    const startRef = oldDriver.lastLapAt || globalRaceState.timer.startedAt || localAnchorTime || driver.lastLapAt;
                     addLapToLog(driver.carNum, driver.lastLapAt - startRef);
                 }
             });
