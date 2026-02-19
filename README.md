@@ -151,3 +151,16 @@ Ngrok will generate a public URL (e.g., https://random-id.ngrok-free.dev) that t
 
 > [!NOTE]
 > *Windows users may need to use ./ngrok.exe if the executable isn't in their PATH.* 
+> 
+
+
+## Bonus Feature: Automated Track Announcer
+
+- **Usage:** Add ?audio=true to the end of the /next-race endpoint: http://localhost:3000/next-race?audio=true
+
+> [!NOTE]
+> *When opening the page first time, click the page anywhere (or click your "Full Screen" button).<br/>Browsers block "autoplay" audio until the user has interacted with the page.*
+>
+- **Functionality:** When session ends, text-to-speech will read out the message:
+<br/>*"Attention in the paddock. The next race, (race name), is starting soon.
+<br/>Drivers (driver names), please proceed to your cars."*
