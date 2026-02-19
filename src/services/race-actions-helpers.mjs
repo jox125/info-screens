@@ -9,7 +9,7 @@ export function createFinishRace({ raceState, io }) {
       )
     ].status = "finished";
     //raceState.timeLeft = 0;
-    raceState.timer.startedAt = null;
+    //raceState.timer.startedAt = null;
     raceState.timer.running = false;
     io.emit("state:update", raceState);
 

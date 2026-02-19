@@ -25,7 +25,7 @@ export function createCountdown({ raceState, io, finishRace }) {
     timer = setTimeout(() => {
       finishRace.finishRace();
       raceState.timeLeft = 0;
-      raceState.timer.startedAt = null;
+      //raceState.timer.startedAt = null;
       raceState.timer.running = false;
       io.emit("tic-tac", raceState.timeLeft);
       clearInterval(ticTac);

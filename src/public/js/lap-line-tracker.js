@@ -13,7 +13,6 @@ const buttonGrid = document.getElementById("button-grid");
 let globalRaceState = null;
 let currentSession = null;
 let lastActiveSessionId = null;
-let lastSyncTimestamp = 0;
 let lapCount = 0;
 let localAnchorTime = null;
 
@@ -56,19 +55,17 @@ socket.on("connect_error", () => {
 socket.on("state:update", (state) => {
     try {
         const previousSession = currentSession;
+        const timerWasRunning = globalRaceState?.timer?.running;
+        const previousServerStartedAt = globalRaceState?.timer?.startedAt;
         globalRaceState = state;
         const isRunning = state.timer?.running;
-        const timerWasRunning = globalRaceState?.timer?.running;
         const serverStartedAt = state.timer?.startedAt;
-        const previousServerStartedAt = globalRaceState?.timer?.startedAt;
 
         if (isRunning) {
             if (!timerWasRunning || !localAnchorTime || serverStartedAt !== previousServerStartedAt) {
                 const elapsedAccordingToServer = state.duration - state.timeLeft;
                 localAnchorTime = Date.now() - elapsedAccordingToServer;
             }
-        } else {
-            localAnchorTime = null;
         }
 
         const activeSession = state.sessions.find(s =>
@@ -83,6 +80,9 @@ socket.on("state:update", (state) => {
         if (sessionStarted || sessionEnded) {
             if (lapLog) lapLog.innerHTML = "";
             lapCount = 0;
+            if (sessionEnded) {
+                localAnchorTime = null;
+            }
             if (globalTimer) {
                 const dur = (state && state.duration) ? state.duration : 0;
                 globalTimer.innerText = sessionEnded ? formatTime(dur) : "00:00:000s";
@@ -116,7 +116,7 @@ socket.on("state:update", (state) => {
             currentSession.drivers.forEach(driver => {
                 const oldDriver = previousSession?.drivers?.find(d => d.carNum === driver.carNum);
                 if (oldDriver && driver.lastLapAt !== oldDriver.lastLapAt) {
-                    const startRef = oldDriver.lastLapAt || globalRaceState.timer.startedAt;
+                    const startRef = oldDriver.lastLapAt || localAnchorTime || globalRaceState.timer.startedAt || driver.lastLapAt;
                     addLapToLog(driver.carNum, driver.lastLapAt - startRef);
                 }
             });
@@ -137,10 +137,9 @@ function renderGrid() {
         btn.innerText = driver.carNum;
 
         const isLive = (currentSession.status === "in progress" || currentSession.status === "finished");
-        const hasTime = globalRaceState.timeLeft > 0;
         const isSafe = globalRaceState.raceMode !== "danger";
 
-        btn.disabled = (!isLive || !hasTime || !isSafe);
+        btn.disabled = (!isLive || !isSafe);
 
         btn.addEventListener("click", () => {
             socket.emit("race:lap", { sessionId: currentSession.id, carNum: driver.carNum });
