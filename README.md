@@ -162,7 +162,7 @@ Ngrok will generate a public URL (e.g., https://random-id.ngrok-free.dev) that t
 > 
 
 
-## Bonus Feature: Automated Track Announcer
+## Bonus Feature 1: Automated Track Announcer
 
 - **Usage:** Add ?audio=true to the end of the /next-race endpoint: http://localhost:3000/next-race?audio=true
 
@@ -173,6 +173,28 @@ Ngrok will generate a public URL (e.g., https://random-id.ngrok-free.dev) that t
 1.  When session marked as next, text-to-speech will read out the message:
 <br/>*"Attention drivers. The next race, (race name), is starting soon.
 <br/>Drivers (driver names), please get ready to move to the paddock area."*
+
 2. When previous race ends or there is no previous race going on, text-to-speech will read out the message:
 <br/>*"Attention drivers. The next race, (race.name), is starting now. 
 <br/>Drivers (driverNames), please proceed to the paddock area."*
+
+## Bonus Feature 2: Keep old races in database (race-state.json)
+
+This feature allows finished race sessions to remain in the system instead of being deleted.
+
+- **Usage:** Start the server with the `-k` or `--keep-old` flag:
+```
+  npm run dev -- -k
+  npm start -- --keep-old
+```
+- **Behaviour:**
+
+  - ***Default behaviour (no flag):***
+    
+    Finished race sessions are permanently removed from the system once they are ended.
+
+  - ***With `-k` / `--keep-old` enabled:*** 
+
+    - Finished race sessions are not deleted.
+    - They are marked with status `closed`.
+    - They remain  in the system state for historical reference.

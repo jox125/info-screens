@@ -1,10 +1,9 @@
 import { SOCKET_COUNTDOWN } from "../shared/constants/socketMessages.js";
-import { countdown, finishRace } from "../server.mjs"; 
+import { countdown, finishRace } from "../server.mjs";
 import { saveStateToFile } from "../config/persist-state.mjs";
-
+import { PARAMS } from "../config/config.mjs";
 
 export function registerRaceActions(socket, io, { raceState }) {
- 
   // ---- RACE MODES MANAGEMENT ----
   socket.on("race:action", (action) => {
     if (socket.data.role !== "safety-official") {
@@ -114,10 +113,24 @@ export function registerRaceActions(socket, io, { raceState }) {
       raceState.sessions.find((session) => session.status === "finished") &&
       action.type === "END_SESSION"
     ) {
-      //change finished race status to closed
-      raceState.sessions[
-        raceState.sessions.findIndex((session) => session.status === "finished")
-      ].status = "closed";
+      //if keep-old enabled change finished race status to closed
+      //else delete
+      console.log(PARAMS);
+      if (PARAMS.isKeepOldRacesEnabled) {
+        raceState.sessions[
+          raceState.sessions.findIndex(
+            (session) => session.status === "finished",
+          )
+        ].status = "closed";
+      } else {
+        raceState.sessions.splice(
+          raceState.sessions.findIndex(
+            (session) => session.status === "finished",
+          ),
+          1,
+        );
+      }
+
       raceState.timeLeft = 0;
       raceState.raceMode = "danger";
       console.log("end session");
@@ -152,7 +165,7 @@ export function registerRaceActions(socket, io, { raceState }) {
 
     console.log(`Lap recorded for Car ${data.carNum}: ${lapTime}ms`);
     io.emit("state:update", raceState); // Push update to Leaderboard!
-    //Save state 
+    //Save state
     saveStateToFile(raceState);
   });
 }

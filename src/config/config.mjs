@@ -18,41 +18,54 @@ export const raceState = {
     running: false,
   },
 };
+//bonus flag
+export const PARAMS = {};
 
-export function checkConfig(){
-    if (!RECEPTIONIST_KEY || !OBSERVER_KEY || !SAFETY_KEY) {
+
+export function checkConfig() {
+  if (!RECEPTIONIST_KEY || !OBSERVER_KEY || !SAFETY_KEY) {
     console.error("ERROR: Missing required environment variables.");
     process.exit(1);
-    }
-    //In development mode load mock data
-    if (process.env.NODE_ENV === "development") {
-      loadStateFromFile(raceState, setDurationFromEnv());
-      //ensure 1min duration
-      if (raceState.duration != 60000) raceState.duration = 60000;
-      //check that timer data is correct
-      //if (raceState.timeLeft === 0) raceState.timer.running = false;
-      //if (!raceState.timer.running) raceState.timeLeft = 0;
+  }
+  
+  //register CLI parameters
+  PARAMS.isKeepOldRacesEnabled =
+    process.argv.includes("--keep-old") || process.argv.includes("-k");
+    //console.log(PARAMS);
+  
+  //In development mode load mock data
+  if (process.env.NODE_ENV === "development") {
+    loadStateFromFile(raceState, setDurationFromEnv());
+    //ensure 1min duration
+    //if (raceState.duration != 60000) raceState.duration = 60000;
+    //check that timer data is correct
+    //if (raceState.timeLeft === 0) raceState.timer.running = false;
+    //if (!raceState.timer.running) raceState.timeLeft = 0;
+    //console.log(raceState);
+    //if no file or file empty, load mock data
+    if (raceState.sessions.length < 1) {
+      Object.assign(raceState, loadMockData());
+      console.log("Mock race state data loaded:");
       console.log(raceState);
-      if (raceState.sessions.length < 1) {
-        Object.assign(raceState, loadMockData());
+    } else {
+      console.log("Race state loaded from file:");
+      console.log(raceState);
+    }
 
-        console.log("Mock race state data loaded:");
-        console.log(raceState);
-      }
-      console.log({
-        NODE_ENV: process.env.NODE_ENV,
-        RECEPTIONIST_KEY: process.env.RECEPTIONIST_KEY,
-        OBSERVER_KEY: process.env.OBSERVER_KEY,
-        SAFETY_KEY: process.env.SAFETY_KEY,
-      });
-    }
-    if (process.env.NODE_ENV === "production") {
-      loadStateFromFile(raceState, setDurationFromEnv());
-    }
+    console.log({
+      NODE_ENV: process.env.NODE_ENV,
+      RECEPTIONIST_KEY: process.env.RECEPTIONIST_KEY,
+      OBSERVER_KEY: process.env.OBSERVER_KEY,
+      SAFETY_KEY: process.env.SAFETY_KEY,
+    });
+  }
+  if (process.env.NODE_ENV === "production") {
+    loadStateFromFile(raceState, setDurationFromEnv());
+  }
 }
 
 function setDurationFromEnv() {
   const ENV = process.env.NODE_ENV;
-  if(ENV === "development") return { duration: 60000 }; // 1min races on dev env
-  if(ENV === "production") return { duration: 600000 }; // 10min races on prod env
+  if (ENV === "development") return { duration: 60000 }; // 1min races on dev env
+  if (ENV === "production") return { duration: 600000 }; // 10min races on prod env
 }

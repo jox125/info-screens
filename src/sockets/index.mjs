@@ -1,7 +1,7 @@
 import { registerRaceActions } from "./race-actions.mjs";
 import { registerReceptionist } from "./receptionist.js";
 import { ROLE } from "../shared/constants/roles.js";
-import { SOCKET_SESSION } from "../shared/constants/socketMessages.js";
+import { SOCKET_SESSION, SOCKET_STATE } from "../shared/constants/socketMessages.js";
 import { ERROR_CODES } from "../shared/constants/codes.js";
 import { registerCountdown } from "./countdown.js";
 
@@ -24,8 +24,8 @@ export function registerSocketHandlers(io, { raceState }) {
 
     // ---- REQUESTS ----
 
-    socket.on("state:request", () => {
-      socket.emit("state:update", raceState);
+    socket.on(SOCKET_STATE.REQUEST, () => {
+      socket.emit(SOCKET_STATE.UPDATE, raceState);
     });
 
     socket.on(SOCKET_SESSION.REQUEST, () => {
