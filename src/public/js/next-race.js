@@ -16,6 +16,7 @@ const role = "public";
 const urlParams = new URLSearchParams(window.location.search);
 const audioEnabled = urlParams.get('audio') === 'true';
 let lastAnnouncedSessionId = null;
+let lastAnnouncedSessionIdForPaddock = null;
 
 socket.auth = { role };
 socket.connect();
@@ -153,10 +154,12 @@ const updateView = (sessions) => {
     const announcement = document.getElementById("announcement");
     if (nextRace.name) {
       //show proceed to paddock announcement
+      console.log(nextRace.name);
       if (raceMode === "danger" && !raceInProgress) {
         announcement.classList.remove("hidden");
         announcement.innerHTML =
           "<div>🚦 PROCEED TO PADDOCK 🚦</div> <div>Drivers please move to the paddock area.</div>";
+          announceProceedToThePaddock(nextRace);
       } else {
         announcement.innerHTML = "";
         announcement.classList.add("hidden");
@@ -204,8 +207,23 @@ function announceNextRace(race) {
     if (!audioEnabled || !race || !race.drivers || race.id === lastAnnouncedSessionId) return;
     lastAnnouncedSessionId = race.id;
     const driverNames = race.drivers.map(d => d.name).join(", ");
-    const message = `Attention in the paddock. The next race, ${race.name}, is starting soon. Drivers ${driverNames}, please proceed to your cars.`;
+    const message = `Attention drivers. The next race, ${race.name}, is starting soon. Drivers ${driverNames}, please get ready to move to the paddock area.`;
     const utterance = new SpeechSynthesisUtterance(message);
     utterance.pitch = 1.0;
     window.speechSynthesis.speak(utterance);
+}
+function announceProceedToThePaddock(race) {
+      if (
+        !audioEnabled ||
+        !race ||
+        !race.drivers ||
+        race.id === lastAnnouncedSessionIdForPaddock
+      )
+        return;
+      lastAnnouncedSessionIdForPaddock = race.id;
+      const driverNames = race.drivers.map((d) => d.name).join(", ");
+      const message = `Attention drivers. The next race, ${race.name}, is starting now. Drivers ${driverNames}, please proceed to the paddock area.`;
+      const utterance = new SpeechSynthesisUtterance(message);
+      utterance.pitch = 1.0;
+      window.speechSynthesis.speak(utterance);      
 }
