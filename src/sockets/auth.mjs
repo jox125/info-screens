@@ -25,6 +25,7 @@ export function socketAuth(RECEPTIONIST_KEY, OBSERVER_KEY, SAFETY_KEY) {
       return next();
     }
 
-    return next(new Error("Unauthorized"));
+    setTimeout(()=>{return next(new Error("Unauthorized"));}, 500);
+    
   });
 }

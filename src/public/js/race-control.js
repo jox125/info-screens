@@ -20,19 +20,15 @@ loginForm.addEventListener("submit", (e) => {
     socket.auth = { role, key };
     socket.connect();
     loginInput.value = "";
+    loginInput.disabled = true;
+    loginInput.placeholder = "";
   }
 });
 
 socket.on("connect_error", (err) => {
-  console.log(err);
-  loginError.innerHTML = "Wrong key";
-  loginInput.disabled = true;
-  loginInput.placeholder = "";
-  window.setTimeout(() => {
-    loginError.innerHTML = "";
-    loginInput.disabled = false;
-    loginInput.placeholder = "Please enter key";
-  }, 500);
+  loginError.innerHTML = "Please enter valid key";
+  loginInput.disabled = false;
+  loginInput.placeholder = "Please enter key";
 });
 
 // ---- AUTH OK, LOAD control panel ----
