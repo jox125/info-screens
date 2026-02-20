@@ -43,6 +43,14 @@ export RECEPTIONIST_KEY=key1
 export SAFETY_KEY=key2
 export OBSERVER_KEY=key3
 ```
+In dev mode default access keys are set in `package.json`
+
+Default keys are: 
+```bash
+RECEPTIONIST_KEY=8ded6076 
+OBSERVER_KEY=662e0f6c 
+SAFETY_KEY=a2d393bc
+```
 
 ## Interfaces
 ### 1. Front Desk
@@ -161,6 +169,10 @@ Ngrok will generate a public URL (e.g., https://random-id.ngrok-free.dev) that t
 > [!NOTE]
 > *When opening the page first time, click the page anywhere (or click your "Full Screen" button).<br/>Browsers block "autoplay" audio until the user has interacted with the page.*
 >
-- **Functionality:** When session ends, text-to-speech will read out the message:
-<br/>*"Attention in the paddock. The next race, (race name), is starting soon.
-<br/>Drivers (driver names), please proceed to your cars."*
+- **Functionality:**
+1.  When session marked as next, text-to-speech will read out the message:
+<br/>*"Attention drivers. The next race, (race name), is starting soon.
+<br/>Drivers (driver names), please get ready to move to the paddock area."*
+2. When previous race ends or there is no previous race going on, text-to-speech will read out the message:
+<br/>*"Attention drivers. The next race, (race.name), is starting now. 
+<br/>Drivers (driverNames), please proceed to the paddock area."*
