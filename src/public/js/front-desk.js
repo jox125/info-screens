@@ -41,18 +41,16 @@ loginForm.addEventListener("submit", (e) => {
     socket.auth = { role, key };
     socket.connect();
     loginInput.value = "";
+    loginInput.disabled = true;
+    loginInput.placeholder = "Disabled";
 });
 
 socket.on("connect_error", (err) => {
     console.log(err);
     loginFeedback.textContent = "Wrong key";
     loginFeedback.classList.remove("hidden");
-    loginInput.disabled = true;
-    loginInput.placeholder = "Disabled";
-    window.setTimeout(() => {
-        loginInput.disabled = false;
-        loginInput.placeholder = "Please enter key";
-    }, 500);
+    loginInput.disabled = false;
+    loginInput.placeholder = "Please enter key";
 });
 
 socket.on("auth:ok", (role) => {
