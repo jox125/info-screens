@@ -102,7 +102,7 @@ body {
 /* --- ERROR & LOG STYLES --- */
 .error-message {
     color: #e11d48;
-    font-weight: 600;
+    font-weight: 400;
     margin-top: 15px;
 }
 

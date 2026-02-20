@@ -32,11 +32,14 @@ socket.on("disconnect", () => {
 });
 
 // --- 1. LOGIN & AUTH ---
+const keyInput = document.getElementById("login-key");
+
 loginForm.addEventListener("submit", (e) => {
     e.preventDefault();
-    const key = document.getElementById("login-key").value.trim();
+    const key = keyInput.value.trim();
     socket.auth = { role: "observer", key: key };
     socket.connect();
+    keyInput.disabled = true;
 });
 
 socket.on("auth:ok", () => {
@@ -49,7 +52,8 @@ socket.on("connect_error", () => {
     const feedback = document.getElementById("login-feedback");
     feedback.innerText = "Wrong key";
     feedback.classList.remove("hidden");
-    setTimeout(() => feedback.classList.add("hidden"), 3000);
+    keyInput.disabled = false;
+    keyInput.value = "";
 });
 
 socket.on("state:update", (state) => {
