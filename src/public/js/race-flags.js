@@ -1,9 +1,13 @@
+import { MODE } from "../../shared/constants/raceModes.js";
+import { ROLE } from "../../shared/constants/roles.js";
+import { SOCKET_STATE } from "../../shared/constants/socketMessages.js";
+
 const socket = io({
   autoConnect: false,
 });
 
 let raceMode = "";
-const role = "public";
+const role = ROLE.PUBLIC;
 socket.auth = { role };
 socket.connect();
 
@@ -16,9 +20,9 @@ socket.on("connect_error", (err) => {
 
 // --- Connection established ---
 socket.on("auth:ok", (role) => {
-  if (role === "public") {
+  if (role === ROLE.PUBLIC) {
     // Request initial data
-    socket.emit("state:request");
+    socket.emit(SOCKET_STATE.REQUEST);
 
     // Hide warnings if exists
     try {
@@ -30,13 +34,13 @@ socket.on("auth:ok", (role) => {
 });
 
 //  ---RACE STATE UPDATED ---
-socket.on("state:update", (state) => {
+socket.on(SOCKET_STATE.UPDATE, (state) => {
   //update race mode
   raceMode = state.raceMode;
   console.log(raceMode);
   //change flag color
   const flag = document.getElementById("flag");
-  flag.classList.remove("safe", "hazard", "danger", "finished");
+  flag.classList.remove(MODE.SAFE, MODE.HAZARD, MODE.DANGER, MODE.FINISHED);
   flag.classList.add(raceMode);
 });
 
