@@ -9,7 +9,7 @@ export const OBSERVER_KEY = process.env.OBSERVER_KEY;
 export const SAFETY_KEY = process.env.SAFETY_KEY;
 
 //bonus flag
-export const PARAMS = {};
+export const params = {};
 
 
 export function checkConfig() {
@@ -19,7 +19,7 @@ export function checkConfig() {
   }
   
   //register CLI parameters
-  PARAMS.isKeepOldRacesEnabled =
+  params.isKeepOldRacesEnabled =
     process.argv.includes("--keep-old") || process.argv.includes("-k");
     //console.log(PARAMS);
   

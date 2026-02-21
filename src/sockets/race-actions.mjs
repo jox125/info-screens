@@ -1,16 +1,19 @@
 import { SOCKET_COUNTDOWN } from "../shared/constants/socketMessages.js";
 import { countdown, finishRace } from "../server.mjs";
 import { saveStateToFile } from "../config/persist-state.mjs";
-import { PARAMS } from "../config/config.mjs";
+import { params } from "../config/config.mjs";
+import { ensureNextRace } from "../services/race-state.mjs";
 
 export function registerRaceActions(socket, io, { raceState }) {
   // ---- RACE MODES MANAGEMENT ----
   socket.on("race:action", (action) => {
+    //check credentials
     if (socket.data.role !== "safety-official") {
       console.warn("Unauthorized action", socket.id);
       return;
     }
 
+    //Start session
     if (
       !raceState.sessions.find((session) => session.status === "in progress") &&
       raceState.sessions.find((session) => session.status === "next") &&
@@ -22,85 +25,48 @@ export function registerRaceActions(socket, io, { raceState }) {
       raceState.sessions[
         raceState.sessions.findIndex((session) => session.status === "next")
       ].status = "in progress";
-
       console.log("START recieved:");
-      //console.log("Race state data:");
-      //console.log(raceState);
 
       //if more upcoming races, find next
-      if (!raceState.sessions.find((session) => session.status === "next")) {
-        if (
-          raceState.sessions.find((session) => session.status === "upcoming")
-        ) {
-          const upcomingSessions = raceState.sessions.filter(
-            (session) => session.status === "upcoming",
-          );
-          let nextSession = {};
-          //find session with smallest id
-          if (!upcomingSessions) {
-          } else {
-            nextSession.id = Number.MAX_SAFE_INTEGER;
-            for (let i = 0; i < upcomingSessions.length; i++) {
-              if (upcomingSessions[i].id < nextSession.id) {
-                nextSession = upcomingSessions[i];
-              }
-            }
-          }
-          raceState.sessions[raceState.sessions.indexOf(nextSession)].status =
-            "next";
-          //console.log("Updated next race:");
-          //console.log("Race state data:");
-          //console.log(raceState);
-        }
-      }
+      ensureNextRace(raceState);
 
       //start timer
       countdown.startCountdown(raceState.duration);
 
       io.emit("state:update", raceState);
-      //console.log("state:update:");
-      //console.log(raceState);
-      //console.log("Drivers:");
-      //console.log(
-      //  raceState.sessions.find((session) => session.status === "in progress")
-      //    .drivers,
-      //);
     }
 
-    //controls active when race is on
+    //Gren Flag
     if (
       raceState.sessions.find((session) => session.status === "in progress") &&
       action.type === "GREEN_FLAG"
     ) {
       raceState.raceMode = "safe";
       console.log("green flag");
-      //console.log("Race state data:");
-      //console.log(raceState);
       io.emit("state:update", raceState);
     }
 
+    //Yellow Flag
     if (
       raceState.sessions.find((session) => session.status === "in progress") &&
       action.type === "YELLOW_FLAG"
     ) {
       raceState.raceMode = "hazard";
       console.log("yellow flag");
-      //console.log("Race state data:");
-      //console.log(raceState);
       io.emit("state:update", raceState);
     }
 
+    //Red Flag
     if (
       raceState.sessions.find((session) => session.status === "in progress") &&
       action.type === "RED_FLAG"
     ) {
       raceState.raceMode = "danger";
       console.log("red flag");
-      //console.log("Race state data:");
-      //console.log(raceState);
       io.emit("state:update", raceState);
     }
 
+    //Chequered Flag
     if (
       raceState.sessions.find((session) => session.status === "in progress") &&
       action.type === "CHEQUERED_FLAG"
@@ -109,19 +75,20 @@ export function registerRaceActions(socket, io, { raceState }) {
       finishRace.finishRace();
     }
 
+    //End Session
     if (
       raceState.sessions.find((session) => session.status === "finished") &&
       action.type === "END_SESSION"
     ) {
       //if keep-old enabled change finished race status to closed
       //else delete
-      console.log(PARAMS);
-      if (PARAMS.isKeepOldRacesEnabled) {
+      if (params.isKeepOldRacesEnabled) {
         raceState.sessions[
           raceState.sessions.findIndex(
             (session) => session.status === "finished",
           )
         ].status = "closed";
+        console.log("Session closed.");
       } else {
         raceState.sessions.splice(
           raceState.sessions.findIndex(
@@ -129,13 +96,12 @@ export function registerRaceActions(socket, io, { raceState }) {
           ),
           1,
         );
+        console.log("Session deleted.");
       }
 
       raceState.timeLeft = 0;
       raceState.raceMode = "danger";
       console.log("end session");
-      //console.log("Race state data:");
-      //console.log(raceState);
       io.emit("state:update", raceState);
       io.emit(SOCKET_COUNTDOWN.UPDATE, raceState.duration);
     }

@@ -1,7 +1,6 @@
 import { saveStateToFile } from "../config/persist-state.mjs";
 
 
-
 export function createCountdown({ raceState, io, finishRace }) {
   //timers
   let ticTac = null;
@@ -17,7 +16,7 @@ export function createCountdown({ raceState, io, finishRace }) {
     raceState.timeLeft = duration;
     ticTac = setInterval(() => {
       raceState.timeLeft -= 1000;
-      io.emit("tic-tac", raceState.timeLeft);     
+      io.emit("tic-tac", raceState.timeLeft);
       //Save state
       saveStateToFile(raceState);
     }, 1000);

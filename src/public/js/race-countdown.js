@@ -16,7 +16,7 @@ socket.emit(SOCKET_COUNTDOWN.REQUEST);
 socket.on(SOCKET_COUNTDOWN.UPDATE, (timeLeft) => {
     countdown.textContent = convertTime(timeLeft);
 });
-
+// Updates countdown from timer
 socket.on("tic-tac", (timeLeft) => {
     countdown.textContent = convertTime(timeLeft);
 });
