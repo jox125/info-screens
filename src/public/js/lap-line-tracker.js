@@ -19,6 +19,7 @@ let currentSession = null;
 let lastActiveSessionId = null;
 let lapCount = 0;
 let localAnchorTime = null;
+let lastLapDone = {};
 
 // 1. DETECT SERVER CONNECTION
 socket.on("connect", () => {
@@ -88,6 +89,7 @@ socket.on(SOCKET_STATE.UPDATE, (state) => {
         if (sessionStarted || sessionEnded) {
             if (lapLog) lapLog.innerHTML = "";
             lapCount = 0;
+            lastLapDone = {};
             if (sessionEnded) {
                 localAnchorTime = null;
             }
@@ -102,6 +104,14 @@ socket.on(SOCKET_STATE.UPDATE, (state) => {
 
         if (activeSession) {
             if (sessionStatusMsg) sessionStatusMsg.classList.add("hidden");
+
+            // Ensure all active drivers exist in lastLapDone for the current session.
+            activeSession.drivers.forEach((driver) => {
+                if (!(driver.carNum in lastLapDone)) {
+                    lastLapDone[driver.carNum] = false;
+                }
+            });
+
             renderGrid();
         }
         else if (nextSession) {
@@ -126,6 +136,9 @@ socket.on(SOCKET_STATE.UPDATE, (state) => {
                 if (oldDriver && driver.lastLapAt !== oldDriver.lastLapAt) {
                     const startRef = oldDriver.lastLapAt || globalRaceState.timer.startedAt || localAnchorTime || driver.lastLapAt;
                     addLapToLog(driver.carNum, driver.lastLapAt - startRef);
+                    if (currentSession.status === STATUS.FINISHED) {
+                        lastLapDone[driver.carNum] = true;
+                    }
                 }
             });
         }
@@ -146,11 +159,16 @@ function renderGrid() {
 
         const isLive = (currentSession.status === STATUS.IN_PROGRESS || currentSession.status === STATUS.FINISHED);
         const isSafe = globalRaceState.raceMode !== MODE.DANGER;
+        const lastLapCompleted = currentSession.status === STATUS.FINISHED && !!lastLapDone[driver.carNum];
 
-        btn.disabled = (!isLive || !isSafe);
+        btn.disabled = (!isLive || !isSafe || lastLapCompleted);
 
         btn.addEventListener("click", () => {
             socket.emit(SOCKET_RACE.LAP, { sessionId: currentSession.id, carNum: driver.carNum });
+            if (currentSession.status === STATUS.FINISHED) {
+                lastLapDone[driver.carNum] = true;
+                btn.disabled = true;
+            }
             btn.style.background = "#10b981";
             setTimeout(() => btn.style.background = "", 150);
         });
