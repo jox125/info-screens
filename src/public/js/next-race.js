@@ -4,7 +4,7 @@ import {
   SOCKET_SESSION,
 } from "../../shared/constants/socketMessages.js";
 import { ROLE } from "../../shared/constants/roles.js";
-import { MODE } from "../../shared/constants/raceModes.mjs";
+import { MODE } from "../../shared/constants/raceModes.js";
 
 const socket = io({
   autoConnect: false,

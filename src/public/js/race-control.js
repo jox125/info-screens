@@ -1,6 +1,9 @@
 import { ERROR_MESSAGES } from "./constants/messages.js";
 import { ERROR_CODES } from "../../shared/constants/codes.js";
 import { ROLE } from "../../shared/constants/roles.js";
+import { RACE_ACTION, SOCKET_RACE, SOCKET_SESSION, SOCKET_STATE } from "../../shared/constants/socketMessages.js";
+import { MODE } from "../../shared/constants/raceModes.js";
+import { STATUS } from "../../shared/constants/status.js";
 
 const socket = io({
   autoConnect: false,
@@ -34,7 +37,7 @@ socket.on("connect_error", (err) => {
 
 // ---- AUTH OK, LOAD control panel ----
 socket.on("auth:ok", (role) => {
-  if (role === "safety-official") {
+  if (role === ROLE.SAFETY_OFFICIAL) {
     //clear view
     const oldControlPanel = document.getElementById("control-panel");
     if (oldControlPanel) oldControlPanel.remove();
@@ -43,7 +46,7 @@ socket.on("auth:ok", (role) => {
     if (loginPanel) loginPanel.remove();
 
     // Request initial data
-    socket.emit("state:request");
+    socket.emit(SOCKET_STATE.REQUEST);
 
     // Render Control Panel
     const controlPanel = document.createElement("div");
@@ -77,7 +80,7 @@ socket.on("auth:ok", (role) => {
     startButton.id = "start-button";
     startButton.innerHTML = "Start Race";
     startButton.onclick = () => {
-      socket.emit("race:action", { type: "START" });
+      socket.emit(SOCKET_RACE.ACTION, { type: RACE_ACTION.START });
     };
     controlPanel.appendChild(startButton);
 
@@ -92,28 +95,28 @@ socket.on("auth:ok", (role) => {
     safeButton.id = "safe-button";
     safeButton.classList.add("race-control-button");
     safeButton.onclick = () => {
-      socket.emit("race:action", { type: "GREEN_FLAG" });
+      socket.emit(SOCKET_RACE.ACTION, { type: RACE_ACTION.GREEN_FLAG });
     };
     const hazardButton = document.createElement("button");
     hazardButton.innerHTML = `<span>Hazard</span>`;
     hazardButton.id = "hazard-button";
     hazardButton.classList.add("race-control-button");
     hazardButton.onclick = () => {
-      socket.emit("race:action", { type: "YELLOW_FLAG" });
+      socket.emit(SOCKET_RACE.ACTION, { type: RACE_ACTION.YELLOW_FLAG });
     };
     const dangerButton = document.createElement("button");
     dangerButton.innerHTML = `<span>Danger</span>`;
     dangerButton.id = "danger-button";
     dangerButton.classList.add("race-control-button");
     dangerButton.onclick = () => {
-      socket.emit("race:action", { type: "RED_FLAG" });
+      socket.emit(SOCKET_RACE.ACTION, { type: RACE_ACTION.RED_FLAG });
     };
     const finishButton = document.createElement("button");
     finishButton.innerHTML = `<span>Finish</span>`;
     finishButton.id = "finish-button";
     finishButton.classList.add("race-control-button");
     finishButton.onclick = () => {
-      socket.emit("race:action", { type: "CHEQUERED_FLAG" });
+      socket.emit(SOCKET_RACE.ACTION, { type: RACE_ACTION.CHEQUERED_FLAG });
     };
 
     raceControlButtonsContainer.appendChild(safeButton);
@@ -129,7 +132,7 @@ socket.on("auth:ok", (role) => {
     endSessionButton.classList.add("hidden");
     endSessionButton.innerHTML = "End Session";
     endSessionButton.onclick = () => {
-      socket.emit("race:action", { type: "END_SESSION" });
+      socket.emit(SOCKET_RACE.ACTION, { type: RACE_ACTION.END_SESSION });
     };
     controlPanel.appendChild(endSessionButton);
 
@@ -146,13 +149,13 @@ const updateView = (state) => {
   Object.assign(raceState, state);
   //change state indicator color
   const stateIndicator = document.getElementById("state-indicator");
-  stateIndicator.classList.remove("safe", "hazard", "danger", "finished");
+  stateIndicator.classList.remove(MODE.SAFE, MODE.HAZARD, MODE.DANGER, MODE.FINISHED);
   stateIndicator.classList.add(raceState.raceMode);
 
   // view 1. no race on, and no next races
   if (
-    !raceState.sessions.find((session) => session.status === "in progress") &&
-    !raceState.sessions.find((session) => session.status === "next")
+    !raceState.sessions.find((session) => session.status === STATUS.IN_PROGRESS) &&
+    !raceState.sessions.find((session) => session.status === STATUS.NEXT)
   ) {
     try {
       //remove info about upcoming races
@@ -180,9 +183,9 @@ const updateView = (state) => {
   }
   //view 2. no race in progress, no race in finished state, next waiting
   if (
-    !raceState.sessions.find((session) => session.status === "in progress") &&
-    !raceState.sessions.find((session) => session.status === "finished") &&
-    raceState.sessions.find((session) => session.status === "next")
+    !raceState.sessions.find((session) => session.status === STATUS.IN_PROGRESS) &&
+    !raceState.sessions.find((session) => session.status === STATUS.FINISHED) &&
+    raceState.sessions.find((session) => session.status === STATUS.NEXT)
   ) {
     try {
       // hide current race info
@@ -202,7 +205,7 @@ const updateView = (state) => {
       const nextInfo = document.getElementById("next-info");
       nextInfo.classList.remove("hidden");
       const nextRace = raceState.sessions.find(
-        (session) => session.status === "next",
+        (session) => session.status === STATUS.NEXT,
       );
       nextInfo.innerHTML = `
         <h4>Next race:</h4>
@@ -238,7 +241,7 @@ const updateView = (state) => {
       //show current race info
       const info = document.getElementById("current-info");
       const currentRace = raceState.sessions.find(
-        (session) => session.status === "in progress",
+        (session) => session.status === STATUS.IN_PROGRESS,
       );
       info.innerHTML = `
         <h4>Current race:</h4>
@@ -273,8 +276,8 @@ const updateView = (state) => {
   }
   //view 4. race is finished but session not jet
   if (
-    !raceState.sessions.find((session) => session.status === "in progress") &&
-    raceState.sessions.find((session) => session.status === "finished")
+    !raceState.sessions.find((session) => session.status === STATUS.IN_PROGRESS) &&
+    raceState.sessions.find((session) => session.status === STATUS.FINISHED)
   ) {
     //hide control buttons, show end session button
     try {
@@ -308,7 +311,7 @@ const updateView = (state) => {
   if (
     !raceState.sessions ||
     raceState.sessions.length < 1 ||
-    !raceState.sessions.find((session) => session.status === "next")
+    !raceState.sessions.find((session) => session.status === STATUS.NEXT)
   ) {
     try {
       //show no next race warning
@@ -326,11 +329,11 @@ const updateView = (state) => {
   }
 };
 
-socket.on("session:update", (sessions) => {
+socket.on(SOCKET_SESSION.UPDATE, (sessions) => {
   raceState.sessions = sessions;
   updateView(raceState);
 });
-socket.on("state:update", (state) => {
+socket.on(SOCKET_STATE.UPDATE, (state) => {
   updateView(state);
 });
 

@@ -1,4 +1,5 @@
-import { MODE } from "../../shared/constants/raceModes.mjs";
+import { MODE } from "../../shared/constants/raceModes.js";
+import { ROLE } from "../../shared/constants/roles.js";
 import { SOCKET_RACE, SOCKET_STATE } from "../../shared/constants/socketMessages.js"
 import { STATUS } from "../../shared/constants/status.js";
 const socket = io({ autoConnect: false });
@@ -40,7 +41,7 @@ const keyInput = document.getElementById("login-key");
 loginForm.addEventListener("submit", (e) => {
     e.preventDefault();
     const key = keyInput.value.trim();
-    socket.auth = { role: "observer", key: key };
+    socket.auth = { role: ROLE.OBSERVER, key: key };
     socket.connect();
     keyInput.disabled = true;
 });

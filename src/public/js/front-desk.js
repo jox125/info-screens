@@ -1,7 +1,7 @@
 import { ROLE } from "../../shared/constants/roles.js";
 import { STATUS, IMMUTABLE_STATUSES } from "../../shared/constants/status.js";
 import { ERROR_MESSAGES, SUCCESS_MESSAGES } from "./constants/messages.js";
-import { SOCKET_DRIVER, SOCKET_SESSION } from "../../shared/constants/socketMessages.js";
+import { SOCKET_DRIVER, SOCKET_SESSION, SOCKET_STATE } from "../../shared/constants/socketMessages.js";
 
 const socket = io({
     autoConnect: false
@@ -101,7 +101,7 @@ socket.on(SOCKET_SESSION.UPDATE, (data) => {
     });
 });
 
-socket.on("state:update", (data) => {
+socket.on(SOCKET_STATE.UPDATE, (data) => {
     syncSessionStatus(data.sessions);
     renderSessions();
 });

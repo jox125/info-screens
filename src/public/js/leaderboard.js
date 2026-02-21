@@ -1,4 +1,4 @@
-import { MODE } from "../../shared/constants/raceModes.mjs";
+import { MODE } from "../../shared/constants/raceModes.js";
 import { ROLE } from "../../shared/constants/roles.js";
 import { SOCKET_STATE } from "../../shared/constants/socketMessages.js";
 import { STATUS } from "../../shared/constants/status.js";
@@ -24,12 +24,12 @@ let localTimerInterval = null;
 
 // --- 2. SOCKET LISTENERS ---
 socket.on("connect", () => {
-    console.log("Connected to Leaderboard");
+    console.log("Connected to Server");
     socket.emit(SOCKET_STATE.REQUEST);
 });
 
 socket.on("disconnect", () => {
-    console.log("Lost connection to Leaderboard");
+    console.log("Lost connection to Server");
 
     if(localTimerInterval) clearInterval(localTimerInterval);
 
