@@ -5,7 +5,7 @@ import { params } from "../config/config.mjs";
 import { ensureNextRace } from "../services/race-state.mjs";
 import { ROLE } from "../shared/constants/roles.js";
 import { STATUS } from "../shared/constants/status.js";
-import { MODE } from "../shared/constants/raceModes.mjs";
+import { MODE } from "../shared/constants/raceModes.js";
 
 export function registerRaceActions(socket, io, { raceState }) {
   // ---- RACE MODES MANAGEMENT ----

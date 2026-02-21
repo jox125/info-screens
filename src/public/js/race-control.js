@@ -227,7 +227,7 @@ const updateView = (state) => {
     }
   }
   // view 3. race in progress
-  if (raceState.sessions.find((session) => session.status === "in progress")) {
+  if (raceState.sessions.find((session) => session.status === STATUS.IN_PROGRESS)) {
     try {
       //disable and hide start button
       const startButton = document.getElementById("start-button");

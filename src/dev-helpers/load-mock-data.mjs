@@ -1,3 +1,5 @@
+import { STATUS } from "../shared/constants/status.js";
+
 export function loadMockData () {
   // example races
   return {
@@ -17,7 +19,7 @@ export function loadMockData () {
             carNum: 22,
           },
         ],
-        status: "upcoming", // planned, upcoming, next, in progress, finished, closed
+        status: STATUS.UPCOMING, // planned, upcoming, next, in progress, finished, closed
       },
       {
         id: 2,
@@ -34,7 +36,7 @@ export function loadMockData () {
             carNum: 44,
           },
         ],
-        status: "upcoming", // planned, upcoming, next, in progress, finished, closed
+        status: STATUS.UPCOMING, // planned, upcoming, next, in progress, finished, closed
       },
       {
         id: 3,
@@ -51,12 +53,8 @@ export function loadMockData () {
             carNum: 66,
           },
         ],
-        status: "upcoming", // planned, upcoming, next, in progress, finished, closed
+        status: STATUS.UPCOMING, // planned, upcoming, next, in progress, finished, closed
       },
     ],
-    //currentRace: null,
-    //nextRace: null,
-    raceMode: "danger", // safe, hazard, danger, finish
-    duration: 60000, // Only 1 min races for now
   };
 }

@@ -1,4 +1,4 @@
-import { MODE } from "../shared/constants/raceModes.mjs";
+import { MODE } from "../shared/constants/raceModes.js";
 import { SOCKET_STATE } from "../shared/constants/socketMessages.js";
 import { STATUS } from "../shared/constants/status.js";
 
