@@ -1,30 +1,44 @@
 export const SOCKET_SESSION = Object.freeze({
-    ADD: "session:add",
-    EDIT: "session:edit",
-    DELETE: "session:delete",
-    ERROR: "session:error",
-    EDIT_ERROR: "session:edit:error",
-    SUCCESS: "session:success",
-    REQUEST: "session:request",
-    UPDATE: "session:update",
-    CONFIRM: "session:confirm"
+  ADD: "session:add",
+  EDIT: "session:edit",
+  DELETE: "session:delete",
+  ERROR: "session:error",
+  EDIT_ERROR: "session:edit:error",
+  SUCCESS: "session:success",
+  REQUEST: "session:request",
+  UPDATE: "session:update",
+  CONFIRM: "session:confirm",
 });
 
 export const SOCKET_DRIVER = Object.freeze({
-    ADD: "driver:add",
-    EDIT: "driver:edit",
-    DELETE: "driver:delete",
-    ERROR: "driver:error",
-    EDIT_ERROR: "driver:edit:error",
-    SUCCESS: "driver:success"
+  ADD: "driver:add",
+  EDIT: "driver:edit",
+  DELETE: "driver:delete",
+  ERROR: "driver:error",
+  EDIT_ERROR: "driver:edit:error",
+  SUCCESS: "driver:success",
 });
 
 export const SOCKET_COUNTDOWN = Object.freeze({
-    REQUEST: "countdown:request",
-    UPDATE: "countdown:update"
+  REQUEST: "countdown:request",
+  UPDATE: "countdown:update",
 });
 
 export const SOCKET_STATE = Object.freeze({
-    REQUEST: "state:request",
-    UPDATE: "state:update"
+  REQUEST: "state:request",
+  UPDATE: "state:update",
+});
+
+export const SOCKET_RACE = Object.freeze({
+  ACTION: "race:action",
+  LAP: "race:lap",
+});
+
+export const RACE_ACTION = Object.freeze({
+  START: "START",
+  GREEN_FLAG: "GREEN_FLAG",
+  YELLOW_FLAG: "YELLOW_FLAG",
+  RED_FLAG: "RED_FLAG",
+  CHEQUERED_FLAG: "CHEQUERED_FLAG",
+  END_SESSION: "END_SESSION",
 });

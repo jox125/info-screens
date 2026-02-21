@@ -1,15 +1,19 @@
+import { MODE } from "../shared/constants/raceModes.mjs";
+import { SOCKET_STATE } from "../shared/constants/socketMessages.js";
+import { STATUS } from "../shared/constants/status.js";
+
 // ---- FINISH RACE HELPER ----
 export function createFinishRace({ raceState, io }) {
   const finishRace = () => {
-    raceState.raceMode = "finished";
+    raceState.raceMode = MODE.FINISHED;
     console.log("checkered flag");
     raceState.sessions[
       raceState.sessions.findIndex(
-        (session) => session.status === "in progress",
+        (session) => session.status === STATUS.IN_PROGRESS,
       )
-    ].status = "finished";
+    ].status = STATUS.FINISHED;
     raceState.timer.running = false;
-    io.emit("state:update", raceState);
+    io.emit( SOCKET_STATE.UPDATE, raceState);
   };
   return { finishRace };
 }

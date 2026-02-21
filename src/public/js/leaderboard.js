@@ -1,8 +1,13 @@
+import { MODE } from "../../shared/constants/raceModes.mjs";
+import { ROLE } from "../../shared/constants/roles.js";
+import { SOCKET_STATE } from "../../shared/constants/socketMessages.js";
+import { STATUS } from "../../shared/constants/status.js";
+
 const socket = io({
     autoConnect: false,
 });
 
-socket.auth = { role: "public" };
+socket.auth = { role: ROLE.PUBLIC };
 socket.connect();
 
 // --- 1. UI ELEMENTS & STATE ---
@@ -20,7 +25,7 @@ let localTimerInterval = null;
 // --- 2. SOCKET LISTENERS ---
 socket.on("connect", () => {
     console.log("Connected to Leaderboard");
-    socket.emit("state:request");
+    socket.emit(SOCKET_STATE.REQUEST);
 });
 
 socket.on("disconnect", () => {
@@ -36,7 +41,7 @@ socket.on("disconnect", () => {
     }
 });
 
-socket.on("state:update", (state) => {
+socket.on(SOCKET_STATE.UPDATE, (state) => {
     globalRaceState = state;
 
     if (globalRaceState.timer?.running) {
@@ -96,20 +101,20 @@ function stopLocalTimer() {
 function renderLeaderboard() {
     if (!globalRaceState) return;
 
-    let activeSession = globalRaceState.sessions.find(s => s.status === "in progress");
+    let activeSession = globalRaceState.sessions.find(s => s.status === STATUS.IN_PROGRESS);
     if (!activeSession) {
         activeSession = [...globalRaceState.sessions]
             .reverse()
-            .find(s => ["finished", "closed"].includes(s.status));
+            .find(s => [STATUS.FINISHED, STATUS.CLOSED].includes(s.status));
     }
 
     if (activeSession) {
-        const statusText = activeSession.status === "in progress" ? "(LIVE)" : "(FINAL)";
+        const statusText = activeSession.status === STATUS.IN_PROGRESS ? "(LIVE)" : "(FINAL)";
         sessionName.textContent = `${activeSession.name} ${statusText}`;
     } else {
         sessionName.textContent = "Waiting for next session...";
         leaderboardBody.innerHTML = `<tr><td colspan="5" style="text-align:center; padding:20px;">No active or past race data available.</td></tr>`;
-        updateFlagStatus("safe");
+        updateFlagStatus(globalRaceState.raceMode); 
         return;
     }
 
@@ -147,19 +152,19 @@ function renderLeaderboard() {
 function updateFlagStatus(mode) {
     flagStatus.className = "flag-indicator";
     switch (mode) {
-        case "safe":
+        case MODE.SAFE:
             flagStatus.classList.add("flag-safe");
             flagStatus.innerText = "SAFE";
             break;
-        case "hazard":
+        case MODE.HAZARD:
             flagStatus.classList.add("flag-hazard");
             flagStatus.innerText = "HAZARD";
             break;
-        case "danger":
+        case MODE.DANGER:
             flagStatus.classList.add("flag-danger");
             flagStatus.innerText = "DANGER";
             break;
-        case "finished":
+        case MODE.FINISHED:
             flagStatus.classList.add("flag-finished");
             flagStatus.innerText = "FINISH";
             break;

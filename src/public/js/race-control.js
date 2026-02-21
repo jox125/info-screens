@@ -1,5 +1,6 @@
 import { ERROR_MESSAGES } from "./constants/messages.js";
 import { ERROR_CODES } from "../../shared/constants/codes.js";
+import { ROLE } from "../../shared/constants/roles.js";
 
 const socket = io({
   autoConnect: false,
@@ -16,7 +17,7 @@ loginForm.addEventListener("submit", (e) => {
   e.preventDefault();
   if (loginInput) {
     let key = loginInput.value.trim();
-    let role = "safety-official";
+    let role = ROLE.SAFETY_OFFICIAL;
     socket.auth = { role, key };
     socket.connect();
     loginInput.value = "";

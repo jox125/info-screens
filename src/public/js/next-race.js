@@ -1,9 +1,10 @@
-import { ROLE } from "../shared/constants/roles.js";
 import { STATUS } from "../../shared/constants/status.js";
 import {
   SOCKET_STATE,
   SOCKET_SESSION,
 } from "../../shared/constants/socketMessages.js";
+import { ROLE } from "../../shared/constants/roles.js";
+import { MODE } from "../../shared/constants/raceModes.mjs";
 
 const socket = io({
   autoConnect: false,
@@ -12,9 +13,9 @@ const socket = io({
 const nextRace = {};
 let raceMode = "";
 let raceInProgress = false;
-const role = "public";
+const role = ROLE.PUBLIC;
 const urlParams = new URLSearchParams(window.location.search);
-const audioEnabled = urlParams.get('audio') === 'true';
+const audioEnabled = urlParams.get("audio") === "true";
 let lastAnnouncedSessionId = null;
 let lastAnnouncedSessionIdForPaddock = null;
 
@@ -114,7 +115,7 @@ document.addEventListener("fullscreenchange", () => {
 
 // --- Connection established ---
 socket.on("auth:ok", (role) => {
-  if (role === ROLE.PUBLIC ) {
+  if (role === ROLE.PUBLIC) {
     // Request initial data
     socket.emit(SOCKET_STATE.REQUEST);
 
@@ -153,17 +154,16 @@ const updateView = (sessions) => {
     const raceName = document.getElementById("race-name");
     const announcement = document.getElementById("announcement");
     if (nextRace.name) {
-      //show proceed to paddock announcement
-      console.log(nextRace.name);
-      if (raceMode === "danger" && !raceInProgress) {
+      //show proceed to paddock announcement      
+      if (raceMode === MODE.DANGER && !raceInProgress) {
         announcement.classList.remove("hidden");
         announcement.innerHTML =
           "<div>🚦 PROCEED TO PADDOCK 🚦</div> <div>Drivers please move to the paddock area.</div>";
-          announceProceedToThePaddock(nextRace);
+        announceProceedToThePaddock(nextRace);
       } else {
         announcement.innerHTML = "";
         announcement.classList.add("hidden");
-      } 
+      }
 
       raceName.innerHTML = nextRace.name;
       //check if needs to scroll
@@ -204,26 +204,34 @@ socket.on(SOCKET_STATE.UPDATE, (state) => {
 
 // ---- BONUS FUNCTIONALITY ---- (Automated Track Announcer)
 function announceNextRace(race) {
-    if (!audioEnabled || !race || !race.drivers || race.id === lastAnnouncedSessionId) return;
-    lastAnnouncedSessionId = race.id;
-    const driverNames = race.drivers.map(d => d.name).join(", ");
-    const message = `Attention drivers. The next race, ${race.name}, is starting soon. Drivers ${driverNames}, please get ready to move to the paddock area.`;
-    const utterance = new SpeechSynthesisUtterance(message);
-    utterance.pitch = 1.0;
-    window.speechSynthesis.speak(utterance);
+  if (
+    !audioEnabled ||
+    !race ||
+    !race.drivers ||
+    race.id === lastAnnouncedSessionId
+  )
+    return;
+  lastAnnouncedSessionId = race.id;
+  const driverNames = race.drivers.map((d) => d.name).join(", ");
+  const message = `Attention drivers. The next race, ${race.name}, is starting soon. Drivers ${driverNames}, please get ready to move to the paddock area.`;
+  const utterance = new SpeechSynthesisUtterance(message);
+  utterance.pitch = 1.0;
+  utterance.lang = "en-US";
+  window.speechSynthesis.speak(utterance);
 }
 function announceProceedToThePaddock(race) {
-      if (
-        !audioEnabled ||
-        !race ||
-        !race.drivers ||
-        race.id === lastAnnouncedSessionIdForPaddock
-      )
-        return;
-      lastAnnouncedSessionIdForPaddock = race.id;
-      const driverNames = race.drivers.map((d) => d.name).join(", ");
-      const message = `Attention drivers. The next race, ${race.name}, is starting now. Drivers ${driverNames}, please proceed to the paddock area.`;
-      const utterance = new SpeechSynthesisUtterance(message);
-      utterance.pitch = 1.0;
-      window.speechSynthesis.speak(utterance);      
+  if (
+    !audioEnabled ||
+    !race ||
+    !race.drivers ||
+    race.id === lastAnnouncedSessionIdForPaddock
+  )
+    return;
+  lastAnnouncedSessionIdForPaddock = race.id;
+  const driverNames = race.drivers.map((d) => d.name).join(", ");
+  const message = `Attention drivers. The next race, ${race.name}, is starting now. Drivers ${driverNames}, please proceed to the paddock area.`;
+  const utterance = new SpeechSynthesisUtterance(message);
+  utterance.pitch = 1.0;
+  utterance.lang = "en-US";
+  window.speechSynthesis.speak(utterance);
 }

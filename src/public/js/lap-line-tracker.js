@@ -1,3 +1,6 @@
+import { MODE } from "../../shared/constants/raceModes.mjs";
+import { SOCKET_RACE, SOCKET_STATE } from "../../shared/constants/socketMessages.js"
+import { STATUS } from "../../shared/constants/status.js";
 const socket = io({ autoConnect: false });
 
 // --- DOM ELEMENTS ---
@@ -20,7 +23,7 @@ let localAnchorTime = null;
 socket.on("connect", () => {
     console.log("Connected to server");
 
-    socket.emit("state:request");
+    socket.emit(SOCKET_STATE.REQUEST);
 });
 
 socket.on("disconnect", () => {
@@ -45,7 +48,7 @@ loginForm.addEventListener("submit", (e) => {
 socket.on("auth:ok", () => {
     loginPanel.classList.add("hidden");
     trackerPanel.classList.remove("hidden");
-    socket.emit("state:request");
+    socket.emit(SOCKET_STATE.REQUEST);
 });
 
 socket.on("connect_error", () => {
@@ -56,7 +59,7 @@ socket.on("connect_error", () => {
     keyInput.value = "";
 });
 
-socket.on("state:update", (state) => {
+socket.on(SOCKET_STATE.UPDATE, (state) => {
     try {
         const previousSession = currentSession;
         const timerWasRunning = globalRaceState?.timer?.running;
@@ -73,10 +76,10 @@ socket.on("state:update", (state) => {
         }
 
         const activeSession = state.sessions.find(s =>
-            ["in progress", "finished"].includes(s.status)
+            [STATUS.IN_PROGRESS, STATUS.FINISHED].includes(s.status)
         );
 
-        const nextSession = state.sessions.find(s => s.status === "next");
+        const nextSession = state.sessions.find(s => s.status === STATUS.NEXT);
 
         const sessionStarted = activeSession && activeSession.id !== lastActiveSessionId;
         const sessionEnded = !activeSession && lastActiveSessionId !== null;
@@ -140,13 +143,13 @@ function renderGrid() {
         const btn = document.createElement("button");
         btn.innerText = driver.carNum;
 
-        const isLive = (currentSession.status === "in progress" || currentSession.status === "finished");
-        const isSafe = globalRaceState.raceMode !== "danger";
+        const isLive = (currentSession.status === STATUS.IN_PROGRESS || currentSession.status === STATUS.FINISHED);
+        const isSafe = globalRaceState.raceMode !== MODE.DANGER;
 
         btn.disabled = (!isLive || !isSafe);
 
         btn.addEventListener("click", () => {
-            socket.emit("race:lap", { sessionId: currentSession.id, carNum: driver.carNum });
+            socket.emit(SOCKET_RACE.LAP, { sessionId: currentSession.id, carNum: driver.carNum });
             btn.style.background = "#10b981";
             setTimeout(() => btn.style.background = "", 150);
         });
@@ -184,7 +187,7 @@ function tick() {
         return;
     }
 
-    const isFinished = currentSession?.status === "finished" || globalRaceState.timeLeft <= 0;
+    const isFinished = currentSession?.status === STATUS.FINISHED || globalRaceState.timeLeft <= 0;
 
     if (isFinished) {
         globalTimer.innerText = formatTime(globalRaceState.duration);

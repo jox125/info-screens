@@ -1,5 +1,4 @@
 import { SOCKET_COUNTDOWN } from "../shared/constants/socketMessages.js";
-//import { saveStateToFile } from "../config/persist-state.mjs";
 
 export function registerCountdown(socket, io, { raceState }) {
   // Updates countdown with timeLeft if a session is running or duration if not

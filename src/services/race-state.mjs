@@ -1,9 +1,13 @@
+import { STATUS } from "../shared/constants/status.js";
+
 export function ensureNextRace(raceState) {
   //add next race if no next race, and upcomings exist
-  if (!raceState.sessions.find((session) => session.status === "next")) {
-    if (raceState.sessions.find((session) => session.status === "upcoming")) {
+  if (!raceState.sessions.find((session) => session.status === STATUS.NEXT)) {
+    if (
+      raceState.sessions.find((session) => session.status === STATUS.UPCOMING)
+    ) {
       const upcomingSessions = raceState.sessions.filter(
-        (session) => session.status === "upcoming",
+        (session) => session.status === STATUS.UPCOMING,
       );
       let nextSession = {};
       //find session with smallest id
@@ -17,10 +21,11 @@ export function ensureNextRace(raceState) {
         }
       }
       raceState.sessions[raceState.sessions.indexOf(nextSession)].status =
-        "next";
+        STATUS.NEXT;
       console.log(
         "Updating raceState ... next race is: " +
-          raceState.sessions.find((session) => session.status === "next").name,
+          raceState.sessions.find((session) => session.status === STATUS.NEXT)
+            .name,
       );
     }
   }
