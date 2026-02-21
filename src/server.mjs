@@ -5,7 +5,8 @@ import { createServer } from "http";
 import { Server } from "socket.io";
 import { fileURLToPath } from "url";
 import { join, dirname } from "path";
-import { raceState, RECEPTIONIST_KEY, OBSERVER_KEY, SAFETY_KEY, checkConfig } from "./config/config.mjs";
+import { RECEPTIONIST_KEY, OBSERVER_KEY, SAFETY_KEY, checkConfig } from "./config/config.mjs";
+import { raceState } from "./config/raceState.mjs";
 import { ensureNextRace } from "./services/race-state.mjs";
 import { socketAuth } from "./sockets/auth.mjs";
 import { registerSocketHandlers } from "./sockets/index.mjs";
@@ -85,5 +86,4 @@ process.on("SIGTERM", () => {
   saveStateToFile(raceState);
   process.exit(0);
 });
-
 

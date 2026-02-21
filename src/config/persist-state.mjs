@@ -1,31 +1,18 @@
 import { countdown } from "../server.mjs";
 import fs from "fs";
-
-
-const defaultRaceState = {
-  sessions: [],
-  raceMode: "danger", // safe, hazard, danger, finish
-  duration: 600000, // 10 min races 
-  timeLeft: 0, //time left 1s. interval
-  timer: {
-    startedAt: null,
-    running: false,
-  },
-};
-
-
+import { DEFAULT_RACE_STATE } from "./raceState.mjs";
 
 export function loadStateFromFile (raceState, duration) {
       try {
         const raw = fs.readFileSync("./src/config/race-state.json", "utf8");
         const persisted = JSON.parse(raw);
-        Object.assign(raceState, defaultRaceState, persisted, duration);
-        console.log("file loaded...");
+        Object.assign(raceState, DEFAULT_RACE_STATE, persisted, duration);
+        console.log("Race State loaded from file:");
         console.log(raceState);
-      } catch (err) {
-        console.log("Load Failed", err);
-        Object.assign(raceState, defaultRaceState, duration);
-        console.log ("defaults loaded: ");
+      } catch {
+        console.log("File Load Failed");
+        Object.assign(raceState, DEFAULT_RACE_STATE, duration);
+        console.log ("Default race state loaded: ");
         console.log (raceState);
       }
 
