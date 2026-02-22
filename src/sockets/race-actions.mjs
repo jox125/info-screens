@@ -87,7 +87,9 @@ export function registerRaceActions(socket, io, { raceState }) {
             finishedSession.closedAt = Date.now();
             console.log("Session closed.");
           } else {
-            raceState.sessions.splice(finishedSession, 1);
+            raceState.sessions = raceState.sessions.filter(
+              (s) => s.id !== finishedSession.id,
+            );
             console.log("Session deleted.");
           }
           raceState.timeLeft = 0;
