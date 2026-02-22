@@ -19,7 +19,7 @@ const fsBtn = document.getElementById("fs-btn");
 
 let globalRaceState = null;
 let localTimerInterval = null;
-
+let cachedSession = null;
 
 
 // --- 2. SOCKET LISTENERS ---
@@ -101,11 +101,37 @@ function stopLocalTimer() {
 function renderLeaderboard() {
     if (!globalRaceState) return;
 
-    let activeSession = globalRaceState.sessions.find(s => s.status === STATUS.IN_PROGRESS);
+    let activeSession = globalRaceState.sessions.find(s =>
+        s.status === STATUS.IN_PROGRESS || s.status === STATUS.FINISHED
+    );
     if (!activeSession) {
-        activeSession = [...globalRaceState.sessions]
-            .reverse()
-            .find(s => [STATUS.FINISHED, STATUS.CLOSED].includes(s.status));
+        const waitingStatuses = [STATUS.PLANNED, STATUS.UPCOMING, STATUS.NEXT];
+        const completedSessions = globalRaceState.sessions.filter(s =>
+            !waitingStatuses.includes(s.status)
+        );
+        if (completedSessions.length > 0) {
+            activeSession = completedSessions.sort((a, b) => {
+                let maxA = a.id || 0;
+                let maxB = b.id || 0;
+                if (a.drivers && a.drivers.length > 0) {
+                    maxA = Math.max(maxA, ...a.drivers.map(d => Number(d.lastLapAt) || 0));
+                }
+                if (b.drivers && b.drivers.length > 0) {
+                    maxB = Math.max(maxB, ...b.drivers.map(d => Number(d.lastLapAt) || 0));
+                }
+                return maxB - maxA;
+            })[0];
+        }
+    }
+    //Cache the session
+        if (!activeSession && cachedSession) {
+            activeSession = cachedSession;
+        }
+        if (activeSession) {
+            cachedSession = JSON.parse(JSON.stringify(activeSession));
+            if (cachedSession.status !== STATUS.IN_PROGRESS) {
+                cachedSession.status = STATUS.CLOSED;
+            }
     }
 
     if (activeSession) {
