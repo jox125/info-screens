@@ -115,9 +115,53 @@ After the race is finished, each car may cross the finish line once more for tim
 Click the "Full Screen" button on any of them to maximize.
 
 
-##  Data Persistence
+##  Data Persistence and Data Structure
 
-This application implements file-system persistence.
+This application implements file-system persistence. Race state is persisted in `src/config/race-state.json`.
+
+- In production, if `race-state.json` is missing, the server starts with the default empty configuration.
+- In development mode, if `race-state.json` is missing, mock data is loaded.
+
+Default in-memory shape:
+
+```js
+{
+  sessions: [],
+  raceMode: "danger",
+  duration: 600000,
+  timeLeft: 0,
+  timer: {
+    startedAt: null,
+    running: false
+  }
+}
+```
+Session object shape:
+```js
+{
+  id: Number,
+  name: String,
+  status: "planned" | "upcoming" | "next" | "in progress" | "finished" | "closed",
+  createdAt: Number | null,   // epoch ms
+  confirmedAt: Number | null, // epoch ms
+  startedAt: Number | null,   // epoch ms
+  finishedAt: Number | null,  // epoch ms
+  closedAt: Number | null,    // epoch ms
+  drivers: Driver[]
+}
+```
+Driver object shape:
+```js
+{
+  id: Number, 
+  name: String,
+  carNum: Number,
+  laps: Number | null,
+  lastLapAt: Number | null,   // epoch ms
+  fastestLap: Number | null   // ms
+}
+```
+
 
 - **Location:** `src/config/race-state.json`
 - **Behavior:** Every time a race action occurs (Start, Lap Recorded, Flag Change), the state is saved to this JSON file.
