@@ -1,7 +1,21 @@
 import { STATUS } from "../shared/constants/status.js";
 
+//Helper to choose ordering number
+const getOrderTs = (session) => {
+  const confirmed = Number(session.confirmedAt);
+  if (Number.isFinite(confirmed)) return confirmed;
+
+  const created = Number(session.createdAt);
+  if (Number.isFinite(created)) return created;
+
+  const id = Number(session.id);
+  if (Number.isFinite(id)) return id;
+
+  return Number.MAX_SAFE_INTEGER;
+};
+
 export function ensureNextRace(raceState) {
-  //add next race if no next race, and upcomings exist
+  //add next race if no next race, and atleast one upcoming exists
   if (!raceState.sessions.find((session) => session.status === STATUS.NEXT)) {
     if (
       raceState.sessions.find((session) => session.status === STATUS.UPCOMING)
@@ -9,24 +23,12 @@ export function ensureNextRace(raceState) {
       const upcomingSessions = raceState.sessions.filter(
         (session) => session.status === STATUS.UPCOMING,
       );
-      let nextSession = {};
-      //find session with smallest id
-      if (!upcomingSessions) {
-      } else {
-        nextSession.id = Number.MAX_SAFE_INTEGER;
-        for (let i = 0; i < upcomingSessions.length; i++) {
-          if (upcomingSessions[i].id < nextSession.id) {
-            nextSession = upcomingSessions[i];
-          }
-        }
-      }
-      raceState.sessions[raceState.sessions.indexOf(nextSession)].status =
-        STATUS.NEXT;
-      console.log(
-        "Updating raceState ... next race is: " +
-          raceState.sessions.find((session) => session.status === STATUS.NEXT)
-            .name,
-      );
+
+      const nextSession = [...upcomingSessions].sort(
+        (a, b) => getOrderTs(a) - getOrderTs(b),
+      )[0];
+      nextSession.status = STATUS.NEXT;
+      console.log("Updating raceState ... next race is: " + nextSession.name);
     }
-  }
+  }  
 }

@@ -20,6 +20,7 @@ export function loadMockData () {
           },
         ],
         status: STATUS.UPCOMING, // planned, upcoming, next, in progress, finished, closed
+        confirmedAt: 1771772590139,
       },
       {
         id: 2,
@@ -37,6 +38,7 @@ export function loadMockData () {
           },
         ],
         status: STATUS.UPCOMING, // planned, upcoming, next, in progress, finished, closed
+        confirmedAt: 1771772590140,
       },
       {
         id: 3,
@@ -54,6 +56,7 @@ export function loadMockData () {
           },
         ],
         status: STATUS.UPCOMING, // planned, upcoming, next, in progress, finished, closed
+        confirmedAt: 1771772590141,
       },
     ],
   };
