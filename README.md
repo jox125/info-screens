@@ -21,12 +21,14 @@ tracks lap times, controls safety flags, and displays real-time leaderboards usi
   
 ## Running the application
 ### Production config
-Race timer in production config is **10 minutes**
+- Race timer in production config is **10 minutes**.
+- If `race-state.json` does not exist, the server starts with an empty/default state.
 ```bash
 npm start
 ```
 ### Development config
-Race timer in development config is **1 minute**
+- Race timer in development config is **1 minute**
+- If `race-state.json` is missing, the server loads mock data (3 example races).
 ```bash
 npm run dev
 ```
@@ -43,7 +45,7 @@ export RECEPTIONIST_KEY=key1
 export SAFETY_KEY=key2
 export OBSERVER_KEY=key3
 ```
-In dev mode default access keys are set in `package.json`
+In developement mode default access keys are read from `package.json`
 
 Default keys are: 
 ```bash
@@ -96,7 +98,10 @@ SAFETY_KEY=a2d393bc
 #### **Features:**
 - Displays a grid of large buttons for every car in the active session.
 - **One-Tap Recording:** Tapping a car number records a lap and updates the leaderboard immediately.
+- **Finish Race Mode:**
+After the race is finished, each car may cross the finish line once more for time logging.
 - **Validation:** Buttons are only active when a race is "In Progress".
+
 
 ### 4. Public Displays (No Login Required)
 
