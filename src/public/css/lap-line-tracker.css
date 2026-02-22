@@ -132,3 +132,13 @@ body {
 
 .time { color: #10b981; font-weight: bold; }
 
+@media (max-width: 640px) {
+    /* --- 2x4 GRID --- */
+.button-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    grid-template-rows: repeat(4, 95px);
+    gap: 15px;
+    width: 100%;
+}
+}

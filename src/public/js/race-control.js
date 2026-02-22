@@ -305,8 +305,7 @@ const updateView = (state) => {
     } catch (err) {
       console.log("Control panel not ready in race finished.");
     }
-  }
-  console.log(raceState);
+  }  
   //Show or hide no-next-race warning
   if (
     !raceState.sessions ||
