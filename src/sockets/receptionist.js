@@ -30,7 +30,12 @@ export function registerReceptionist(socket, io, { raceState }) {
             id: Date.now(),
             name: normalizedName,
             drivers: [],
-            status: STATUS.PLANNED
+            status: STATUS.PLANNED,
+            createdAt: Date.now(),
+            confirmedAt: null,
+            startedAt: null,
+            finishedAt: null,
+            closedAt: null
         };
 
         raceState.sessions.push(session);
@@ -147,6 +152,7 @@ export function registerReceptionist(socket, io, { raceState }) {
       }
       
       session.status = STATUS.UPCOMING;
+      session.confirmedAt = Date.now();
       ensureNextRace(raceState);
 
       io.emit(SOCKET_SESSION.UPDATE, raceState.sessions);
