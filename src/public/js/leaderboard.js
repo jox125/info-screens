@@ -19,7 +19,6 @@ const fsBtn = document.getElementById("fs-btn");
 
 let globalRaceState = null;
 let localTimerInterval = null;
-let cachedSession = null;
 
 // --- 2. SOCKET LISTENERS ---
 socket.on("connect", () => {
@@ -129,16 +128,6 @@ function renderLeaderboard() {
         }
         return maxB - maxA;
       })[0];
-    }
-  }
-  //Cache the session
-  if (!activeSession && cachedSession) {
-    activeSession = cachedSession;
-  }
-  if (activeSession) {
-    cachedSession = JSON.parse(JSON.stringify(activeSession));
-    if (cachedSession.status !== STATUS.IN_PROGRESS) {
-      cachedSession.status = STATUS.CLOSED;
     }
   }
 

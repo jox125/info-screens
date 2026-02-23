@@ -35,6 +35,13 @@ export function registerRaceActions(socket, io, { raceState }) {
       case RACE_ACTION.START:
         if (!inProgressSession && nextSession) {
           console.log("START recieved:");
+        // Delete old closed session if keep-old is disabled
+        if (!params.isKeepOldRacesEnabled) {
+            raceState.sessions = raceState.sessions.filter(
+                (s) => s.status !== STATUS.CLOSED,
+            );
+            console.log("Old sessions deleted.");
+        }
           raceState.raceMode = MODE.SAFE;
           //change next race status to in-progres
           nextSession.status = STATUS.IN_PROGRESS;
@@ -80,23 +87,14 @@ export function registerRaceActions(socket, io, { raceState }) {
       //End Session
       case RACE_ACTION.END_SESSION:
         if (finishedSession) {
-          //if keep-old enabled change finished race status to closed
-          //else delete
-          if (params.isKeepOldRacesEnabled) {
             finishedSession.status = STATUS.CLOSED;
             finishedSession.closedAt = Date.now();
             console.log("Session closed.");
-          } else {
-            raceState.sessions = raceState.sessions.filter(
-              (s) => s.id !== finishedSession.id,
-            );
-            console.log("Session deleted.");
-          }
-          raceState.timeLeft = 0;
-          raceState.raceMode = MODE.DANGER;
-          console.log("end session");
-          io.emit(SOCKET_STATE.UPDATE, raceState);
-          io.emit(SOCKET_COUNTDOWN.UPDATE, raceState.duration);
+            raceState.timeLeft = 0;
+            raceState.raceMode = MODE.DANGER;
+            console.log("end session");
+            io.emit(SOCKET_STATE.UPDATE, raceState);
+            io.emit(SOCKET_COUNTDOWN.UPDATE, raceState.duration);
         }
         break;
       default:
