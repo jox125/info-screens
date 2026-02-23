@@ -97,6 +97,11 @@ socket.on(SOCKET_STATE.UPDATE, (state) => {
                 const dur = (state && state.duration) ? state.duration : 0;
                 globalTimer.innerText = sessionEnded ? formatTime(dur) : "00:00:000s";
             }
+            if (sessionStarted && activeSession.lapLog) {
+                activeSession.lapLog.forEach(log => {
+                    addLapToLog(log.carNum, log.lapTime);
+                });
+            }
         }
 
         lastActiveSessionId = activeSession ? activeSession.id : null;
@@ -104,15 +109,26 @@ socket.on(SOCKET_STATE.UPDATE, (state) => {
 
         if (activeSession) {
             if (sessionStatusMsg) sessionStatusMsg.classList.add("hidden");
+            const isFinished = activeSession.status === STATUS.FINISHED;
+            let finishTimestamp = 0;
 
-            // Ensure all active drivers exist in lastLapDone for the current session.
+            // Calculate the race finished time
+            if (isFinished && globalRaceState.timer?.startedAt) {
+                const elapsedWhenFinished = globalRaceState.duration - globalRaceState.timeLeft;
+                finishTimestamp = globalRaceState.timer.startedAt + elapsedWhenFinished;
+            }
+
             activeSession.drivers.forEach((driver) => {
-                if (!(driver.carNum in lastLapDone)) {
+                // Check if race is finished and their last lap was logged after the finish line was crossed
+                if (isFinished && driver.lastLapAt && driver.lastLapAt >= finishTimestamp) {
+                    lastLapDone[driver.carNum] = true;
+                } else if (!(driver.carNum in lastLapDone)) {
                     lastLapDone[driver.carNum] = false;
                 }
             });
 
             renderGrid();
+
         }
         else if (nextSession) {
             if (buttonGrid) buttonGrid.innerHTML = "";

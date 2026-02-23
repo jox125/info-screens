@@ -125,6 +125,10 @@ export function registerRaceActions(socket, io, { raceState }) {
       driver.fastestLap = lapTime;
     }
 
+    //Save log to the session
+    if (!session.lapLog) session.lapLog = [];
+    session.lapLog.push({ carNum: data.carNum, lapTime: lapTime });
+
     console.log(`Lap recorded for Car ${data.carNum}: ${lapTime}ms`);
     io.emit(SOCKET_STATE.UPDATE, raceState); // Push update to Leaderboard!
     //Save state
