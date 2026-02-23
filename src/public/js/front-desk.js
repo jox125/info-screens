@@ -1,10 +1,14 @@
 import { ROLE } from "../../shared/constants/roles.js";
 import { STATUS, IMMUTABLE_STATUSES } from "../../shared/constants/status.js";
 import { ERROR_MESSAGES, SUCCESS_MESSAGES } from "./constants/messages.js";
-import { SOCKET_DRIVER, SOCKET_SESSION, SOCKET_STATE } from "../../shared/constants/socketMessages.js";
+import {
+  SOCKET_DRIVER,
+  SOCKET_SESSION,
+  SOCKET_STATE,
+} from "../../shared/constants/socketMessages.js";
 
 const socket = io({
-    autoConnect: false
+  autoConnect: false,
 });
 
 const body = document.body;
@@ -22,8 +26,8 @@ const driverPanel = document.getElementById("driver-panel");
 const driverPanelClose = document.getElementById("driver-panel-close");
 
 const currentEditForm = {
-    sessionId: null,
-    driverId: null
+  sessionId: null,
+  driverId: null,
 };
 let sessions = [];
 let selectedSessionId = null;
@@ -35,634 +39,642 @@ const loginInput = document.getElementById("login-key");
 const loginFeedback = document.getElementById("login-feedback");
 
 loginForm.addEventListener("submit", (e) => {
-    e.preventDefault();
-    const role = ROLE.RECEPTIONIST;
-    const key = loginInput.value.trim();
-    socket.auth = { role, key };
-    socket.connect();
-    loginInput.value = "";
-    loginInput.disabled = true;
-    loginInput.placeholder = "Disabled";
+  e.preventDefault();
+  const role = ROLE.RECEPTIONIST;
+  const key = loginInput.value.trim();
+  socket.auth = { role, key };
+  socket.connect();
+  loginInput.value = "";
+  loginInput.disabled = true;
+  loginInput.placeholder = "Disabled";
 });
 
 socket.on("connect_error", (err) => {
-    console.log(err);
-    loginFeedback.textContent = "Wrong key";
-    loginFeedback.classList.remove("hidden");
-    loginInput.disabled = false;
-    loginInput.placeholder = "Please enter key";
+  console.log(err);
+  loginFeedback.textContent = "Wrong key";
+  loginFeedback.classList.remove("hidden");
+  loginInput.disabled = false;
+  loginInput.placeholder = "Please enter key";
 });
 
 socket.on("auth:ok", (role) => {
-    if(role !== ROLE.RECEPTIONIST) return;
-    document.querySelector(".interface-content").removeChild(loginPanel);
-    sessionPanel.classList.remove("hidden");
+  if (role !== ROLE.RECEPTIONIST) return;
+  document.querySelector(".interface-content").removeChild(loginPanel);
+  sessionPanel.classList.remove("hidden");
 });
-
 
 // After auth
 socket.on("connect", () => {
-    console.log("Connected to server");
+  console.log("Connected to server");
 
-    // Request initial data
-    socket.emit(SOCKET_SESSION.REQUEST);
+  // Request initial data
+  socket.emit(SOCKET_SESSION.REQUEST);
 });
 
 // Render sessions after updates
 socket.on(SOCKET_SESSION.UPDATE, (data) => {
-    sessions = data;
-    renderSessions();
+  sessions = data;
+  renderSessions();
 
-    if (selectedSessionId) {
-        renderDrivers();
+  if (selectedSessionId) {
+    renderDrivers();
+  }
+
+  resetSessionFeedback();
+  resetDriverFeedback();
+
+  document.querySelectorAll(".edit-session-form").forEach((form) => {
+    form.classList.add("hidden");
+
+    const errorElement = form.querySelector(".error-message");
+    if (errorElement) {
+      errorElement.classList.add("hidden");
+      errorElement.textContent = "";
     }
+  });
 
-    resetSessionFeedback();
-    resetDriverFeedback();
+  document.querySelectorAll(".edit-driver-form").forEach((form) => {
+    form.classList.add("hidden");
 
-    document.querySelectorAll(".edit-session-form").forEach((form) => {
-        form.classList.add("hidden");
-
-        const errorElement = form.querySelector(".error-message");
-        if (errorElement) {
-            errorElement.classList.add("hidden");
-            errorElement.textContent = "";
-        }
-    });
-
-    document.querySelectorAll(".edit-driver-form").forEach((form) => {
-        form.classList.add("hidden");
-
-        const errorElement = form.querySelector(".error-message");
-        if (errorElement) {
-            errorElement.classList.add("hidden");
-            errorElement.textContent = "";
-        }
-    });
+    const errorElement = form.querySelector(".error-message");
+    if (errorElement) {
+      errorElement.classList.add("hidden");
+      errorElement.textContent = "";
+    }
+  });
 });
 
 socket.on(SOCKET_STATE.UPDATE, (data) => {
-    syncSessionStatus(data.sessions);
-    renderSessions();
+  syncSessionStatus(data.sessions);
+  renderSessions();
 });
 
 // ---- FEEDBACK MESSAGES ----
 
 // Successful session action messages
 socket.on(SOCKET_SESSION.SUCCESS, (data) => {
-    if(SUCCESS_MESSAGES[data.code] === SUCCESS_MESSAGES.SESSION_CONFIRMED) {
-        driverPanel.classList.add("hidden");
-    }
-    sessionFeedback.textContent = SUCCESS_MESSAGES[data.code];
-    sessionFeedback.classList.add("success-message");
-    sessionFeedback.classList.remove("hidden");
+  if (SUCCESS_MESSAGES[data.code] === SUCCESS_MESSAGES.SESSION_CONFIRMED) {
+    driverPanel.classList.add("hidden");
+  }
+  sessionFeedback.textContent = SUCCESS_MESSAGES[data.code];
+  sessionFeedback.classList.add("success-message");
+  sessionFeedback.classList.remove("hidden");
 });
 
 // Successful driver action messages
 socket.on(SOCKET_DRIVER.SUCCESS, (data) => {
-    driverFeedback.textContent = SUCCESS_MESSAGES[data.code];
-    driverFeedback.classList.add("success-message");
-    driverFeedback.classList.remove("hidden");
+  driverFeedback.textContent = SUCCESS_MESSAGES[data.code];
+  driverFeedback.classList.add("success-message");
+  driverFeedback.classList.remove("hidden");
 });
 
 // General error messages (No name, session not found etc...)
 socket.on(SOCKET_SESSION.ERROR, (data) => {
-    resetSessionFeedback();
-    resetDriverFeedback();
+  resetSessionFeedback();
+  resetDriverFeedback();
 
-    const message = data.status ? ERROR_MESSAGES[data.code].replace("${status}", data.status) : ERROR_MESSAGES[data.code];
-    sessionFeedback.textContent = message;
-    sessionFeedback.classList.add("error-message");
-    sessionFeedback.classList.remove("hidden");
+  const message = data.status
+    ? ERROR_MESSAGES[data.code].replace("${status}", data.status)
+    : ERROR_MESSAGES[data.code];
+  sessionFeedback.textContent = message;
+  sessionFeedback.classList.add("error-message");
+  sessionFeedback.classList.remove("hidden");
 
-    // If no name is given, focus input box
-    if (data.focus) sessionFeedback.focus();
+  // If no name is given, focus input box
+  if (data.focus) sessionFeedback.focus();
 });
 
 // Error message if something went wrong trying to edit a session
 socket.on(SOCKET_SESSION.EDIT_ERROR, (data) => {
-    resetSessionFeedback();
-    resetDriverFeedback();
+  resetSessionFeedback();
+  resetDriverFeedback();
 
-    const sessionItem = document.querySelector(`.session-item[data-session-id="${data.sessionId}"]`);
+  const sessionItem = document.querySelector(
+    `.session-item[data-session-id="${data.sessionId}"]`,
+  );
 
-    if (!sessionItem) return;
+  if (!sessionItem) return;
 
-    const editForm = sessionItem.querySelector(".edit-session-form");
-    const errorElement = editForm.querySelector(".error-message");
-    const input = editForm.querySelector(".edit-session-name");
+  const editForm = sessionItem.querySelector(".edit-session-form");
+  const errorElement = editForm.querySelector(".error-message");
+  const input = editForm.querySelector(".edit-session-name");
 
-    errorElement.textContent = ERROR_MESSAGES[data.code];
-    errorElement.classList.remove("hidden");
+  errorElement.textContent = ERROR_MESSAGES[data.code];
+  errorElement.classList.remove("hidden");
 
-    editForm.classList.remove("hidden");
-    input.focus();
+  editForm.classList.remove("hidden");
+  input.focus();
 });
 
 // Error message if something went wrong trying to add a driver
 socket.on(SOCKET_DRIVER.ERROR, (data) => {
-    resetSessionFeedback();
-    resetDriverFeedback();
-    let message = ERROR_MESSAGES[data.code];
+  resetSessionFeedback();
+  resetDriverFeedback();
+  let message = ERROR_MESSAGES[data.code];
 
-    if(data.carExists) {
-        message = ERROR_MESSAGES[data.code].replace("${carNum}", data.carNum);
-    }
-    if(data.status) {
-        message = ERROR_MESSAGES[data.code].replace("${status}", data.status);
-    }
-    if(data.name) {
-        message = ERROR_MESSAGES[data.code].replace("${name}", data.name);
-    }
-    driverFeedback.textContent = message;
-    driverFeedback.classList.add("error-message");
-    driverFeedback.classList.remove("hidden", "success-message");
-    driverNameInput.focus();
+  if (data.carExists) {
+    message = ERROR_MESSAGES[data.code].replace("${carNum}", data.carNum);
+  }
+  if (data.status) {
+    message = ERROR_MESSAGES[data.code].replace("${status}", data.status);
+  }
+  if (data.name) {
+    message = ERROR_MESSAGES[data.code].replace("${name}", data.name);
+  }
+  driverFeedback.textContent = message;
+  driverFeedback.classList.add("error-message");
+  driverFeedback.classList.remove("hidden", "success-message");
+  driverNameInput.focus();
 });
 
 // Error message if something went wrong trying to edit a driver
 socket.on(SOCKET_DRIVER.EDIT_ERROR, (data) => {
-    resetSessionFeedback();
-    resetDriverFeedback();
+  resetSessionFeedback();
+  resetDriverFeedback();
 
-    const driverItem = document.querySelector(`.driver-item[data-driver-id="${data.driverId}"]`);
+  const driverItem = document.querySelector(
+    `.driver-item[data-driver-id="${data.driverId}"]`,
+  );
 
-    if (!driverItem) return;
+  if (!driverItem) return;
 
-    const editForm = driverItem.querySelector(".edit-driver-form");
-    const errorElement = editForm.querySelector(".error-message");
-    const nameInput = editForm.querySelector(".edit-driver-name");
-    const carNumInput = editForm.querySelector(".edit-car-number");
+  const editForm = driverItem.querySelector(".edit-driver-form");
+  const errorElement = editForm.querySelector(".error-message");
+  const nameInput = editForm.querySelector(".edit-driver-name");
+  const carNumInput = editForm.querySelector(".edit-car-number");
 
-    let message = ERROR_MESSAGES[data.code];
+  let message = ERROR_MESSAGES[data.code];
 
-    if(data.name) {
-        message = ERROR_MESSAGES[data.code].replace("${name}", data.name);
-    }
+  if (data.name) {
+    message = ERROR_MESSAGES[data.code].replace("${name}", data.name);
+  }
 
-    if(data.carNum) {
-        message = ERROR_MESSAGES[data.code].replace("${carNum}", data.carNum);
-    }
+  if (data.carNum) {
+    message = ERROR_MESSAGES[data.code].replace("${carNum}", data.carNum);
+  }
 
-    errorElement.textContent = message;
-    errorElement.classList.remove("hidden");
+  errorElement.textContent = message;
+  errorElement.classList.remove("hidden");
 
-    editForm.classList.remove("hidden");
-    nameInput.value = "";
-    carNumInput.value = "";
-    nameInput.focus();
+  editForm.classList.remove("hidden");
+  nameInput.value = "";
+  carNumInput.value = "";
+  nameInput.focus();
 });
 
 // ---- EVENT LISTENERS ----
 
 // Listener for creating new session
 addSessionForm.addEventListener("submit", (e) => {
-    e.preventDefault();
-    const sessionName = sessionNameInput.value.trim();
+  e.preventDefault();
+  const sessionName = sessionNameInput.value.trim();
 
-    if (!sessionName) {
-        sessionFeedback.textContent = ERROR_MESSAGES.SESSION_NAME_REQUIRED;
-        sessionFeedback.classList.add("error-message");
-        sessionFeedback.classList.remove("hidden", "success-message");
-        sessionNameInput.focus();
-        return;
-    }
+  if (!sessionName) {
+    sessionFeedback.textContent = ERROR_MESSAGES.SESSION_NAME_REQUIRED;
+    sessionFeedback.classList.add("error-message");
+    sessionFeedback.classList.remove("hidden", "success-message");
+    sessionNameInput.focus();
+    return;
+  }
 
-    sessionNameInput.value = "";
-    socket.emit(SOCKET_SESSION.ADD, { name: sessionName });
+  sessionNameInput.value = "";
+  socket.emit(SOCKET_SESSION.ADD, { name: sessionName });
 });
 
 // Listener for toggling driverPanel visibility and removing session
 sessionList.addEventListener("click", (e) => {
-    const session = e.target;
-    const sessionItem = session.closest(".session-item");
+  const session = e.target;
+  const sessionItem = session.closest(".session-item");
 
-    if (!sessionItem) return;
-    if (session.closest(".edit-session-form")) return;
+  if (!sessionItem) return;
+  if (session.closest(".edit-session-form")) return;
 
-    // Remove session
-    const isRemoveButton = session.classList.contains("remove-session-button");
-    const sessionId = Number(sessionItem.dataset.sessionId);
+  // Remove session
+  const isRemoveButton = session.classList.contains("remove-session-button");
+  const sessionId = Number(sessionItem.dataset.sessionId);
 
-    if (isRemoveButton) {
-        removeSession(sessionId);
+  if (isRemoveButton) {
+    removeSession(sessionId);
 
-        // Hide driver panel if session was selected
-        if (selectedSessionId === sessionId) {
-            selectedSessionId = null;
-            driverPanel.classList.add("hidden");
-            body.classList.remove("driver-panel-visible");
-        }
-        return;
+    // Hide driver panel if session was selected
+    if (selectedSessionId === sessionId) {
+      selectedSessionId = null;
+      driverPanel.classList.add("hidden");
+      body.classList.remove("driver-panel-visible");
+    }
+    return;
+  }
+
+  // Toggles edit form
+  if (session.classList.contains("edit-session-button")) {
+    const editForm = sessionItem.querySelector(".edit-session-form");
+    if (currentEditForm.sessionId === editForm.id) {
+      editForm.classList.add("hidden");
+      currentEditForm.sessionId = null;
+      currentEditForm.driverId = null;
+      return;
     }
 
-    // Toggles edit form
-    if (session.classList.contains("edit-session-button")) {
-        const editForm = sessionItem.querySelector(".edit-session-form");
-        if(currentEditForm.sessionId === editForm.id) {
-            editForm.classList.add("hidden");
-            currentEditForm.sessionId = null;
-            currentEditForm.driverId = null;
-            return;
-        }
-        
-        closeLastEditForm();
-        editForm.classList.toggle("hidden");
-        currentEditForm.sessionId = editForm.id;
-        currentEditForm.driverId = null;
-        return;
-    }
+    closeLastEditForm();
+    editForm.classList.toggle("hidden");
+    currentEditForm.sessionId = editForm.id;
+    currentEditForm.driverId = null;
+    return;
+  }
 
-    // Sends confirmation of session to server
-    const confirmButton = session.classList.contains("confirm-session-button");
-    if(confirmButton) {
-        return socket.emit(SOCKET_SESSION.CONFIRM, { sessionId });
-    }
+  // Sends confirmation of session to server
+  const confirmButton = session.classList.contains("confirm-session-button");
+  if (confirmButton) {
+    return socket.emit(SOCKET_SESSION.CONFIRM, { sessionId });
+  }
 
-    // Toggles driverPanel visibility based on if a session is selected or not
-    selectedSessionId = selectedSessionId === sessionId ? null : sessionId;
-    driverPanel.classList.toggle("hidden", selectedSessionId === null);
-    body.classList.toggle("driver-panel-visible", selectedSessionId !== null);
+  // Toggles driverPanel visibility based on if a session is selected or not
+  selectedSessionId = selectedSessionId === sessionId ? null : sessionId;
+  driverPanel.classList.toggle("hidden", selectedSessionId === null);
+  body.classList.toggle("driver-panel-visible", selectedSessionId !== null);
 
-    renderSessions();
-    renderDrivers();
+  renderSessions();
+  renderDrivers();
 });
 
 // Listener for editing session name
 sessionList.addEventListener("submit", (e) => {
-    if (!e.target.classList.contains("edit-session-form")) return;
-    e.preventDefault();
+  if (!e.target.classList.contains("edit-session-form")) return;
+  e.preventDefault();
 
-    const sessionItem = e.target.closest(".session-item");
-    const sessionId = sessionItem.dataset.sessionId;
-    const input = sessionItem.querySelector(".edit-session-name");
-    const newName = input.value.trim();
-    const errorElement = e.target.querySelector(".error-message");
+  const sessionItem = e.target.closest(".session-item");
+  const sessionId = sessionItem.dataset.sessionId;
+  const input = sessionItem.querySelector(".edit-session-name");
+  const newName = input.value.trim();
+  const errorElement = e.target.querySelector(".error-message");
 
-    if (!newName) {
-        errorElement.textContent = ERROR_MESSAGES.SESSION_NAME_REQUIRED;
-        errorElement.classList.remove("hidden");
-        input.focus();
-        return;
-    }
+  if (!newName) {
+    errorElement.textContent = ERROR_MESSAGES.SESSION_NAME_REQUIRED;
+    errorElement.classList.remove("hidden");
+    input.focus();
+    return;
+  }
 
-    editSession(sessionId, newName);
+  editSession(sessionId, newName);
 });
 
 // Listener for creating new driver
 addDriverForm.addEventListener("submit", (e) => {
-    e.preventDefault();
-    const driverName = driverNameInput.value.trim();
-    const carNum = driverCarNumInput.value;
+  e.preventDefault();
+  const driverName = driverNameInput.value.trim();
+  const carNum = driverCarNumInput.value;
 
-    if (!driverName) {
-        driverFeedback.textContent = ERROR_MESSAGES.DRIVER_NAME_REQUIRED;
-        driverFeedback.classList.add("error-message");
-        driverFeedback.classList.remove("hidden", "success-message");
-        driverNameInput.focus();
-        return;
-    }
-    driverNameInput.value = "";
-    driverCarNumInput.value = "";
+  if (!driverName) {
+    driverFeedback.textContent = ERROR_MESSAGES.DRIVER_NAME_REQUIRED;
+    driverFeedback.classList.add("error-message");
+    driverFeedback.classList.remove("hidden", "success-message");
+    driverNameInput.focus();
+    return;
+  }
+  driverNameInput.value = "";
+  driverCarNumInput.value = "";
 
-    socket.emit(SOCKET_DRIVER.ADD, {
-        sessionId: selectedSessionId,
-        name: driverName,
-        carNum
-    });
+  socket.emit(SOCKET_DRIVER.ADD, {
+    sessionId: selectedSessionId,
+    name: driverName,
+    carNum,
+  });
 });
 
 // Listener for toggling edit form and removing driver
 driverList.addEventListener("click", (e) => {
-    const driver = e.target;
-    const driverItem = driver.closest(".driver-item");
+  const driver = e.target;
+  const driverItem = driver.closest(".driver-item");
 
-    // Remove driver
-    if (driver.classList.contains("remove-driver-button")) {
-        const driverId = driverItem.dataset.driverId;
-        removeDriver(driverId);
+  // Remove driver
+  if (driver.classList.contains("remove-driver-button")) {
+    const driverId = driverItem.dataset.driverId;
+    removeDriver(driverId);
+  }
+
+  // Toggles edit form
+  if (driver.classList.contains("edit-driver-button")) {
+    const editForm = driverItem.querySelector(".edit-driver-form");
+    if (currentEditForm.driverId === editForm.id) {
+      editForm.classList.add("hidden");
+      currentEditForm.sessionId = null;
+      currentEditForm.driverId = null;
+      return;
     }
 
-    // Toggles edit form
-    if (driver.classList.contains("edit-driver-button")) {
-        const editForm = driverItem.querySelector(".edit-driver-form");
-        if(currentEditForm.driverId === editForm.id) {
-            editForm.classList.add("hidden");
-            currentEditForm.sessionId = null;
-            currentEditForm.driverId = null;
-            return;
-        }
-        
-        closeLastEditForm();
-        editForm.classList.toggle("hidden");
-        currentEditForm.sessionId = null;
-        currentEditForm.driverId = editForm.id;
-    }
+    closeLastEditForm();
+    editForm.classList.toggle("hidden");
+    currentEditForm.sessionId = null;
+    currentEditForm.driverId = editForm.id;
+  }
 });
 
 // Listener for editing driver
 driverList.addEventListener("submit", (e) => {
-    if (!e.target.classList.contains("edit-driver-form")) return;
-    e.preventDefault();
+  if (!e.target.classList.contains("edit-driver-form")) return;
+  e.preventDefault();
 
-    const driverItem = e.target.closest(".driver-item");
-    const driverId = driverItem.dataset.driverId;
-    const nameInput = driverItem.querySelector(".edit-driver-name");
-    const newName = nameInput.value.trim();
-    const newCarNum = driverItem.querySelector(".edit-car-number").value;
-    const errorElement = e.target.querySelector(".error-message");
+  const driverItem = e.target.closest(".driver-item");
+  const driverId = driverItem.dataset.driverId;
+  const nameInput = driverItem.querySelector(".edit-driver-name");
+  const newName = nameInput.value.trim();
+  const newCarNum = driverItem.querySelector(".edit-car-number").value;
+  const errorElement = e.target.querySelector(".error-message");
 
-    if(!newName && !newCarNum) {
-        errorElement.textContent = ERROR_MESSAGES.AT_LEAST_ONE_FIELD_REQUIRED;
-        errorElement.classList.remove("hidden");
-        return;
-    }
+  if (!newName && !newCarNum) {
+    errorElement.textContent = ERROR_MESSAGES.AT_LEAST_ONE_FIELD_REQUIRED;
+    errorElement.classList.remove("hidden");
+    return;
+  }
 
-    editDriver(driverId, newName, newCarNum);
+  editDriver(driverId, newName, newCarNum);
 });
 
 driverPanelClose.addEventListener("click", () => {
-    driverPanel.classList.add("hidden");
-    body.classList.remove("driver-panel-visible");
-    selectedSessionId = null;
-    renderSessions();
+  driverPanel.classList.add("hidden");
+  body.classList.remove("driver-panel-visible");
+  selectedSessionId = null;
+  renderSessions();
 });
 
 // ---- FUNCTIONS ----
 
 // Renders the session list
 function renderSessions() {
-    sessionList.innerHTML = "";
-    sessionFeedback.textContent = "";
-    sessionFeedback.classList.add("hidden");
-    currentEditForm.sessionId = null;
-    currentEditForm.driverId = null;
+  sessionList.innerHTML = "";
+  sessionFeedback.textContent = "";
+  sessionFeedback.classList.add("hidden");
+  currentEditForm.sessionId = null;
+  currentEditForm.driverId = null;
 
-    if (!sessions.find(s => s.status === STATUS.PLANNED)) {
-        const emptyMessage = createEmptyMessage("No sessions. Add one to get started.");
-        emptyMessage.classList.add("empty-message--sessions");
+  if (!sessions.find((s) => s.status === STATUS.UPCOMING)) {
+    const emptyMessage = createEmptyMessage(
+      "No sessions. Add one to get started.",
+    );
+    emptyMessage.classList.add("empty-message--sessions");
 
-        sessionList.appendChild(emptyMessage);
-        driverPanel.classList.add("hidden");
-        body.classList.remove("driver-panel-visible");
-        return;
-    }
+    sessionList.appendChild(emptyMessage);
+    driverPanel.classList.add("hidden");
+    body.classList.remove("driver-panel-visible");
+    return;
+  }
 
-    sessions.forEach((session) => {
-        if(IMMUTABLE_STATUSES.has(session.status)) return;
-        sessionList.appendChild(createSessionItem(session));
-    });
+  sessions.forEach((session) => {
+    if (IMMUTABLE_STATUSES.has(session.status)) return;
+    sessionList.appendChild(createSessionItem(session));
+  });
 }
 
 // Render drivers for selected session
 function renderDrivers() {
-    driverList.innerHTML = "";
-    driverFeedback.textContent = "";
-    driverFeedback.classList.add("hidden");
-    currentEditForm.sessionId = null;
-    currentEditForm.driverId = null;
+  driverList.innerHTML = "";
+  driverFeedback.textContent = "";
+  driverFeedback.classList.add("hidden");
+  currentEditForm.sessionId = null;
+  currentEditForm.driverId = null;
 
-    const session = sessions.find((s) => s.id === selectedSessionId);
+  const session = sessions.find((s) => s.id === selectedSessionId);
 
-    if (!session || session.drivers.length === 0) {
-        const emptyMessage = createEmptyMessage("No drivers yet. Add one to get started.");
-        emptyMessage.classList.add("empty-message--drivers");
-        driverList.appendChild(emptyMessage);
-        return;
-    }
-
-    const sortedDrivers = [...session.drivers].sort(
-        (a, b) => a.carNum - b.carNum,
+  if (!session || session.drivers.length === 0) {
+    const emptyMessage = createEmptyMessage(
+      "No drivers yet. Add one to get started.",
     );
+    emptyMessage.classList.add("empty-message--drivers");
+    driverList.appendChild(emptyMessage);
+    return;
+  }
 
-    sortedDrivers.forEach((driver) => {
-        const status = session.status;
-        const item = createDriverItem(driver);
-        driverList.appendChild(item);
-    });
+  const sortedDrivers = [...session.drivers].sort(
+    (a, b) => a.carNum - b.carNum,
+  );
+
+  sortedDrivers.forEach((driver) => {
+    const status = session.status;
+    const item = createDriverItem(driver);
+    driverList.appendChild(item);
+  });
 }
 
 function editSession(sessionId, newName) {
-    socket.emit(SOCKET_SESSION.EDIT, {
-        sessionId,
-        newName,
-    });
+  socket.emit(SOCKET_SESSION.EDIT, {
+    sessionId,
+    newName,
+  });
 }
 
 function removeSession(sessionId) {
-    socket.emit(SOCKET_SESSION.DELETE, {
-        sessionId,
-    });
+  socket.emit(SOCKET_SESSION.DELETE, {
+    sessionId,
+  });
 }
 
 function editDriver(driverId, newName, newCarNum) {
-    socket.emit(SOCKET_DRIVER.EDIT, {
-        sessionId: selectedSessionId,
-        driverId,
-        newName,
-        newCarNum
-    });
+  socket.emit(SOCKET_DRIVER.EDIT, {
+    sessionId: selectedSessionId,
+    driverId,
+    newName,
+    newCarNum,
+  });
 }
 
 function removeDriver(driverId) {
-    socket.emit(SOCKET_DRIVER.DELETE, {
-        sessionId: selectedSessionId,
-        driverId,
-    });
+  socket.emit(SOCKET_DRIVER.DELETE, {
+    sessionId: selectedSessionId,
+    driverId,
+  });
 }
 
 function createEmptyMessage(message) {
-    const emptyMessage = document.createElement("p");
-    emptyMessage.classList.add("empty-message");
-    emptyMessage.textContent = message;
+  const emptyMessage = document.createElement("p");
+  emptyMessage.classList.add("empty-message");
+  emptyMessage.textContent = message;
 
-    return emptyMessage;
+  return emptyMessage;
 }
 
 function createSessionItem(session) {
-    const item = document.createElement("div");
-    item.classList.add("session-item");
-    item.classList.add("list-container");
-    item.dataset.sessionId = session.id;
+  const item = document.createElement("div");
+  item.classList.add("session-item");
+  item.classList.add("list-container");
+  item.dataset.sessionId = session.id;
 
-    if (session.id === selectedSessionId) {
-        item.classList.add("selected");
-    }
+  if (session.id === selectedSessionId) {
+    item.classList.add("selected");
+  }
 
-    const header = document.createElement("div");
-    header.classList.add("session-header");
+  const header = document.createElement("div");
+  header.classList.add("session-header");
 
-    const name = document.createElement("h3");
-    name.textContent = `${session.name}`;
+  const name = document.createElement("h3");
+  name.textContent = `${session.name}`;
 
-    const driverCount = document.createElement("span");
-    driverCount.className = "driver-count";
-    driverCount.textContent = `${session.drivers.length} drivers`;
-    
-    header.appendChild(name);
-    header.appendChild(driverCount);
-    item.appendChild(header);
+  const driverCount = document.createElement("span");
+  driverCount.className = "driver-count";
+  driverCount.textContent = `${session.drivers.length} drivers`;
 
-    const buttonContainer = document.createElement("div");
-    buttonContainer.classList.add("button-container");
+  header.appendChild(name);
+  header.appendChild(driverCount);
+  item.appendChild(header);
 
-    const editButton = document.createElement("button");
-    editButton.classList.add("edit-session-button");
-    editButton.textContent = "Edit Session";
+  const buttonContainer = document.createElement("div");
+  buttonContainer.classList.add("button-container");
 
-    const editForm = document.createElement("form");
-    editForm.classList.add("edit-session-form", "hidden");
-    editForm.id = session.id;
+  const editButton = document.createElement("button");
+  editButton.classList.add("edit-session-button");
+  editButton.textContent = "Edit Session";
 
-    const nameInput = document.createElement("input");
-    nameInput.type = "text";
-    nameInput.classList.add("edit-session-name");
-    nameInput.id = `session-${session.id}`;
-    nameInput.placeholder = "New session name";
+  const editForm = document.createElement("form");
+  editForm.classList.add("edit-session-form", "hidden");
+  editForm.id = session.id;
 
-    const editError = document.createElement("p");
-    editError.classList.add("error-message", "hidden");
+  const nameInput = document.createElement("input");
+  nameInput.type = "text";
+  nameInput.classList.add("edit-session-name");
+  nameInput.id = `session-${session.id}`;
+  nameInput.placeholder = "New session name";
 
-    const saveButton = document.createElement("button");
-    saveButton.type = "submit";
-    saveButton.textContent = "Save session";
+  const editError = document.createElement("p");
+  editError.classList.add("error-message", "hidden");
 
-    const removeButton = document.createElement("button");
-    removeButton.classList.add("remove-session-button");
-    removeButton.textContent = "Remove Session";
+  const saveButton = document.createElement("button");
+  saveButton.type = "submit";
+  saveButton.textContent = "Save session";
 
-    const confirmButton = document.createElement("button");
-    confirmButton.classList.add("confirm-session-button");
-    confirmButton.textContent = "Confirm Session";
+  const removeButton = document.createElement("button");
+  removeButton.classList.add("remove-session-button");
+  removeButton.textContent = "Remove Session";
 
-    buttonContainer.appendChild(confirmButton);
-    buttonContainer.appendChild(editButton);
-    buttonContainer.appendChild(removeButton);
-    editForm.appendChild(nameInput);
-    editForm.appendChild(editError);
-    editForm.appendChild(saveButton);
-    item.appendChild(buttonContainer);
-    item.appendChild(editForm);
+  const confirmButton = document.createElement("button");
+  confirmButton.classList.add("confirm-session-button");
+  confirmButton.textContent = "Confirm Session";
 
-    return item;
+  buttonContainer.appendChild(confirmButton);
+  buttonContainer.appendChild(editButton);
+  buttonContainer.appendChild(removeButton);
+  editForm.appendChild(nameInput);
+  editForm.appendChild(editError);
+  editForm.appendChild(saveButton);
+  item.appendChild(buttonContainer);
+  item.appendChild(editForm);
+
+  return item;
 }
 
 function createDriverItem(driver) {
-    const item = document.createElement("div");
-    item.classList.add("driver-item", "list-container");
-    item.dataset.driverId = driver.id;
+  const item = document.createElement("div");
+  item.classList.add("driver-item", "list-container");
+  item.dataset.driverId = driver.id;
 
-    const header = document.createElement("div");
-    header.classList.add("driver-header");
+  const header = document.createElement("div");
+  header.classList.add("driver-header");
 
-    const driverName = document.createElement("h3");
-    driverName.textContent = driver.name;
+  const driverName = document.createElement("h3");
+  driverName.textContent = driver.name;
 
-    const driverCar = document.createElement("span");
-    driverCar.classList.add("driver-car");
-    driverCar.textContent = `#${driver.carNum}`;
+  const driverCar = document.createElement("span");
+  driverCar.classList.add("driver-car");
+  driverCar.textContent = `#${driver.carNum}`;
 
-    header.appendChild(driverName);
-    header.appendChild(driverCar);
-    item.appendChild(header);
+  header.appendChild(driverName);
+  header.appendChild(driverCar);
+  item.appendChild(header);
 
-    const buttonContainer = document.createElement("div");
-    buttonContainer.classList.add("button-container");
+  const buttonContainer = document.createElement("div");
+  buttonContainer.classList.add("button-container");
 
-    const editButton = document.createElement("button");
-    editButton.classList.add("edit-driver-button");
-    editButton.textContent = "Edit Driver";
+  const editButton = document.createElement("button");
+  editButton.classList.add("edit-driver-button");
+  editButton.textContent = "Edit Driver";
 
-    const editForm = document.createElement("form");
-    editForm.classList.add("edit-driver-form", "hidden");
-    editForm.id = driver.id;
+  const editForm = document.createElement("form");
+  editForm.classList.add("edit-driver-form", "hidden");
+  editForm.id = driver.id;
 
-    const nameInput = document.createElement("input");
-    nameInput.type = "text";
-    nameInput.classList.add("edit-driver-name");
-    nameInput.id = `driver-${driver.id}`;
-    nameInput.placeholder = "New driver name";
+  const nameInput = document.createElement("input");
+  nameInput.type = "text";
+  nameInput.classList.add("edit-driver-name");
+  nameInput.id = `driver-${driver.id}`;
+  nameInput.placeholder = "New driver name";
 
-    const carNumInput = document.createElement("input");
-    carNumInput.classList.add("edit-car-number");
-    carNumInput.id = `car-${driver.id}`;
-    carNumInput.placeholder = "New car number";
-    carNumInput.type = "number";
-    carNumInput.min = "0";
-    carNumInput.max = "999";
-    carNumInput.step = "1";
+  const carNumInput = document.createElement("input");
+  carNumInput.classList.add("edit-car-number");
+  carNumInput.id = `car-${driver.id}`;
+  carNumInput.placeholder = "New car number";
+  carNumInput.type = "number";
+  carNumInput.min = "0";
+  carNumInput.max = "999";
+  carNumInput.step = "1";
 
-    const editError = document.createElement("p");
-    editError.classList.add("error-message", "hidden");
+  const editError = document.createElement("p");
+  editError.classList.add("error-message", "hidden");
 
-    const saveButton = document.createElement("button");
-    saveButton.type = "submit";
-    saveButton.textContent = "Save driver";
+  const saveButton = document.createElement("button");
+  saveButton.type = "submit";
+  saveButton.textContent = "Save driver";
 
-    const removeButton = document.createElement("button");
-    removeButton.classList.add("remove-driver-button");
-    removeButton.textContent = "Remove Driver";
+  const removeButton = document.createElement("button");
+  removeButton.classList.add("remove-driver-button");
+  removeButton.textContent = "Remove Driver";
 
-    buttonContainer.appendChild(editButton);
-    buttonContainer.appendChild(removeButton);
-    editForm.appendChild(nameInput);
-    editForm.appendChild(carNumInput);
-    editForm.appendChild(editError);
-    editForm.appendChild(saveButton);
-    item.appendChild(buttonContainer);
-    item.appendChild(editForm);
+  buttonContainer.appendChild(editButton);
+  buttonContainer.appendChild(removeButton);
+  editForm.appendChild(nameInput);
+  editForm.appendChild(carNumInput);
+  editForm.appendChild(editError);
+  editForm.appendChild(saveButton);
+  item.appendChild(buttonContainer);
+  item.appendChild(editForm);
 
-    return item;
+  return item;
 }
 
 function syncSessionStatus(serverSessions) {
-    serverSessions.forEach(serverSession => {
-        const localSession = sessions.find(s => s.id === serverSession.id);
+  serverSessions.forEach((serverSession) => {
+    const localSession = sessions.find((s) => s.id === serverSession.id);
 
-        if(!localSession) return;
+    if (!localSession) return;
 
-        if(localSession.status !== serverSession.status) {
-            localSession.status = serverSession.status;
-        }
-    });
+    if (localSession.status !== serverSession.status) {
+      localSession.status = serverSession.status;
+    }
+  });
 }
 
 function resetSessionFeedback() {
-    sessionFeedback.classList.add("hidden");
-    sessionFeedback.classList.remove("success-message", "error-message");
-    sessionFeedback.textContent = "";
+  sessionFeedback.classList.add("hidden");
+  sessionFeedback.classList.remove("success-message", "error-message");
+  sessionFeedback.textContent = "";
 }
 
 function resetDriverFeedback() {
-    driverFeedback.classList.add("hidden");
-    driverFeedback.classList.remove("success-message", "error-message");
-    driverFeedback.textContent = "";
+  driverFeedback.classList.add("hidden");
+  driverFeedback.classList.remove("success-message", "error-message");
+  driverFeedback.textContent = "";
 }
 
 function closeLastEditForm() {
-    const sessionColumns = document.querySelectorAll(".session-column");
+  const sessionColumns = document.querySelectorAll(".session-column");
 
-    sessionColumns.forEach((elem) => {
-        const status = elem
-            .querySelector(".session-status-header")
-            .textContent
-            .trim()
-            .toLowerCase();
+  sessionColumns.forEach((elem) => {
+    const status = elem
+      .querySelector(".session-status-header")
+      .textContent.trim()
+      .toLowerCase();
 
-        if(IMMUTABLE_STATUSES.has(status)) return;
+    if (IMMUTABLE_STATUSES.has(status)) return;
 
-        const sessionItems = elem.querySelectorAll(".session-item");
-        if(!sessionItems) return;
-        sessionItems.forEach(item => {
-            const editForm = item.querySelector(".edit-session-form");
-            editForm.classList.add("hidden");
-        });
-        
-        const driverItems = driverList.querySelectorAll(".driver-item");
-        if(!driverItems) return;
-        driverItems.forEach(item => {
-            const editForm = item.querySelector(".edit-driver-form");
-            editForm.classList.add("hidden");
-        });
+    const sessionItems = elem.querySelectorAll(".session-item");
+    if (!sessionItems) return;
+    sessionItems.forEach((item) => {
+      const editForm = item.querySelector(".edit-session-form");
+      editForm.classList.add("hidden");
     });
+
+    const driverItems = driverList.querySelectorAll(".driver-item");
+    if (!driverItems) return;
+    driverItems.forEach((item) => {
+      const editForm = item.querySelector(".edit-driver-form");
+      editForm.classList.add("hidden");
+    });
+  });
 }

@@ -1,17 +1,17 @@
 export const STATUS = Object.freeze({
-    PLANNED: "planned",
-    IN_PROGRESS: "in progress",
-    NEXT: "next",
-    UPCOMING: "upcoming",
-    FINISHED: "finished",
-    CLOSED: "closed"
+  UPCOMING: "upcoming",
+  IN_PROGRESS: "in progress",
+  NEXT: "next",
+  CONFIRMED: "confirmed",
+  FINISHED: "finished",
+  CLOSED: "closed",
 });
 
-// Used by front desk so only planned sessions are visible and can be edited
+// Used by front desk so only upcoming sessions are visible and can be edited
 export const IMMUTABLE_STATUSES = new Set([
-    STATUS.IN_PROGRESS,
-    STATUS.FINISHED,
-    STATUS.NEXT,
-    STATUS.UPCOMING,
-    STATUS.CLOSED
+  STATUS.IN_PROGRESS,
+  STATUS.FINISHED,
+  STATUS.NEXT,
+  STATUS.CONFIRMED,
+  STATUS.CLOSED,
 ]);

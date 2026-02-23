@@ -1,6 +1,6 @@
 import { STATUS } from "../shared/constants/status.js";
 
-export function loadMockData () {
+export function loadMockData() {
   // example races
   return {
     sessions: [
@@ -19,7 +19,7 @@ export function loadMockData () {
             carNum: 22,
           },
         ],
-        status: STATUS.UPCOMING, // planned, upcoming, next, in progress, finished, closed
+        status: STATUS.CONFIRMED, // upcoming, upcoming-confirmed, next, in progress, finished, closed
         confirmedAt: 1771772590139,
       },
       {
@@ -37,7 +37,7 @@ export function loadMockData () {
             carNum: 44,
           },
         ],
-        status: STATUS.UPCOMING, // planned, upcoming, next, in progress, finished, closed
+        status: STATUS.CONFIRMED, // upcoming, upcoming-confirmed, next, in progress, finished, closed
         confirmedAt: 1771772590140,
       },
       {
@@ -55,7 +55,7 @@ export function loadMockData () {
             carNum: 66,
           },
         ],
-        status: STATUS.UPCOMING, // planned, upcoming, next, in progress, finished, closed
+        status: STATUS.CONFIRMED, // upcoming, upcoming-confirmed, next, in progress, finished, closed
         confirmedAt: 1771772590141,
       },
     ],

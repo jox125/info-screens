@@ -18,10 +18,10 @@ export function ensureNextRace(raceState) {
   //add next race if no next race, and atleast one upcoming exists
   if (!raceState.sessions.find((session) => session.status === STATUS.NEXT)) {
     if (
-      raceState.sessions.find((session) => session.status === STATUS.UPCOMING)
+      raceState.sessions.find((session) => session.status === STATUS.CONFIRMED)
     ) {
       const upcomingSessions = raceState.sessions.filter(
-        (session) => session.status === STATUS.UPCOMING,
+        (session) => session.status === STATUS.CONFIRMED,
       );
 
       const nextSession = [...upcomingSessions].sort(
@@ -30,5 +30,5 @@ export function ensureNextRace(raceState) {
       nextSession.status = STATUS.NEXT;
       console.log("Updating raceState ... next race is: " + nextSession.name);
     }
-  }  
+  }
 }
