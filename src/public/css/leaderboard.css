@@ -130,8 +130,8 @@ body {
 .pos-col { width: 50px; color: #888; font-weight: bold; text-align: center; }
 .car-col { font-weight: 900; color: #222; }
 .driver-col { color: #444; }
-.laps-col { text-align: center; font-weight: bold; color: #555; }
-.time-col { text-align: right; font-family: 'Courier New', monospace; font-weight: 900; color: #000; }
+.laps-col { font-weight: bold; color: #555; }
+.time-col { font-family: 'Courier New', monospace; font-weight: 900; color: #000; }
 
 #fs-btn {
     position: fixed;
