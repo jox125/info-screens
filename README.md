@@ -5,7 +5,7 @@ tracks lap times, controls safety flags, and displays real-time leaderboards usi
 
 ![info-screens screenshot](/assets/info-screens.jpg)
 
-Demo video: [info-screens demo video] (assets/screen-capture.mp4)
+Demo video: [info-screens demo video](assets/screen-capture.mp4)
 
 ## Tech Stack
 
