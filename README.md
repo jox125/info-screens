@@ -3,9 +3,8 @@
 A real-time race management system built for Beachside Racetrack. This application manages race sessions,
 tracks lap times, controls safety flags, and displays real-time leaderboards using WebSockets.
 
-![info-screens screenshot](/assets/info-screens.jpg)
+[![Vaata demo](/assets/info-screens.jpg)](assets/screen-capture.mp4)
 
-Demo video: [info-screens demo video](assets/screen-capture.mp4)
 
 ## Tech Stack
 
